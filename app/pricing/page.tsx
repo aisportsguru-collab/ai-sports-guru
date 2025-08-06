@@ -1,52 +1,40 @@
-import Link from 'next/link';
+"use client";
 
-export const metadata = {
-  title: 'Pricing – AI Sports Guru',
-  description: 'Choose a plan that fits your betting style. Start for free or upgrade for more powerful insights.'
-};
+import Link from "next/link";
 
 export default function PricingPage() {
   return (
-    <section className="py-16">
-      <h1 className="text-3xl font-bold text-center text-secondary mb-8">Choose Your Plan</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        {/* Free Plan */}
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col">
-          <h2 className="text-xl font-semibold text-secondary mb-2">Free</h2>
-          <p className="text-4xl font-bold text-secondary mb-4">$0<span className="text-base font-normal text-gray-500">/mo</span></p>
-          <ul className="space-y-2 text-gray-600 flex-1">
-            <li>Limited daily predictions</li>
-            <li>Basic stats and odds</li>
-            <li>Community access</li>
-          </ul>
-          <Link href="/sign-up" className="btn btn-primary mt-6">Get Started</Link>
-        </div>
-        {/* Pro Plan */}
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col border-2 border-secondary">
-          <h2 className="text-xl font-semibold text-secondary mb-2">Pro</h2>
-          <p className="text-4xl font-bold text-secondary mb-4">$19<span className="text-base font-normal text-gray-500">/mo</span></p>
-          <ul className="space-y-2 text-gray-600 flex-1">
-            <li>Unlimited predictions</li>
-            <li>Full odds comparison</li>
-            <li>Advanced analytics</li>
-            <li>Email support</li>
-          </ul>
-          {/* The subscribe button will eventually trigger a Stripe checkout session. */}
-          <button className="btn btn-primary mt-6" onClick={() => alert('Integrate Stripe checkout here.')}>Subscribe</button>
-        </div>
-        {/* Pro+ Plan */}
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col">
-          <h2 className="text-xl font-semibold text-secondary mb-2">Pro+</h2>
-          <p className="text-4xl font-bold text-secondary mb-4">$199<span className="text-base font-normal text-gray-500">/yr</span></p>
-          <ul className="space-y-2 text-gray-600 flex-1">
-            <li>All Pro features</li>
-            <li>Annual savings (2 months free)</li>
-            <li>Priority support</li>
-            <li>Early access to new sports</li>
-          </ul>
-          <button className="btn btn-primary mt-6" onClick={() => alert('Integrate Stripe checkout here.')}>Subscribe</button>
-        </div>
+    <main className="bg-black text-white min-h-screen flex flex-col items-center px-6 pt-20 pb-32">
+      <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-center">
+        Start Your Free Trial
+      </h1>
+      <p className="text-lg text-gray-300 text-center max-w-2xl mb-10">
+        Get full access to AI Sports Guru for 7 days, absolutely free. Cancel anytime.
+      </p>
+
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 w-full max-w-xl text-center">
+        <h2 className="text-3xl font-bold mb-4">$49.99 / month</h2>
+        <p className="text-gray-300 mb-6">
+          Unlimited access to all AI predictions across all sports: NBA, NFL, NHL, MLB, NCAAF, NCAAB, and WNBA.
+        </p>
+
+        <ul className="text-left text-gray-300 space-y-3 mb-8">
+          <li>✅ Daily Moneyline, Spread, and Over/Under Predictions</li>
+          <li>✅ Confidence Scores with Every Pick</li>
+          <li>✅ Secure Login & Mobile-Friendly Interface</li>
+          <li>✅ One Subscription, All Sports Included</li>
+        </ul>
+
+        <Link href="/sign-up">
+          <button className="bg-yellow-400 text-black font-bold px-8 py-4 rounded-2xl hover:bg-yellow-500 transition w-full">
+            Start Free Trial Now
+          </button>
+        </Link>
+
+        <p className="text-sm text-gray-500 mt-6 italic">
+          Your card won't be charged until after the trial. Cancel anytime.
+        </p>
       </div>
-    </section>
+    </main>
   );
 }
