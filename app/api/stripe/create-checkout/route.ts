@@ -1,47 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
+/* eslint-disable */
+import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 
-export const runtime = "nodejs";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 export async function POST(req: NextRequest) {
   try {
-    let body: unknown = {};
-    try {
-      body = await req.json();
-    } catch {
-      body = {};
-    }
+    const body = (await req.json().catch(() => ({}))) as {
+      priceId?: string;
+      customer?: string;
+      supabase_user_id?: string;
+    };
 
     const priceId =
       body.priceId ||
-      process.env.STRIPE_PRICE_ID ||
-      process.env.NEXT_PUBLIC_DEFAULT_PRICE_ID;
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ID ||
+      process.env.STRIPE_PRICE_ID;
 
     if (!priceId) {
-      return NextResponse.json({ error: "Missing priceId" }, { status: 400 });
+      return NextResponse.json({ error: 'Missing priceId' }, { status: 400 });
     }
 
-    const origin = req.nextUrl.origin;
-
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
+      mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${origin}/test-billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/test-billing?canceled=1`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/test-billing?success=1`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?canceled=1`,
       customer: body.customer,
       metadata: {
-        supabase_user_id: body.supabase_user_id || "",
+        supabase_user_id: body.supabase_user_id || '',
       },
+      allow_promotion_codes: true,
     });
 
-    return NextResponse.json({ url: session.url });
-  } catch (error) {
-    console.error("Checkout session error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ url: session.url }, { status: 200 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

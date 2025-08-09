@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 
 type Prediction = {
@@ -87,7 +87,7 @@ export default function Page() {
               key={game.gameId}
               className="bg-gray-900 border border-gray-700 text-white"
             >
-              <CardContent className="p-4">
+              <div className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <h2 className="text-xl font-semibold">
                     {game.teams[0]} vs {game.teams[1]}
@@ -126,7 +126,7 @@ export default function Page() {
                     </p>
                   </div>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           ))}
         </div>
