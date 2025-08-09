@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+dist/
+.env*
+*.zip
+*.tar.gz
+.DS_Store
+coverage/
