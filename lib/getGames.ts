@@ -9,7 +9,7 @@ import { Game } from '../components/GameCard';
  *
  * @param sport One of "nba", "nfl", "mlb", "nhl", "ncaaf", "ncaab", "wnba".
  */
-export async function getGames(_sport: string): Promise<Game[]> {
+export async function getGames(): Promise<Game[]> {
   // TODO: Replace this mocked data with a call to your backend API endpoint
   // that aggregates sportsbook odds and prediction model outputs. An example
   // implementation might look like:

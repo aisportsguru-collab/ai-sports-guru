@@ -1,9 +1,25 @@
+# Node
 node_modules/
+.npm/
 .next/
 out/
 dist/
-.env*
-*.zip
-*.tar.gz
+*.log
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# OS/editor
 .DS_Store
+.vscode/
+.idea/
+
+# Builds/archives
+*.zip
+*.tar
+*.tar.gz
+
+# Misc
 coverage/

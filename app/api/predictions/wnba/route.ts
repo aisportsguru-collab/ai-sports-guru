@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_PREDICTION_API_URL}/predict/wnba`,
