@@ -2,25 +2,29 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Use SDK default API version (do NOT hard-code apiVersion)
+// Use SDK default API version
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-// Supabase admin client (server-only)
-// Never expose this key to the client. This file runs on the server.
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+// Ensure this runs at runtime and uses Node (so we can read the raw body)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
+  // Create Supabase admin client at runtime (not at module load)
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceKey) {
+    console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    return new NextResponse('Server misconfigured', { status: 500 });
+  }
+  const supabase = createClient(supabaseUrl, serviceKey);
+
   // Read raw body for Stripe signature verification
   const rawBody = await req.text();
   const sig = req.headers.get('stripe-signature') || '';
 
   let event: Stripe.Event;
-
   try {
     event = await stripe.webhooks.constructEventAsync(rawBody, sig, endpointSecret);
   } catch (err: any) {
@@ -37,14 +41,13 @@ export async function POST(req: Request) {
         const email =
           session.customer_details?.email || (session.customer_email as string | undefined);
 
-        // Retrieve subscription to get authoritative status
+        // Get authoritative subscription status from Stripe
         let subStatus: string | null = null;
         if (subscriptionId) {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
-          subStatus = sub.status; // e.g., 'trialing' | 'active' | ...
+          subStatus = sub.status; // 'trialing' | 'active' | ...
         }
 
-        // Update profiles by email first, else by stripe_customer_id
         if (email) {
           await supabase
             .from('profiles')
@@ -66,7 +69,6 @@ export async function POST(req: Request) {
             })
             .eq('stripe_customer_id', customerId);
         }
-
         break;
       }
 
@@ -74,7 +76,7 @@ export async function POST(req: Request) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
-        const subStatus = subscription.status; // 'active' | 'trialing' | 'canceled' | etc.
+        const subStatus = subscription.status;
         const subscriptionId = subscription.id;
 
         await supabase
@@ -86,12 +88,11 @@ export async function POST(req: Request) {
             stripe_subscription_id: subscriptionId,
           })
           .eq('stripe_customer_id', customerId);
-
         break;
       }
 
       default:
-        // For other events we don't need to do anything
+        // ignore other events
         break;
     }
 
@@ -101,6 +102,3 @@ export async function POST(req: Request) {
     return new NextResponse('Webhook handler failed', { status: 500 });
   }
 }
-
-// Ensure Node runtime (not Edge) so we can access raw body and use Stripe SDK
-export const runtime = 'nodejs';
