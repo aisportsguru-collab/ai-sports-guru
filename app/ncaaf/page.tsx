@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 type Prediction = {
@@ -50,7 +50,17 @@ function fmtEdge(n?: number | null) {
   return ` (edge ${p.toFixed(0)}%)`;
 }
 
+// --- Page component only renders a Suspense boundary ---
 export default function NCAAFPage() {
+  return (
+    <Suspense fallback={<main className="bg-black text-white min-h-screen px-6 pb-24"><div className="pt-10 text-gray-400">Loading…</div></main>}>
+      <NCAAFInner />
+    </Suspense>
+  );
+}
+
+// --- Inner client component uses useSearchParams ---
+function NCAAFInner() {
   const search = useSearchParams();
   const router = useRouter();
 
