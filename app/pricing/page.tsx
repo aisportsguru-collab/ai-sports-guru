@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import SubscribeButton from "@/components/SubscribeButton";
 
 export default function PricingPage() {
   return (
@@ -25,14 +25,13 @@ export default function PricingPage() {
           <li>✅ One Subscription, All Sports Included</li>
         </ul>
 
-        <Link href="/sign-up">
-          <button className="bg-yellow-400 text-black font-bold px-8 py-4 rounded-2xl hover:bg-yellow-500 transition w-full">
-            Start Free Trial Now
-          </button>
-        </Link>
+        {/* Direct to Stripe Checkout */}
+        <div className="flex justify-center">
+          <SubscribeButton />
+        </div>
 
         <p className="text-sm text-gray-500 mt-6 italic">
-          Your card won't be charged until after the trial. Cancel anytime.
+          Your card won&apos;t be charged until after the trial. Cancel anytime.
         </p>
       </div>
     </main>
