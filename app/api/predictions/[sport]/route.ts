@@ -2,62 +2,80 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
-const VALID_SPORTS = new Set(["ncaaf","nfl","nba","mlb","nhl","wnba","ncaab"]);
+type RouteContext = {
+  params: { sport: string };
+};
 
-function bad(msg: string, status = 400) {
-  return NextResponse.json({ error: msg }, { status });
-}
-
-export async function GET(req: Request, { params }: any) {
-  const sport = (params?.sport || "").toLowerCase();
-  if (!VALID_SPORTS.has(sport)) {
-    return bad(`Invalid sport. Use one of: ${Array.from(VALID_SPORTS).join(", ")}`);
-  }
-
+export async function GET(req: Request, ctx: RouteContext) {
   const url = new URL(req.url);
-  const season = parseInt(url.searchParams.get("season") || "2025", 10);
-  const week = url.searchParams.get("week");
-  const dateFrom = url.searchParams.get("date_from"); // YYYY-MM-DD
-  const dateTo = url.searchParams.get("date_to");     // YYYY-MM-DD
-  const limit = Math.min(parseInt(url.searchParams.get("limit") || "200", 10), 200);
+  const season = Number(url.searchParams.get("season") || "2025");
+  const week = Number(url.searchParams.get("week") || "1");
+  const debug = url.searchParams.get("debug") === "1";
 
-  const supabaseUrl = process.env.SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  if (!supabaseUrl || !serviceKey) {
-    return bad("Server not configured (missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)", 500);
+  const sport = (ctx.params?.sport || "").toLowerCase();
+
+  if (!sport) {
+    return NextResponse.json({ error: "Missing sport" }, { status: 400 });
   }
-  const supabase = createClient(supabaseUrl, serviceKey);
-
-  let query = supabase
-    .from("ai_research_predictions")
-    .select(`
-      id, sport, season, week, game_date,
-      home_team, away_team,
-      predicted_winner, confidence,
-      offense_favor, defense_favor,
-      key_players_home, key_players_away,
-      spread_pick, ou_pick,
-      source_tag, created_at
-    `)
-    .eq("sport", sport)
-    .eq("season", season)
-    .order("game_date", { ascending: true })
-    .limit(limit);
-
-  if (week) query = query.eq("week", parseInt(week, 10));
-  if (dateFrom) query = query.gte("game_date", dateFrom);
-  if (dateTo) query = query.lte("game_date", dateTo);
-
-  const { data, error } = await query;
-  if (error) {
-    console.error("Predictions fetch error:", error);
-    return bad("Failed to fetch predictions", 500);
+  if (!Number.isFinite(season) || !Number.isFinite(week)) {
+    return NextResponse.json({ error: "Invalid season/week" }, { status: 400 });
   }
 
-  const res = NextResponse.json({ sport, season, count: data?.length || 0, results: data || [] });
-  res.headers.set("Access-Control-Allow-Origin", "*");
-  res.headers.set("Cache-Control", "public, max-age=60");
-  return res;
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("[predictions] Missing envs", {
+      hasUrl: !!SUPABASE_URL,
+      hasKey: !!SUPABASE_SERVICE_ROLE_KEY,
+    });
+    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+  }
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  try {
+    const { data, error } = await supabase
+      .from("ai_research_predictions")
+      .select("*")
+      .eq("sport", sport)
+      .eq("season", season)
+      .eq("week", week)
+      .order("game_date", { ascending: true });
+
+    if (error) {
+      console.error("[predictions] Supabase select error:", {
+        message: error.message,
+        details: (error as any).details,
+        hint: (error as any).hint,
+        code: (error as any).code,
+      });
+      return NextResponse.json({ error: "Failed to fetch predictions" }, { status: 500 });
+    }
+
+    if (debug) {
+      return NextResponse.json({
+        ok: true,
+        count: data?.length || 0,
+        env: {
+          hasUrl: !!SUPABASE_URL,
+          hasKey: !!SUPABASE_SERVICE_ROLE_KEY,
+          runtime: "nodejs",
+          vercelEnv: process.env.VERCEL_ENV,
+        },
+        data,
+      });
+    }
+
+    return NextResponse.json({ data });
+  } catch (err: any) {
+    console.error("[predictions] Unexpected error:", {
+      message: err?.message,
+      stack: err?.stack,
+    });
+    return NextResponse.json({ error: "Failed to fetch predictions" }, { status: 500 });
+  }
 }
