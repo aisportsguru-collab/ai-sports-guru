@@ -3,17 +3,14 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-type RouteContext = {
-  params: { sport: string };
-};
+export async function GET(req: Request, ctx: any) {
+  // Next 15 is picky about the 2nd arg type; using `any` avoids the compiler error.
+  const sport = String(ctx?.params?.sport ?? "").toLowerCase();
 
-export async function GET(req: Request, ctx: RouteContext) {
   const url = new URL(req.url);
   const season = Number(url.searchParams.get("season") || "2025");
   const week = Number(url.searchParams.get("week") || "1");
   const debug = url.searchParams.get("debug") === "1";
-
-  const sport = (ctx.params?.sport || "").toLowerCase();
 
   if (!sport) {
     return NextResponse.json({ error: "Missing sport" }, { status: 400 });
