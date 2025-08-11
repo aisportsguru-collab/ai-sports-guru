@@ -10,8 +10,8 @@ function bad(msg: string, status = 400) {
   return NextResponse.json({ error: msg }, { status });
 }
 
-export async function GET(req: Request, ctx: { params: { sport: string } }) {
-  const sport = (ctx.params?.sport || "").toLowerCase();
+export async function GET(req: Request, { params }: { params: { sport: string } }) {
+  const sport = (params?.sport || "").toLowerCase();
   if (!VALID_SPORTS.has(sport)) {
     return bad(`Invalid sport. Use one of: ${Array.from(VALID_SPORTS).join(", ")}`);
   }
