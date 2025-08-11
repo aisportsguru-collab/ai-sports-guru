@@ -1,4 +1,3 @@
-// app/api/admin/upsert-predictions/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -12,11 +11,11 @@ type Incoming = {
   sport: string;
   season?: number | string | null;
   week?: number | string | null;
-  game_date: string; // ISO or YYYY-MM-DD
+  game_date: string;
   home_team: string;
   away_team: string;
   predicted_winner: string;
-  confidence?: number | null; // 0..1 or 0..100, we store as-is
+  confidence?: number | null;
   offense_favor?: string | null;
   defense_favor?: string | null;
   key_players_home?: string[] | null;
@@ -27,10 +26,16 @@ type Incoming = {
   source_tag?: string | null;
 };
 
+function norm(s: string | null | undefined) {
+  return (s ?? "")
+    .trim()
+    .replace(/^Bearer\s+/i, "")
+    .replace(/^['"]|['"]$/g, ""); // strip accidental quotes
+}
+
 function bad(body: any, status = 400) {
   return NextResponse.json(body, { status });
 }
-
 function ok(body: any, status = 200) {
   const res = NextResponse.json(body, { status });
   res.headers.set("Access-Control-Allow-Origin", "*");
@@ -46,16 +51,28 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: Request) {
-  // --- Auth guard
-  const adminToken = process.env.PREDICTIONS_ADMIN_TOKEN || "";
-  const headerToken =
-    req.headers.get("x-admin-token") ||
-    (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  if (!adminToken || !headerToken || headerToken !== adminToken) {
-    return bad({ error: "Unauthorized" }, 401);
+  // --- Auth guard (sanitized & compared)
+  const adminEnv = process.env.PREDICTIONS_ADMIN_TOKEN || "";
+  const admin = norm(adminEnv);
+
+  const headerToken = norm(req.headers.get("x-admin-token")) || norm(req.headers.get("authorization"));
+
+  if (!admin || !headerToken || headerToken !== admin) {
+    return bad(
+      {
+        error: "Unauthorized",
+        details: {
+          hasAdminEnv: !!admin,
+          adminLen: admin.length,
+          headerLen: headerToken.length,
+          note: "Lengths shown for debugging. Values never logged.",
+        },
+      },
+      401
+    );
   }
 
-  // --- Env guard
+  // --- Env guard for DB
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -70,11 +87,12 @@ export async function POST(req: Request) {
   } catch {
     return bad({ error: "Invalid JSON" }, 400);
   }
+
   const entries: Incoming[] = Array.isArray(payload)
     ? payload
     : Array.isArray(payload?.entries)
     ? payload.entries
-    : typeof payload === "object"
+    : typeof payload === "object" && payload
     ? [payload]
     : [];
 
@@ -82,12 +100,13 @@ export async function POST(req: Request) {
     return bad({ error: "No entries provided (array or {entries:[...]})" }, 400);
   }
 
-  // --- Normalize & validate rows
+  // --- Normalize rows
   const rows = [];
   const errors: Array<{ index: number; error: string }> = [];
 
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i] as Incoming;
+
     const sport = String(e.sport || "").toLowerCase().trim();
     const game_date_raw = String(e.game_date || "").trim();
     const home_team = (e.home_team || "").toString().trim();
@@ -113,7 +132,6 @@ export async function POST(req: Request) {
         ? parseInt(e.week, 10)
         : e.week;
 
-    // normalize date to YYYY-MM-DD
     const game_date = game_date_raw.includes("T") ? game_date_raw.slice(0, 10) : game_date_raw;
 
     const confidence =
@@ -153,7 +171,6 @@ export async function POST(req: Request) {
     return bad({ error: "All rows invalid", details: errors }, 400);
   }
 
-  // --- Upsert
   const { data, error } = await supabase
     .from("ai_research_predictions")
     .upsert(rows, {
