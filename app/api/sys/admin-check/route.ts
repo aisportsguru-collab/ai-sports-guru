@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
-import { readAdminHeader, verifyAdmin } from "@/lib/adminAuth";
-
-export const runtime = "nodejs";
+import { checkAdmin } from "@/lib/adminAuth";
 
 export async function GET(req: Request) {
-  const env = (process.env.ADMIN_TOKEN || "").trim();
-  const header = readAdminHeader(req);
-  const verdict = verifyAdmin(req);
-
+  const result = checkAdmin(req);
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, ...result }, { status: 401 });
+  }
   return NextResponse.json({
-    ok: verdict.ok,
-    reason: verdict.ok ? null : verdict.reason,
-    envLen: env.length,
-    headerLen: header.length,
-    headerPreview: header ? header.slice(0, 6) + "…" : "",
-    // NOTE: no secrets echoed back
+    ok: true,
+    ...result,
+    runtime: process.env.VERCEL ? "nodejs" : "local",
+    vercelEnv: process.env.VERCEL_ENV ?? null,
   });
 }
