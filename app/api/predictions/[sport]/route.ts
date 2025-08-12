@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -7,11 +9,10 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-type Ctx = { params: { sport: string } };
-
-export async function GET(req: Request, ctx: Ctx) {
+// Do NOT type the second argument; Next's analyzer can reject custom types here.
+export async function GET(req: Request, context: any) {
   try {
-    const { sport } = ctx.params;
+    const sport: string = context?.params?.sport;
     const url = new URL(req.url);
     const seasonStr = url.searchParams.get("season");
     const weekStr = url.searchParams.get("week");
@@ -32,14 +33,15 @@ export async function GET(req: Request, ctx: Ctx) {
       .order("game_date", { ascending: true });
 
     if (isWeekly) {
-      const weekNum = weekStr !== null ? Number(weekStr) : NaN;
-      if (!Number.isFinite(weekNum)) {
-        // You can swap this to auto-compute current week if you prefer
-        return NextResponse.json({ error: "Missing ?week for this sport" }, { status: 400 });
+      if (!weekStr || Number.isNaN(Number(weekStr))) {
+        return NextResponse.json(
+          { error: "Missing ?week for this sport" },
+          { status: 400 }
+        );
       }
-      q = q.eq("week", weekNum);
+      q = q.eq("week", Number(weekStr));
     } else {
-      // Non-weekly sports: only rows where week IS NULL
+      // Non-weekly sports: only rows that have week = NULL
       q = q.is("week", null);
     }
 
@@ -59,8 +61,11 @@ export async function GET(req: Request, ctx: Ctx) {
     }
 
     return NextResponse.json({ data: data ?? [] });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Predictions fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch predictions" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch predictions" },
+      { status: 500 }
+    );
   }
 }
