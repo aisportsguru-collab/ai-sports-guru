@@ -1,93 +1,102 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 
-// Use SDK default API version
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!;
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
+const SUPABASE_URL = process.env.SUPABASE_URL!;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Ensure this runs at runtime and uses Node (so we can read the raw body)
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
-export async function POST(req: Request) {
-  // Create Supabase admin client at runtime (not at module load)
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) {
-    console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-    return new NextResponse('Server misconfigured', { status: 500 });
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+} as const;
+
+async function buffer(readable: ReadableStream<Uint8Array>) {
+  const reader = readable.getReader();
+  const chunks: Uint8Array[] = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
   }
-  const supabase = createClient(supabaseUrl, serviceKey);
+  return Buffer.concat(chunks);
+}
 
-  // Read raw body for Stripe signature verification
-  const rawBody = await req.text();
-  const sig = req.headers.get('stripe-signature') || '';
-
-  let event: Stripe.Event;
+export async function POST(req: NextRequest) {
   try {
-    event = await stripe.webhooks.constructEventAsync(rawBody, sig, endpointSecret);
-  } catch (err: any) {
-    console.error('❌ Webhook signature verification failed:', err?.message || err);
-    return new NextResponse('Signature verification failed', { status: 400 });
-  }
+    if (!STRIPE_WEBHOOK_SECRET) {
+      return NextResponse.json({ error: "Missing STRIPE_WEBHOOK_SECRET" }, { status: 500 });
+    }
 
-  try {
+    const buf = await buffer(req.body!);
+    const sig = req.headers.get("stripe-signature") as string;
+
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(buf, sig, STRIPE_WEBHOOK_SECRET);
+    } catch (err: any) {
+      return NextResponse.json({ error: `Webhook signature verification failed: ${err.message}` }, { status: 400 });
+    }
+
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const customerId = session.customer as string | null;
-        const subscriptionId = session.subscription as string | null;
-        const email =
-          session.customer_details?.email || (session.customer_email as string | undefined);
-
-        // Get authoritative subscription status from Stripe
-        let subStatus: string | null = null;
-        if (subscriptionId) {
-          const sub = await stripe.subscriptions.retrieve(subscriptionId);
-          subStatus = sub.status; // 'trialing' | 'active' | ...
-        }
-
-        if (email) {
-          await supabase
-            .from('profiles')
-            .update({
-              is_subscribed: subStatus === 'active' || subStatus === 'trialing',
-              subscription_status: subStatus,
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
-            })
-            .eq('email', email);
-        } else if (customerId) {
-          await supabase
-            .from('profiles')
-            .update({
-              is_subscribed: subStatus === 'active' || subStatus === 'trialing',
-              subscription_status: subStatus,
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
-            })
-            .eq('stripe_customer_id', customerId);
+        // user_id was set in metadata in create-checkout-session
+        const userId = (session.metadata?.user_id || session.subscription && (await stripe.subscriptions.retrieve(String(session.subscription))).metadata?.user_id || "").trim();
+        const customerId = String(session.customer || "");
+        if (userId) {
+          await supabase.from("profiles").update({
+            stripe_customer_id: customerId || null,
+          }).eq("id", userId);
         }
         break;
       }
 
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
-        const subStatus = subscription.status;
-        const subscriptionId = subscription.id;
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        const userId = (sub.metadata?.user_id || "").trim();
 
-        await supabase
-          .from('profiles')
-          .update({
-            is_subscribed: subStatus === 'active' || subStatus === 'trialing',
-            subscription_status: subStatus,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-          })
-          .eq('stripe_customer_id', customerId);
+        // find profile by userId if present, else by customer id
+        let eqColumn: "id" | "stripe_customer_id" = "id";
+        let eqValue: string | null = userId || null;
+
+        if (!eqValue) {
+          const customerId = String(sub.customer || "");
+          eqColumn = "stripe_customer_id";
+          eqValue = customerId || null;
+        }
+
+        if (!eqValue) break;
+
+        const status = sub.status;
+        const currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
+
+        // role logic: active/past_due/trialing → pro; canceled/unpaid/incomplete_expired → free
+        const toPro = ["active", "trialing", "past_due"].includes(status);
+        await supabase.from("profiles").update({
+          stripe_subscription_id: sub.id,
+          stripe_subscription_status: status,
+          stripe_current_period_end: currentPeriodEnd,
+          role: toPro ? "pro" : "free",
+        }).eq(eqColumn, eqValue);
+
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const customerId = String(sub.customer || "");
+        await supabase.from("profiles").update({
+          stripe_subscription_id: null,
+          stripe_subscription_status: "canceled",
+          role: "free",
+        }).eq("stripe_customer_id", customerId);
         break;
       }
 
@@ -96,9 +105,8 @@ export async function POST(req: Request) {
         break;
     }
 
-    return new NextResponse('OK', { status: 200 });
-  } catch (err: any) {
-    console.error('❌ Webhook processing error:', err?.message || err);
-    return new NextResponse('Webhook handler failed', { status: 500 });
+    return NextResponse.json({ received: true }, { status: 200 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message || String(e) }, { status: 500 });
   }
 }
