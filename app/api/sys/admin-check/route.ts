@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { checkAdmin } from "@/lib/adminAuth";
 
@@ -9,7 +11,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     ok: true,
     ...result,
-    runtime: process.env.VERCEL ? "nodejs" : "local",
+    runtime: "nodejs",
     vercelEnv: process.env.VERCEL_ENV ?? null,
   });
 }
