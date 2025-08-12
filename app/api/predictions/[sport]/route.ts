@@ -9,7 +9,7 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-// Do NOT type the second argument; Next's analyzer can reject custom types here.
+// NOTE: do NOT type the 2nd arg; Next 15 route analyzer is picky.
 export async function GET(req: Request, context: any) {
   try {
     const sport: string = context?.params?.sport;
@@ -24,7 +24,6 @@ export async function GET(req: Request, context: any) {
     const season = Number(seasonStr);
 
     const isWeekly = sport === "nfl" || sport === "ncaaf";
-
     let q = supabase
       .from("ai_research_predictions")
       .select("*")
@@ -33,16 +32,17 @@ export async function GET(req: Request, context: any) {
       .order("game_date", { ascending: true });
 
     if (isWeekly) {
-      if (!weekStr || Number.isNaN(Number(weekStr))) {
+      const weekNum = Number(weekStr);
+      if (!Number.isFinite(weekNum)) {
         return NextResponse.json(
           { error: "Missing ?week for this sport" },
           { status: 400 }
         );
       }
-      q = q.eq("week", Number(weekStr));
+      q = q.eq("week", weekNum);
     } else {
-      // Non-weekly sports: only rows that have week = NULL
-      q = q.is("week", null);
+      // Non-weekly sports normalized to week=0
+      q = q.eq("week", 0);
     }
 
     const { data, error } = await q;
@@ -53,7 +53,7 @@ export async function GET(req: Request, context: any) {
         ok: true,
         sport,
         season,
-        week: isWeekly ? Number(weekStr) : null,
+        week: isWeekly ? Number(weekStr) : 0,
         isWeekly,
         count: data?.length ?? 0,
         data,
