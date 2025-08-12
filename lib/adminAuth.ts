@@ -4,7 +4,7 @@ export type AdminCheck =
   | { ok: true; envLen: number; headerLen: number }
   | { ok: false; reason: string; envLen?: number; headerLen?: number };
 
-/** Pulls token from `x-admin-token` or `Authorization: Bearer <token>` */
+/** Pulls token from x-admin-token or Authorization Bearer <token> */
 export function getIncomingToken(req: Request): string | null {
   const h = req.headers;
   const raw =
@@ -19,6 +19,7 @@ export function getIncomingToken(req: Request): string | null {
   return v || null;
 }
 
+/** Constant time compare, returns structured result for optional debugging */
 export function checkAdmin(req: Request): AdminCheck {
   const expected = (process.env.ADMIN_TOKEN || "").trim();
   if (!expected) return { ok: false, reason: "missing ADMIN_TOKEN env" };
@@ -42,4 +43,15 @@ export function checkAdmin(req: Request): AdminCheck {
   return match
     ? { ok: true, headerLen: a.length, envLen: b.length }
     : { ok: false, reason: "token mismatch", headerLen: a.length, envLen: b.length };
+}
+
+/** Simple boolean helper for route handlers */
+export function requireAdmin(req: Request): boolean {
+  return checkAdmin(req).ok;
+}
+
+/** Optional helper if you want a reason string for 401 responses in non production */
+export function adminFailureReason(req: Request): string | null {
+  const res = checkAdmin(req);
+  return res.ok ? null : res.reason || "unauthorized";
 }
