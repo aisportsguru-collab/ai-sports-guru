@@ -1,182 +1,221 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 
-type SpreadPick = { team: string; line: number; edge: number };
-type OuPick = { total: number; pick: "Over" | "Under"; edge: number };
-type Prediction = {
+type SpreadPick = { team: string; line: number; edge: number } | null;
+type OuPick = { total: number; pick: "Over" | "Under"; edge: number } | null;
+
+export type PredictionRow = {
   id: string;
   sport: string;
   season: number;
   week: number | null;
-  game_date: string; // YYYY-MM-DD
+  game_date: string; // ISO date
   home_team: string;
   away_team: string;
   predicted_winner: string | null;
-  confidence: number | null; // 0..1
-  spread_pick: SpreadPick | null;
-  ou_pick: OuPick | null;
+  confidence: number | null;
+  spread_pick: SpreadPick;
+  ou_pick: OuPick;
   offense_favor: string | null;
   defense_favor: string | null;
   key_players_home: string[] | null;
   key_players_away: string[] | null;
-  source_tag: string | null;
 };
 
-const WEEKLY = new Set(["nfl", "ncaaf"]);
-
-function pct(n: number | null | undefined) {
-  if (typeof n !== "number" || Number.isNaN(n)) return null;
-  return Math.round(n * 100);
-}
-
-export default function PredictionsPage({
-  sport,
-  title,
-  weekly = false,
-}: {
+type Props = {
   sport: string;
   title: string;
-  weekly?: boolean;
-}) {
-  const [items, setItems] = useState<Prediction[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  defaultSeason?: number;
+  defaultWeek?: number;
+  isWeekly?: boolean;      // true for NFL/NCAAF, false for daily leagues
+  showControls?: boolean;  // hide filters on public pages
+};
 
-  const season = useMemo(() => new Date().getUTCFullYear(), []);
-  const week = useMemo(() => (weekly ? 1 : 0), [weekly]);
+function formatPct(n?: number | null) {
+  if (n == null) return "—";
+  return `${Math.round(n * 100)}%`;
+}
+
+function formatEdge(n?: number | null) {
+  if (n == null) return "—";
+  return `edge ${Math.round(n * 100)}%`;
+}
+
+function niceDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+async function fetchPredictions(
+  sport: string,
+  season: number,
+  week?: number
+): Promise<PredictionRow[]> {
+  const qs = new URLSearchParams({ season: String(season) });
+  if (typeof week === "number") qs.set("week", String(week));
+  const res = await fetch(`/api/predictions/${sport}?` + qs.toString(), {
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json?.data ?? [];
+}
+
+function Inner({
+  sport,
+  title,
+  defaultSeason,
+  defaultWeek,
+  isWeekly,
+  showControls,
+}: Props) {
+  const now = useMemo(() => new Date(), []);
+  const initialSeason = defaultSeason ?? now.getFullYear();
+  const [season, setSeason] = useState<number>(initialSeason);
+  const [week, setWeek] = useState<number | undefined>(
+    isWeekly ? defaultWeek ?? 1 : undefined
+  );
+  const [rows, setRows] = useState<PredictionRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let url = `/api/predictions/${sport}?season=${season}`;
-    if (weekly || WEEKLY.has(sport)) {
-      url += `&week=${week}`;
-    }
+    let cancelled = false;
     setLoading(true);
-    setErr(null);
-    fetch(url)
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const j = await r.json();
-        setItems(Array.isArray(j.data) ? j.data : []);
+    fetchPredictions(sport, season, isWeekly ? week : undefined)
+      .then((data) => {
+        if (!cancelled) setRows(data);
       })
-      .catch((e) => setErr(String(e)))
-      .finally(() => setLoading(false));
-  }, [sport, season, week, weekly]);
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [sport, season, week, isWeekly]);
 
   return (
     <section className="py-12 px-4 max-w-6xl mx-auto min-h-screen bg-black text-white">
-      <h1 className="text-4xl font-bold text-center text-yellow-400 mb-10">
+      <h1 className="text-3xl md:text-4xl font-bold text-yellow-400 mb-6">
         {title}
       </h1>
+      <p className="text-sm text-gray-400 mb-8">
+        Moneyline, spread, and totals (if available).
+      </p>
 
-      {loading && <p className="text-center text-gray-400">Loading…</p>}
-      {!loading && err && (
-        <p className="text-center text-red-400">Error: {err}</p>
-      )}
+      {/* Optional controls (hidden on public pages) */}
+      {showControls && (
+        <div className="flex items-center gap-4 mb-8">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-300">Season</label>
+            <input
+              type="number"
+              className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 w-24"
+              value={season}
+              onChange={(e) => setSeason(parseInt(e.target.value || "0", 10))}
+            />
+          </div>
 
-      {!loading && !err && (items?.length ?? 0) === 0 && (
-        <p className="text-center text-gray-400">
-          No predictions available yet.
-        </p>
-      )}
-
-      {!loading && !err && items && items.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {items.map((g) => {
-            const conf = pct(g.confidence);
-            return (
-              <div
-                key={g.id}
-                className="bg-gray-900 rounded-2xl shadow-md p-6 border border-gray-700"
-              >
-                <div className="text-xl font-semibold mb-1 text-yellow-400">
-                  {g.away_team} @ {g.home_team}
-                </div>
-                <div className="text-sm text-gray-400 mb-4">
-                  {new Date(g.game_date + "T00:00:00Z").toLocaleDateString()}
-                </div>
-
-                <div className="space-y-3 text-sm">
-                  {g.predicted_winner && (
-                    <div>
-                      <span className="text-gray-400">Moneyline:</span>{" "}
-                      <span className="text-yellow-400 font-bold">
-                        {g.predicted_winner}
-                      </span>
-                      {typeof conf === "number" && (
-                        <span className="text-gray-400"> ({conf}%)</span>
-                      )}
-                    </div>
-                  )}
-
-                  {g.spread_pick && (
-                    <div>
-                      <span className="text-gray-400">Spread:</span>{" "}
-                      <span className="text-yellow-400 font-bold">
-                        {g.spread_pick.team} {g.spread_pick.line}
-                      </span>{" "}
-                      <span className="text-gray-400">
-                        (edge {pct(g.spread_pick.edge)}%)
-                      </span>
-                    </div>
-                  )}
-
-                  {g.ou_pick && (
-                    <div>
-                      <span className="text-gray-400">Total:</span>{" "}
-                      <span className="text-yellow-400 font-bold">
-                        {g.ou_pick.pick} {g.ou_pick.total}
-                      </span>{" "}
-                      <span className="text-gray-400">
-                        (edge {pct(g.ou_pick.edge)}%)
-                      </span>
-                    </div>
-                  )}
-
-                  {(g.offense_favor || g.defense_favor) && (
-                    <div className="pt-2 border-t border-gray-800">
-                      {g.offense_favor && (
-                        <div>
-                          <span className="text-gray-400">Offense:</span>{" "}
-                          {g.offense_favor}
-                        </div>
-                      )}
-                      {g.defense_favor && (
-                        <div>
-                          <span className="text-gray-400">Defense:</span>{" "}
-                          {g.defense_favor}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {(g.key_players_home || g.key_players_away) && (
-                    <div className="pt-2 border-t border-gray-800 text-xs">
-                      {g.key_players_home && g.key_players_home.length > 0 && (
-                        <div>
-                          <span className="text-gray-400">Home key:</span>{" "}
-                          {g.key_players_home.join(", ")}
-                        </div>
-                      )}
-                      {g.key_players_away && g.key_players_away.length > 0 && (
-                        <div>
-                          <span className="text-gray-400">Away key:</span>{" "}
-                          {g.key_players_away.join(", ")}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {isWeekly && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-300">Week</label>
+              <input
+                type="number"
+                className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 w-20"
+                value={week ?? 1}
+                onChange={(e) => setWeek(parseInt(e.target.value || "1", 10))}
+              />
+            </div>
+          )}
         </div>
       )}
 
-      <p className="text-xs text-gray-500 text-center mt-12 max-w-2xl mx-auto">
-        AI predictions are for educational and entertainment purposes only. No
-        outcome is guaranteed. Please gamble responsibly.
+      <div className="overflow-x-auto rounded-2xl border border-gray-800 bg-[#0c1118]">
+        <table className="min-w-full text-sm">
+          <thead className="bg-[#0e1522] text-gray-300">
+            <tr className="divide-x divide-gray-800">
+              <th className="px-4 py-3 text-left">Date</th>
+              <th className="px-4 py-3 text-left">Away</th>
+              <th className="px-4 py-3 text-left">Home</th>
+              <th className="px-4 py-3 text-left">Predicted Winner</th>
+              <th className="px-4 py-3 text-left">Conf.</th>
+              <th className="px-4 py-3 text-left">Spread Pick</th>
+              <th className="px-4 py-3 text-left">Total Pick</th>
+              <th className="px-4 py-3 text-left">Offense — Favor</th>
+              <th className="px-4 py-3 text-left">Defense — Favor</th>
+              <th className="px-4 py-3 text-left">Key Players (Home)</th>
+              <th className="px-4 py-3 text-left">Key Players (Away)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-800 text-gray-200">
+            {loading ? (
+              <tr>
+                <td className="px-4 py-6 text-gray-400" colSpan={11}>
+                  Loading…
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-gray-400" colSpan={11}>
+                  No predictions found.
+                </td>
+              </tr>
+            ) : (
+              rows.map((r) => (
+                <tr key={r.id} className="divide-x divide-gray-800">
+                  <td className="px-4 py-3">{niceDate(r.game_date)}</td>
+                  <td className="px-4 py-3">{r.away_team}</td>
+                  <td className="px-4 py-3">{r.home_team}</td>
+                  <td className="px-4 py-3 font-semibold">
+                    {r.predicted_winner ?? "—"}
+                  </td>
+                  <td className="px-4 py-3">{formatPct(r.confidence)}</td>
+                  <td className="px-4 py-3">
+                    {r.spread_pick
+                      ? `${r.spread_pick.team} ${
+                          r.spread_pick.line > 0
+                            ? `+${r.spread_pick.line}`
+                            : r.spread_pick.line
+                        } (${formatEdge(r.spread_pick.edge)})`
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {r.ou_pick
+                      ? `${r.ou_pick.pick} ${r.ou_pick.total} (${formatEdge(
+                          r.ou_pick.edge
+                        )})`
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3">{r.offense_favor ?? "—"}</td>
+                  <td className="px-4 py-3">{r.defense_favor ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {(r.key_players_home ?? []).join(", ") || "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {(r.key_players_away ?? []).join(", ") || "—"}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-xs text-gray-500 text-center mt-6">
+        *For entertainment purposes only. No guarantees. Source: AI daily
+        research.
       </p>
     </section>
+  );
+}
+
+export default function PredictionsPage(props: Props) {
+  // Next 15 requires suspense around client hooks used inside trees.
+  return (
+    <Suspense fallback={<section className="py-12 px-4 max-w-6xl mx-auto text-gray-400">Loading…</section>}>
+      <Inner {...props} />
+    </Suspense>
   );
 }
