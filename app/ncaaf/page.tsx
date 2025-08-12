@@ -1,4 +1,16 @@
 import PredictionsPage from "@/components/PredictionsPage";
-export default function Page() {
-  return <PredictionsPage sport="ncaaf" title="NCAAF Predictions" weekly />;
+
+const currentYear = new Date().getFullYear();
+
+export default function NCAAFPage() {
+  return (
+    <PredictionsPage
+      sport="ncaaf"
+      title="NCAAF — AI Research Picks"
+      defaultSeason={currentYear}
+      defaultWeek={1}
+      isWeekly
+      showControls={false}
+    />
+  );
 }

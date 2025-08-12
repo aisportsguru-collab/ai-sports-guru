@@ -1,4 +1,14 @@
 import PredictionsPage from "@/components/PredictionsPage";
-export default function Page() {
-  return <PredictionsPage sport="ncaab" title="NCAAB Predictions" />;
+
+const currentYear = new Date().getFullYear();
+
+export default function NCAABPage() {
+  return (
+    <PredictionsPage
+      sport="ncaab"
+      title="NCAAB — AI Research Picks"
+      defaultSeason={currentYear}
+      showControls={false}
+    />
+  );
 }

@@ -1,4 +1,14 @@
 import PredictionsPage from "@/components/PredictionsPage";
-export default function Page() {
-  return <PredictionsPage sport="mlb" title="MLB Predictions" />;
+
+const currentYear = new Date().getFullYear();
+
+export default function MLBPage() {
+  return (
+    <PredictionsPage
+      sport="mlb"
+      title="MLB — AI Research Picks"
+      defaultSeason={currentYear}
+      showControls={false}
+    />
+  );
 }
