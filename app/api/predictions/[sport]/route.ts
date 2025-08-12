@@ -1,78 +1,66 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "nodejs";
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
+);
 
-export async function GET(req: Request, ctx: any) {
-  // Next 15 is picky about the 2nd arg type; using `any` avoids the compiler error.
-  const sport = String(ctx?.params?.sport ?? "").toLowerCase();
+type Ctx = { params: { sport: string } };
 
-  const url = new URL(req.url);
-  const season = Number(url.searchParams.get("season") || "2025");
-  const week = Number(url.searchParams.get("week") || "1");
-  const debug = url.searchParams.get("debug") === "1";
-
-  if (!sport) {
-    return NextResponse.json({ error: "Missing sport" }, { status: 400 });
-  }
-  if (!Number.isFinite(season) || !Number.isFinite(week)) {
-    return NextResponse.json({ error: "Invalid season/week" }, { status: 400 });
-  }
-
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    console.error("[predictions] Missing envs", {
-      hasUrl: !!SUPABASE_URL,
-      hasKey: !!SUPABASE_SERVICE_ROLE_KEY,
-    });
-    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
-  }
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
+export async function GET(req: Request, ctx: Ctx) {
   try {
-    const { data, error } = await supabase
+    const { sport } = ctx.params;
+    const url = new URL(req.url);
+    const seasonStr = url.searchParams.get("season");
+    const weekStr = url.searchParams.get("week");
+    const debug = url.searchParams.get("debug") === "1";
+
+    if (!seasonStr) {
+      return NextResponse.json({ error: "Missing ?season" }, { status: 400 });
+    }
+    const season = Number(seasonStr);
+
+    const isWeekly = sport === "nfl" || sport === "ncaaf";
+
+    let q = supabase
       .from("ai_research_predictions")
       .select("*")
       .eq("sport", sport)
       .eq("season", season)
-      .eq("week", week)
       .order("game_date", { ascending: true });
 
-    if (error) {
-      console.error("[predictions] Supabase select error:", {
-        message: error.message,
-        details: (error as any).details,
-        hint: (error as any).hint,
-        code: (error as any).code,
-      });
-      return NextResponse.json({ error: "Failed to fetch predictions" }, { status: 500 });
+    if (isWeekly) {
+      const weekNum = weekStr !== null ? Number(weekStr) : NaN;
+      if (!Number.isFinite(weekNum)) {
+        // You can swap this to auto-compute current week if you prefer
+        return NextResponse.json({ error: "Missing ?week for this sport" }, { status: 400 });
+      }
+      q = q.eq("week", weekNum);
+    } else {
+      // Non-weekly sports: only rows where week IS NULL
+      q = q.is("week", null);
     }
+
+    const { data, error } = await q;
+    if (error) throw error;
 
     if (debug) {
       return NextResponse.json({
         ok: true,
-        count: data?.length || 0,
-        env: {
-          hasUrl: !!SUPABASE_URL,
-          hasKey: !!SUPABASE_SERVICE_ROLE_KEY,
-          runtime: "nodejs",
-          vercelEnv: process.env.VERCEL_ENV,
-        },
+        sport,
+        season,
+        week: isWeekly ? Number(weekStr) : null,
+        isWeekly,
+        count: data?.length ?? 0,
         data,
       });
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json({ data: data ?? [] });
   } catch (err: any) {
-    console.error("[predictions] Unexpected error:", {
-      message: err?.message,
-      stack: err?.stack,
-    });
+    console.error("Predictions fetch error:", err);
     return NextResponse.json({ error: "Failed to fetch predictions" }, { status: 500 });
   }
 }
