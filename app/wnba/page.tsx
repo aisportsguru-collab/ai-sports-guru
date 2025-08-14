@@ -1,14 +1,5 @@
-import PredictionsPage from "@/components/PredictionsPage";
-
-const currentYear = new Date().getFullYear();
+import PredictionsGrid from "@/components/PredictionsGrid";
 
 export default function WNBAPage() {
-  return (
-    <PredictionsPage
-      sport="wnba"
-      title="WNBA — AI Research Picks"
-      defaultSeason={currentYear}
-      showControls={false}
-    />
-  );
+  return <PredictionsGrid sport="wnba" initialDaysFrom={0} />;
 }

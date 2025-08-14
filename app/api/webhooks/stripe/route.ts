@@ -1,112 +1,181 @@
-import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+import { headers } from 'next/headers';
+import Stripe from 'stripe';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { toTriStatus } from '@/lib/subscription';
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!;
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-} as const;
+type Json = Record<string, any>;
 
-async function buffer(readable: ReadableStream<Uint8Array>) {
-  const reader = readable.getReader();
-  const chunks: Uint8Array[] = [];
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) chunks.push(value);
-  }
-  return Buffer.concat(chunks);
+async function insertEventLog(id: string, type: string, payload: Json) {
+  const { data: existing } = await supabaseAdmin
+    .from('webhook_events')
+    .select('id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (existing) return false;
+
+  await supabaseAdmin.from('webhook_events').insert({
+    id,
+    type,
+    payload,
+    success: false,
+    message: 'received',
+  });
+
+  return true;
 }
 
-export async function POST(req: NextRequest) {
+async function markEventProcessed(id: string, ok: boolean, message: string) {
+  await supabaseAdmin
+    .from('webhook_events')
+    .update({ processed_at: new Date().toISOString(), success: ok, message })
+    .eq('id', id);
+}
+
+async function setSubscriptionStatusByCustomerId(
+  stripeCustomerId: string,
+  status: 'active' | 'trialing' | 'none'
+) {
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('id, subscription_status, stripe_customer_id')
+    .eq('stripe_customer_id', stripeCustomerId)
+    .maybeSingle();
+
+  if (!profile) return { updated: false };
+  if (profile.subscription_status === status) return { updated: true };
+
+  const { error: upErr } = await supabaseAdmin
+    .from('profiles')
+    .update({ subscription_status: status })
+    .eq('id', profile.id);
+
+  if (upErr) throw upErr;
+  return { updated: true };
+}
+
+async function setSubscriptionStatusByEmail(
+  email: string,
+  stripeCustomerId: string | null,
+  status: 'active' | 'trialing' | 'none'
+) {
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('id, subscription_status, stripe_customer_id')
+    .eq('email', email.toLowerCase())
+    .maybeSingle();
+
+  if (!profile) return { updated: false };
+
+  const patch: Record<string, any> = { subscription_status: status };
+  if (stripeCustomerId && !profile.stripe_customer_id) patch.stripe_customer_id = stripeCustomerId;
+
+  const { error: upErr } = await supabaseAdmin
+    .from('profiles')
+    .update(patch)
+    .eq('id', profile.id);
+
+  if (upErr) throw upErr;
+  return { updated: true };
+}
+
+async function updateFromStripeSubscription(sub: Stripe.Subscription) {
+  const tri = toTriStatus(sub.status);
+  const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
+  await setSubscriptionStatusByCustomerId(customerId, tri);
+}
+
+export async function GET() {
+  // simple health check
+  return new Response('stripe webhook ok', { status: 200 });
+}
+
+export async function POST(req: Request) {
+  const sig = headers().get('stripe-signature');
+  if (!sig) return new Response('Missing Stripe signature', { status: 400 });
+
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) return new Response('Missing STRIPE_WEBHOOK_SECRET', { status: 500 });
+
+  const raw = Buffer.from(await req.arrayBuffer());
+
+  let event: Stripe.Event;
   try {
-    if (!STRIPE_WEBHOOK_SECRET) {
-      return NextResponse.json({ error: "Missing STRIPE_WEBHOOK_SECRET" }, { status: 500 });
-    }
+    event = stripe.webhooks.constructEvent(raw, sig, secret);
+  } catch (err: any) {
+    // extra logging to server console to help diagnose bad secret or body mismatch
+    console.error('[stripe] signature verification failed:', err?.message);
+    return new Response(`Webhook Error: ${err?.message ?? 'invalid signature'}`, { status: 400 });
+  }
 
-    const buf = await buffer(req.body!);
-    const sig = req.headers.get("stripe-signature") as string;
+  const eventId = event.id;
+  const eventType = event.type;
+  await insertEventLog(eventId, eventType, event.data.object as any);
 
-    let event: Stripe.Event;
-    try {
-      event = stripe.webhooks.constructEvent(buf, sig, STRIPE_WEBHOOK_SECRET);
-    } catch (err: any) {
-      return NextResponse.json({ error: `Webhook signature verification failed: ${err.message}` }, { status: 400 });
-    }
-
-    switch (event.type) {
-      case "checkout.session.completed": {
+  try {
+    switch (eventType) {
+      case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        // user_id was set in metadata in create-checkout-session
-        const userId = (session.metadata?.user_id || session.subscription && (await stripe.subscriptions.retrieve(String(session.subscription))).metadata?.user_id || "").trim();
-        const customerId = String(session.customer || "");
-        if (userId) {
-          await supabase.from("profiles").update({
-            stripe_customer_id: customerId || null,
-          }).eq("id", userId);
+        const customerId = (session.customer as string) ?? null;
+        const email =
+          session.customer_details?.email ||
+          (typeof session.customer_email === 'string' ? session.customer_email : '') ||
+          '';
+
+        if (session.subscription) {
+          const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+          const tri = toTriStatus(sub.status);
+          if (customerId) {
+            await setSubscriptionStatusByCustomerId(customerId, tri);
+          } else if (email) {
+            await setSubscriptionStatusByEmail(email, sub.customer as string, tri);
+          }
+        } else if (customerId) {
+          await setSubscriptionStatusByCustomerId(customerId, 'active');
+        } else if (email) {
+          await setSubscriptionStatusByEmail(email, null, 'active');
         }
         break;
       }
 
-      case "customer.subscription.created":
-      case "customer.subscription.updated": {
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription;
-        const userId = (sub.metadata?.user_id || "").trim();
-
-        // find profile by userId if present, else by customer id
-        let eqColumn: "id" | "stripe_customer_id" = "id";
-        let eqValue: string | null = userId || null;
-
-        if (!eqValue) {
-          const customerId = String(sub.customer || "");
-          eqColumn = "stripe_customer_id";
-          eqValue = customerId || null;
-        }
-
-        if (!eqValue) break;
-
-        const status = sub.status;
-        const currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
-
-        // role logic: active/past_due/trialing → pro; canceled/unpaid/incomplete_expired → free
-        const toPro = ["active", "trialing", "past_due"].includes(status);
-        await supabase.from("profiles").update({
-          stripe_subscription_id: sub.id,
-          stripe_subscription_status: status,
-          stripe_current_period_end: currentPeriodEnd,
-          role: toPro ? "pro" : "free",
-        }).eq(eqColumn, eqValue);
-
+        await updateFromStripeSubscription(sub);
         break;
       }
 
-      case "customer.subscription.deleted": {
+      case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription;
-        const customerId = String(sub.customer || "");
-        await supabase.from("profiles").update({
-          stripe_subscription_id: null,
-          stripe_subscription_status: "canceled",
-          role: "free",
-        }).eq("stripe_customer_id", customerId);
+        const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
+        await setSubscriptionStatusByCustomerId(customerId, 'none');
         break;
       }
 
+      case 'invoice.paid': {
+        const inv = event.data.object as Stripe.Invoice;
+        const customerId = inv.customer as string | null;
+        const email = inv.customer_email || '';
+        if (customerId) await setSubscriptionStatusByCustomerId(customerId, 'active');
+        else if (email) await setSubscriptionStatusByEmail(email, null, 'active');
+        break;
+      }
+
+      // ignore the rest
       default:
-        // ignore other events
         break;
     }
 
-    return NextResponse.json({ received: true }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || String(e) }, { status: 500 });
+    await markEventProcessed(eventId, true, 'processed');
+    return new Response('ok', { status: 200 });
+  } catch (err: any) {
+    console.error('[stripe] handler error:', err);
+    await markEventProcessed(eventId, false, err?.message ?? 'error');
+    return new Response('Handler Error', { status: 500 });
   }
 }

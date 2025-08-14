@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "AI Sports Guru",
+    "slug": "aisportsguru-mobile",
+    "scheme": "aisportsguru",
+    "ios": { "bundleIdentifier": "com.aisportsguru.app", "supportsTablet": false },
+    "android": { "package": "com.aisportsguru.app" },
+    "plugins": []
+  }
+}

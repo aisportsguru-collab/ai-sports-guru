@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useRole } from "../../../hooks/useRole";
+import PaywallBlur from "../../../components/PaywallBlur";
 
 type Row = {
   external_id: string | null;
@@ -58,9 +60,10 @@ function badge(status?: string | null) {
 
 export default function MLBClient() {
   const router = useRouter();
-  const sp = useSearchParams(); // can be null at type-level in Next 15
+  const sp = useSearchParams();
+  const { role, loading: roleLoading } = useRole();
 
-  // URL state (null-safe reads)
+  // URL state (null-safe)
   const [season, setSeason] = useState<number | "">(() => {
     const s = sp?.get("season") ?? null;
     return s ? Number(s) : new Date().getUTCFullYear();
@@ -107,6 +110,78 @@ export default function MLBClient() {
   const onApplyFilters = () => setPage(1);
   const canPrev = meta.page > 1;
   const canNext = meta.page < meta.totalPages;
+
+  const body = (
+    <div className="border rounded-lg overflow-hidden">
+      <table className="min-w-full text-sm">
+        <thead className="bg-gray-100 text-black">
+          <tr>
+            <th className="text-left p-3">Matchup</th>
+            <th className="text-left p-3">Start</th>
+            <th className="text-left p-3">Moneyline A,H</th>
+            <th className="text-left p-3">Spread H (A,H)</th>
+            <th className="text-left p-3">Total (O,U)</th>
+            <th className="text-left p-3">Model Picks</th>
+            <th className="text-left p-3">Conf</th>
+            <th className="text-left p-3">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => {
+            const key = r.external_id || `${r.home_team}-${r.away_team}-${r.commence_time || i}`;
+            return (
+              <tr key={key} className="border-t">
+                <td className="p-3">
+                  <div className="font-medium">
+                    {r.away_team} at {r.home_team}
+                  </div>
+                </td>
+                <td className="p-3">{safeDate(r.commence_time)}</td>
+                <td className="p-3">
+                  {fmtMoney(r.moneyline_away)} , {fmtMoney(r.moneyline_home)}
+                </td>
+                <td className="p-3">
+                  {r.spread_line != null ? (
+                    <>
+                      {r.spread_line >= 0 ? "+" : ""}{r.spread_line}{" "}
+                      <span className="text-gray-400">
+                        ( {fmtMoney(r.spread_price_away)} , {fmtMoney(r.spread_price_home)} )
+                      </span>
+                    </>
+                  ) : "—"}
+                </td>
+                <td className="p-3">
+                  {r.total_line != null ? (
+                    <>
+                      {fmtNum(r.total_line)}{" "}
+                      <span className="text-gray-400">
+                        ( {fmtMoney(r.total_over_price)} , {fmtMoney(r.total_under_price)} )
+                      </span>
+                    </>
+                  ) : "—"}
+                </td>
+                <td className="p-3">
+                  <div>ML, {r.pick_moneyline ?? "—"}</div>
+                  <div>Spread, {r.pick_spread ?? "—"}</div>
+                  <div>Total, {r.pick_total ?? "—"}</div>
+                  {r.rationale ? <div className="text-xs text-gray-500 mt-1">{r.rationale}</div> : null}
+                </td>
+                <td className="p-3">
+                  <div>ML, {r.conf_moneyline ?? "—"}%</div>
+                  <div>Spr, {r.conf_spread ?? "—"}%</div>
+                  <div>Tot, {r.conf_total ?? "—"}%</div>
+                </td>
+                <td className="p-3">{badge(r.result_status)}</td>
+              </tr>
+            );
+          })}
+          {rows.length === 0 && !loading && (
+            <tr className="border-t"><td className="p-4 text-center text-gray-400" colSpan={8}>No results.</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 
   if (loading && rows.length === 0) {
     return <div className="p-6">Loading…</div>;
@@ -161,76 +236,14 @@ export default function MLBClient() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-100 text-black">
-            <tr>
-              <th className="text-left p-3">Matchup</th>
-              <th className="text-left p-3">Start</th>
-              <th className="text-left p-3">Moneyline A,H</th>
-              <th className="text-left p-3">Spread H (A,H)</th>
-              <th className="text-left p-3">Total (O,U)</th>
-              <th className="text-left p-3">Model Picks</th>
-              <th className="text-left p-3">Conf</th>
-              <th className="text-left p-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => {
-              const key = r.external_id || `${r.home_team}-${r.away_team}-${r.commence_time || i}`;
-              return (
-                <tr key={key} className="border-t">
-                  <td className="p-3">
-                    <div className="font-medium">
-                      {r.away_team} at {r.home_team}
-                    </div>
-                  </td>
-                  <td className="p-3">{safeDate(r.commence_time)}</td>
-                  <td className="p-3">
-                    {fmtMoney(r.moneyline_away)} , {fmtMoney(r.moneyline_home)}
-                  </td>
-                  <td className="p-3">
-                    {r.spread_line != null ? (
-                      <>
-                        {r.spread_line >= 0 ? "+" : ""}{r.spread_line}{" "}
-                        <span className="text-gray-400">
-                          ( {fmtMoney(r.spread_price_away)} , {fmtMoney(r.spread_price_home)} )
-                        </span>
-                      </>
-                    ) : "—"}
-                  </td>
-                  <td className="p-3">
-                    {r.total_line != null ? (
-                      <>
-                        {fmtNum(r.total_line)}{" "}
-                        <span className="text-gray-400">
-                          ( {fmtMoney(r.total_over_price)} , {fmtMoney(r.total_under_price)} )
-                        </span>
-                      </>
-                    ) : "—"}
-                  </td>
-                  <td className="p-3">
-                    <div>ML, {r.pick_moneyline ?? "—"}</div>
-                    <div>Spread, {r.pick_spread ?? "—"}</div>
-                    <div>Total, {r.pick_total ?? "—"}</div>
-                    {r.rationale ? <div className="text-xs text-gray-500 mt-1">{r.rationale}</div> : null}
-                  </td>
-                  <td className="p-3">
-                    <div>ML, {r.conf_moneyline ?? "—"}%</div>
-                    <div>Spr, {r.conf_spread ?? "—"}%</div>
-                    <div>Tot, {r.conf_total ?? "—"}%</div>
-                  </td>
-                  <td className="p-3">{badge(r.result_status)}</td>
-                </tr>
-              );
-            })}
-            {rows.length === 0 && !loading && (
-              <tr className="border-t"><td className="p-4 text-center text-gray-400" colSpan={8}>No results.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Gate: show full table for pro/admin; blur for free/signed-out */}
+      {roleLoading ? (
+        <div className="p-6">Checking your access…</div>
+      ) : role === "pro" || role === "admin" ? (
+        body
+      ) : (
+        <PaywallBlur>{body}</PaywallBlur>
+      )}
 
       {/* Pagination */}
       <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-3">

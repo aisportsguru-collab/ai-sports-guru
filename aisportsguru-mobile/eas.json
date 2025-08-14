@@ -1,0 +1,20 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "dev-sim": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "simulator": true }
+    },
+    "production": {
+      "android": {},
+      "ios": {}
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

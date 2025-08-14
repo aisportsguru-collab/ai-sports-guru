@@ -1,14 +1,5 @@
-import PredictionsPage from "@/components/PredictionsPage";
-
-const currentYear = new Date().getFullYear();
+import PredictionsGrid from "@/components/PredictionsGrid";
 
 export default function NHLPage() {
-  return (
-    <PredictionsPage
-      sport="nhl"
-      title="NHL — AI Research Picks"
-      defaultSeason={currentYear}
-      showControls={false}
-    />
-  );
+  return <PredictionsGrid sport="nhl" initialDaysFrom={0} />;
 }

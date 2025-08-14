@@ -1,14 +1,5 @@
-import PredictionsPage from "@/components/PredictionsPage";
-
-const currentYear = new Date().getFullYear();
+import PredictionsGrid from "@/components/PredictionsGrid";
 
 export default function NCAABPage() {
-  return (
-    <PredictionsPage
-      sport="ncaab"
-      title="NCAAB — AI Research Picks"
-      defaultSeason={currentYear}
-      showControls={false}
-    />
-  );
+  return <PredictionsGrid sport="ncaab" initialDaysFrom={0} />;
 }

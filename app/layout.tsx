@@ -1,24 +1,19 @@
-import '../styles/globals.css';
-import { ReactNode } from 'react';
-import Navbar from '../components/Navbar';
+import type { Metadata } from "next";
+import "./globals.css";
+import SupabaseListener from "@/components/SupabaseListener";
 
-export const metadata = {
-  title: 'AI Sports Guru',
-  description: 'Your AI-powered sports betting advisor for NFL, NBA, MLB, NHL, NCAAF, NCAAB and WNBA.'
+export const metadata: Metadata = {
+  title: "AI Sports Guru",
+  description: "AI-powered sports betting predictions",
 };
 
-interface RootLayoutProps {
-  children: ReactNode;
-}
-
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="antialiased">
-        {/* Persistent navigation bar */}
-        <Navbar />
-        {/* Main content area with max width and responsive padding */}
-        <main className="mx-auto max-w-6xl px-4 md:px-6 py-6">{children}</main>
+      <body>
+        {/* Keeps the server cookie in sync with client auth */}
+        <SupabaseListener />
+        {children}
       </body>
     </html>
   );

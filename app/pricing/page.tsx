@@ -1,39 +1,76 @@
-"use client";
+'use client';
 
-import SubscribeButton from "@/components/SubscribeButton";
+import { useState } from 'react';
+
+const MONTHLY_PRICE = 49.99;
+const ANNUAL_PRICE = 499.0; // two months free equivalent
 
 export default function PricingPage() {
+  const [loadingPlan, setLoadingPlan] = useState<null | 'monthly' | 'annual'>(null);
+
+  async function startCheckout(priceId: string) {
+    try {
+      setLoadingPlan(priceId === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ? 'monthly' : 'annual');
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        alert(`Checkout error. ${text}`);
+        setLoadingPlan(null);
+        return;
+      }
+      const { url } = await res.json();
+      window.location.href = url as string;
+    } catch (e: any) {
+      alert(`Network error. ${e?.message ?? 'Unknown error'}`);
+      setLoadingPlan(null);
+    }
+  }
+
+  const monthlyId = process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID || '';
+  const annualId = process.env.NEXT_PUBLIC_STRIPE_ANNUAL_PRICE_ID || '';
+
   return (
-    <main className="bg-black text-white min-h-screen flex flex-col items-center px-6 pt-20 pb-32">
-      <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-center">
-        Start Your Free Trial
-      </h1>
-      <p className="text-lg text-gray-300 text-center max-w-2xl mb-10">
-        Get full access to AI Sports Guru for 7 days, absolutely free. Cancel anytime.
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <h1 className="text-3xl font-bold text-center">Choose your plan</h1>
+      <p className="mt-3 text-center text-sm opacity-80">
+        Accurate AI predictions for NFL, NBA, NCAAF, NCAAB, NHL, and MLB. Cancel anytime.
       </p>
 
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 w-full max-w-xl text-center">
-        <h2 className="text-3xl font-bold mb-4">$49.99 / month</h2>
-        <p className="text-gray-300 mb-6">
-          Unlimited access to all AI predictions across all sports: NBA, NFL, NHL, MLB, NCAAF, NCAAB, and WNBA.
-        </p>
-
-        <ul className="text-left text-gray-300 space-y-3 mb-8">
-          <li>✅ Daily Moneyline, Spread, and Over/Under Predictions</li>
-          <li>✅ Confidence Scores with Every Pick</li>
-          <li>✅ Secure Login & Mobile-Friendly Interface</li>
-          <li>✅ One Subscription, All Sports Included</li>
-        </ul>
-
-        {/* Direct to Stripe Checkout */}
-        <div className="flex justify-center">
-          <SubscribeButton />
+      <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border p-6 shadow-sm">
+          <h2 className="text-xl font-semibold">Monthly</h2>
+          <p className="mt-2 text-3xl font-bold">${MONTHLY_PRICE.toFixed(2)}</p>
+          <p className="text-sm opacity-80">Billed monthly</p>
+          <button
+            disabled={loadingPlan !== null || !monthlyId}
+            onClick={() => startCheckout(monthlyId)}
+            className={`mt-6 w-full rounded-xl px-4 py-3 text-white ${loadingPlan ? 'bg-gray-400' : 'bg-black'} disabled:opacity-60`}
+          >
+            {loadingPlan === 'monthly' ? 'Redirecting…' : 'Start monthly'}
+          </button>
         </div>
 
-        <p className="text-sm text-gray-500 mt-6 italic">
-          Your card won&apos;t be charged until after the trial. Cancel anytime.
-        </p>
+        <div className="rounded-2xl border p-6 shadow-sm">
+          <h2 className="text-xl font-semibold">Annual</h2>
+          <p className="mt-2 text-3xl font-bold">${ANNUAL_PRICE.toFixed(0)}</p>
+          <p className="text-sm opacity-80">Pay once a year. Two months free</p>
+          <button
+            disabled={loadingPlan !== null || !annualId}
+            onClick={() => startCheckout(annualId)}
+            className={`mt-6 w-full rounded-xl px-4 py-3 text-white ${loadingPlan ? 'bg-gray-400' : 'bg-black'} disabled:opacity-60`}
+          >
+            {loadingPlan === 'annual' ? 'Redirecting…' : 'Start annual'}
+          </button>
+        </div>
       </div>
-    </main>
+
+      <p className="mt-8 text-center text-xs opacity-70">
+        By subscribing, you agree to our Terms of Service and Privacy Policy. Predictions are for entertainment and educational use only. No guarantees on outcomes. Please bet responsibly.
+      </p>
+    </div>
   );
 }
