@@ -1,7 +1,11 @@
 {
   "redirects": [
-    { "source": "http://www.aisportsguru.com/:path*", "destination": "https://aisportsguru.com/:path*", "permanent": true },
-    { "source": "https://www.aisportsguru.com/:path*", "destination": "https://aisportsguru.com/:path*", "permanent": true }
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.aisportsguru.com" }],
+      "destination": "https://aisportsguru.com/:path*",
+      "permanent": true
+    }
   ],
   "crons": [
     { "path": "/api/cron/warm-nfl", "schedule": "*/15 * * * *" }
