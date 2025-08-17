@@ -1,50 +1,87 @@
-import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Linking, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function Welcome() {
+function CheckBox({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
+  return (
+    <TouchableOpacity onPress={onToggle} style={[styles.checkbox, checked && styles.checkboxChecked]}>
+      {checked ? <Text style={styles.checkboxMark}>✓</Text> : null}
+    </TouchableOpacity>
+  );
+}
+
+export default function WelcomeScreen() {
   const router = useRouter();
-  const spin = useRef(new Animated.Value(0)).current;
+  const [accepted, setAccepted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  React.useEffect(() => {
-    Animated.loop(
-      Animated.timing(spin, { toValue: 1, duration: 6000, easing: Easing.linear, useNativeDriver: true })
-    ).start();
-  }, [spin]);
-
-  const rotate = spin.interpolate({ inputRange: [0,1], outputRange: ['0deg','360deg'] });
+  const continueNext = async () => {
+    if (!accepted) {
+      Alert.alert('Please accept', 'You must accept the Terms to continue.');
+      return;
+    }
+    try {
+      setSaving(true);
+      await AsyncStorage.setItem('tosAccepted', '1');
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'Could not save your acceptance. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <View style={styles.wrap}>
-      <Animated.View style={[styles.aura, { transform: [{ rotate }] }]} />
-      <Text style={styles.h}>AI Sports Guru</Text>
-      <Text style={styles.p}>
-        Model-driven picks for NFL, NBA, MLB, NHL, NCAAF, NCAAB and WNBA.
-      </Text>
-      <View style={{ height: 12 }} />
-      <View style={styles.bullets}>
-        <Text style={styles.b}>• Daily predictions cached for speed</Text>
-        <Text style={styles.b}>• Live odds via TheOddsAPI</Text>
-        <Text style={styles.b}>• Gated access by subscription</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0b0f2a' }}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Welcome to AI Sports Guru</Text>
+        <Text style={styles.subtitle}>
+          Predictions are informational and for educational and entertainment purposes only. 
+          No guarantee of outcomes. Wager responsibly and within your means.
+        </Text>
+
+        <View style={styles.acceptRow}>
+          <CheckBox checked={accepted} onToggle={() => setAccepted(v => !v)} />
+          <Text style={styles.acceptText}>
+            I agree to the 
+            <Text style={styles.link} onPress={() => router.push('/(onboarding)/terms')}> Terms of Use</Text>, 
+            <Text style={styles.link} onPress={() => router.push('/(public)/privacy')}> Privacy Policy</Text>, and 
+            <Text style={styles.link} onPress={() => router.push('/(public)/responsible')}> Responsible Gaming</Text>.
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={continueNext}
+          disabled={!accepted || saving}
+          style={[styles.cta, (!accepted || saving) && styles.ctaDisabled]}
+        >
+          <Text style={styles.ctaText}>{saving ? 'Saving...' : 'Continue'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => Linking.openURL('mailto:support@aisportsguru.com')}>
+          <Text style={styles.helpText}>Need help? Contact support</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.btn} onPress={() => router.replace('/(auth)/signup')}>
-        <Text style={styles.btnText}>Get Started</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.replace('/(auth)/login')} style={styles.ghost}>
-        <Text style={{ color:'#ddd' }}>I already have an account</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex:1, padding:24, justifyContent:'center', backgroundColor:'#0a0a0a' },
-  h: { color:'#fff', fontSize:28, fontWeight:'900', textAlign:'center', marginBottom:12 },
-  p: { color:'#bdbdbd', textAlign:'center' },
-  bullets: { marginTop:10, gap:6 },
-  b: { color:'#a3a3a3' },
-  btn: { marginTop:18, backgroundColor:'#ffd700', padding:14, borderRadius:12, alignItems:'center' },
-  btnText: { color:'#0a0a0a', fontWeight:'900' },
-  ghost: { marginTop:12, alignItems:'center' },
-  aura: { position:'absolute', top:90, alignSelf:'center', width:260, height:260, borderRadius:130, borderWidth:14, borderColor:'#1b1b1b', opacity:0.6 }
+  container: { flex: 1, padding: 24, justifyContent: 'center' },
+  title: { color: '#fff', fontSize: 28, fontWeight: '800', textAlign: 'center', marginBottom: 12 },
+  subtitle: { color: '#FFFFFFCC', fontSize: 14, lineHeight: 20, textAlign: 'center', marginBottom: 24 },
+  acceptRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 20 },
+  checkbox: {
+    width: 28, height: 28, borderRadius: 6, borderWidth: 2, borderColor: '#3fc060',
+    marginRight: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent',
+  },
+  checkboxChecked: { backgroundColor: '#3fc060' },
+  checkboxMark: { color: '#0b0f2a', fontSize: 18, fontWeight: '800' },
+  acceptText: { color: '#FFFFFFCC', flex: 1, fontSize: 14, lineHeight: 20 },
+  link: { color: '#7fdca5', textDecorationLine: 'underline' },
+  cta: { backgroundColor: '#3fc060', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginBottom: 12 },
+  ctaDisabled: { opacity: 0.6 },
+  ctaText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  helpText: { color: '#FFFFFF88', fontSize: 12, textAlign: 'center', marginTop: 8, textDecorationLine: 'underline' },
 });

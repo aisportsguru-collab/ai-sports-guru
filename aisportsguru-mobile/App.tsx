@@ -1,32 +1,17 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import LoginScreen from './screens/LoginScreen';
-import SportsListScreen from './screens/SportsListScreen';
-import PredictionsScreen from './screens/PredictionsScreen';
-import AccountScreen from './screens/AccountScreen';
+import React, { useEffect } from 'react';
+import { SafeAreaView } from 'react-native';
+import { configurePurchases } from './src/lib/purchases';
+import PaywallScreen from './src/screens/PaywallScreen';
 
-const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
-
-function MainTabs() {
-  return (
-    <Tab.Navigator>
-      <Tab.Screen name="Sports" component={SportsListScreen} />
-      <Tab.Screen name="Account" component={AccountScreen} />
-    </Tab.Navigator>
-  );
-}
+const RC_APP_USER_ID = process.env.RC_APP_USER_ID || "$RCAnonymousID:2a8617d150e946fcb7d27693cd921e02";
 
 export default function App() {
+  useEffect(() => {
+    configurePurchases(RC_APP_USER_ID);
+  }, []);
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Main" component={MainTabs} />
-        <Stack.Screen name="Predictions" component={PredictionsScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0F' }}>
+      <PaywallScreen />
+    </SafeAreaView>
   );
 }

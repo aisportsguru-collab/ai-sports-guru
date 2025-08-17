@@ -1,11 +1,10 @@
-import { Stack } from 'expo-router';
-import { useEffect } from 'react';
-import { configureRevenueCat } from '../lib/revenuecat';
+import { Slot } from 'expo-router';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
-  useEffect(() => {
-    configureRevenueCat();
-  }, []);
-
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <SafeAreaProvider>
+      <Slot />
+    </SafeAreaProvider>
+  );
 }

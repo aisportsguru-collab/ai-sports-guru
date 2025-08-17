@@ -1,0 +1,71 @@
+import React from "react";
+import { View, Text, Pressable, ActivityIndicator, ScrollView } from "react-native";
+import { useRouter } from "expo-router";
+import { useEntitlement } from "../../providers/EntitlementProvider";
+
+export default function Paywall() {
+  const router = useRouter();
+  const { isReady, isPro, loading, error, monthly, yearly, purchaseMonthly, purchaseYearly, restore, refresh } = useEntitlement();
+
+  React.useEffect(() => {
+    if (isReady && isPro) router.replace("/pro");
+  }, [isReady, isPro]);
+
+  const Button = ({ title, onPress }: { title: string; onPress: () => void }) => (
+    <Pressable
+      onPress={onPress}
+      disabled={loading}
+      style={{
+        backgroundColor: "#FFD400",
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: "center",
+        opacity: loading ? 0.7 : 1,
+        marginBottom: 16
+      }}
+    >
+      <Text style={{ fontSize: 16, fontWeight: "700", color: "#000" }}>{title}</Text>
+    </Pressable>
+  );
+
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: "#0B0B0F" }} contentContainerStyle={{ padding: 20 }}>
+      <Text style={{ color: "white", fontSize: 24, fontWeight: "800", marginBottom: 12 }}>
+        AI Sports Guru
+      </Text>
+      <Text style={{ color: "#B8B8C3", marginBottom: 24 }}>
+        Unlock full predictions for every league, priority updates, and premium tools.
+      </Text>
+
+      {!isReady && <ActivityIndicator />}
+
+      <Button
+        title={`Start Monthly ${monthly?.priceString ?? "$49.99"}`}
+        onPress={() => { purchaseMonthly(); }}
+      />
+      <Button
+        title={`Start Yearly ${yearly?.priceString ?? "$499.99"}`}
+        onPress={() => { purchaseYearly(); }}
+      />
+
+      <Pressable onPress={restore} style={{ alignSelf: "center", marginTop: 8 }}>
+        <Text style={{ color: "#9DA3AF", textDecorationLine: "underline" }}>Restore Purchases</Text>
+      </Pressable>
+
+      {error ? (
+        <View style={{ backgroundColor: "#3B0F0F", borderRadius: 10, padding: 12, marginTop: 16 }}>
+          <Text style={{ color: "#FFB4B4" }}>{error}</Text>
+        </View>
+      ) : null}
+
+      <View style={{ backgroundColor: "#0F172A", borderRadius: 10, padding: 12, marginTop: 16 }}>
+        <Text style={{ color: "#93C5FD", fontWeight: "700", marginBottom: 8 }}>Debug</Text>
+        <Text style={{ color: "#93C5FD" }}>monthly: {monthly?.identifier ?? "null"} ({monthly?.priceString ?? "$49.99"})</Text>
+        <Text style={{ color: "#93C5FD" }}>yearly:  {yearly?.identifier  ?? "null"} ({yearly?.priceString  ?? "$499.99"})</Text>
+        <Pressable onPress={refresh} style={{ marginTop: 8 }}>
+          <Text style={{ color: "#60A5FA", textDecorationLine: "underline" }}>Refresh</Text>
+        </Pressable>
+      </View>
+    </ScrollView>
+  );
+}

@@ -10,3 +10,6 @@ dist
 
 
 .env.local
+.vercel
+# local data captured from mobile ingest
+/.data/

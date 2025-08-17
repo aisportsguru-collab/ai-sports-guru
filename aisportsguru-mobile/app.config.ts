@@ -1,31 +1,36 @@
 import type { ExpoConfig } from 'expo/config';
+import appJson from './app.json';
 
-const config: ExpoConfig = {
-  name: 'AI Sports Guru',
-  slug: 'ai-sports-guru',
-  scheme: 'aisportsguru',
-  owner: 'aisportsguru',
-  version: '1.0.0',
-  orientation: 'portrait',
-  icon: './assets/icon.png',
-  ios: {
-    bundleIdentifier: 'com.aisportsguru.app',
-    supportsTablet: false,
-    buildNumber: '1.0.0',
-    infoPlist: {
-      // Answered "yes" to standard/exempt encryption -> set this to false
-      ITSAppUsesNonExemptEncryption: false
-    }
-  },
-  android: {
-    package: 'com.aisportsguru.app',
-    versionCode: 1
-  },
-  extra: {
-    eas: {
-      projectId: 'd7861c8f-a2c5-4f9e-a4f5-5b483dcaa789'
-    }
-  }
+export default (): ExpoConfig => {
+  const base = (appJson as any).expo ?? {};
+  const hasIconPng = true; // set to true; Expo will ignore if missing at build time for iOS dev
+
+  return {
+    ...base,
+
+    // Simple, classy splash (no stretched image)
+    splash: {
+      backgroundColor: '#0b0f2a',
+      resizeMode: 'contain',
+      dark: {
+        backgroundColor: '#0b0f2a',
+        resizeMode: 'contain',
+      },
+      light: {
+        backgroundColor: '#eaf0ff',
+        resizeMode: 'contain',
+      },
+    },
+
+    android: {
+      ...(base.android ?? {}),
+      // Point adaptive icon to a safe file if you have one; otherwise set a color only.
+      adaptiveIcon: hasIconPng
+        ? {
+            foregroundImage: './assets/icon.png',
+            backgroundColor: '#0b0f2a',
+          }
+        : undefined,
+    },
+  };
 };
-
-export default () => config;

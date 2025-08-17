@@ -1,34 +1,67 @@
-type Sport = {
-  key: string;
-  name: string;
-  // extend as needed
+export type Game = {
+  id: string;
+  league: "nfl";
+  kickoffISO: string;
+  home: string;
+  away: string;
+  odds: {
+    moneyline?: { home?: number; away?: number; book?: string };
+    spread?: {
+      home?: { point: number; price: number };
+      away?: { point: number; price: number };
+      book?: string;
+    };
+    total?: {
+      over?: { point: number; price: number };
+      under?: { point: number; price: number };
+      book?: string;
+    };
+  };
+  predictions?: {
+    moneyline?: { pick: "HOME" | "AWAY"; confidencePct: number };
+    spread?: { pick: "HOME" | "AWAY"; line: number; confidencePct: number };
+    total?: { pick: "OVER" | "UNDER"; line: number; confidencePct: number };
+  };
 };
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:3000/api';
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 
-type CacheEntry<T> = { at: number; data: T };
-const mem: Record<string, CacheEntry<any>> = {};
-
-export async function cachedFetch<T>(key: string, url: string, ttlMs = 60_000): Promise<T> {
-  const now = Date.now();
-  const hit = mem[key];
-  if (hit && now - hit.at < ttlMs) return hit.data as T;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = (await res.json()) as T;
-  mem[key] = { at: now, data };
-  return data;
+function ymd(d: Date): string {
+  return d.toISOString().slice(0, 10);
 }
 
-/** Predictions from your cached API (no direct Odds API hits) */
-export async function getPredictions(sport: string, daysFrom = 0) {
-  const url = `${API_BASE}/predictions/${encodeURIComponent(sport)}?daysFrom=${daysFrom}`;
-  return cachedFetch<any>(`pred:${sport}:${daysFrom}`, url, 60_000);
-}
+export async function listGames(
+  league: "nfl",
+  opts?: { from?: string; to?: string }
+): Promise<Game[]> {
+  const fromDate = new Date();
+  fromDate.setHours(0, 0, 0, 0);
+  const toDate = new Date(fromDate);
+  toDate.setDate(toDate.getDate() + 45);
 
-/** List of sports — you can adapt to your backend route if different */
-export async function getSportsList() {
-  const url = `${API_BASE}/predictions/sports`; // create server alias if needed
-  return cachedFetch<Sport[]>(`sports:list`, url, 60_000);
+  const from = opts?.from ?? ymd(fromDate);
+  const to = opts?.to ?? ymd(toDate);
+
+  const url = `${API_BASE}/api/games?league=${league}&from=${from}&to=${to}`;
+  try {
+    const res = await fetch(url, { method: "GET" });
+    if (!res.ok) {
+      console.warn("listGames bad status", res.status);
+      return [];
+    }
+    const json = await res.json();
+    const arr = json?.data;
+    if (!Array.isArray(arr)) {
+      console.warn("listGames data not array", arr);
+      return [];
+    }
+    if (__DEV__) {
+      console.log(`listGames: got ${arr.length} items. from=${from} to=${to}`);
+      if (arr[0]) console.log("First item:", arr[0]);
+    }
+    return arr as Game[];
+  } catch (err) {
+    console.warn("listGames error", err);
+    return [];
+  }
 }

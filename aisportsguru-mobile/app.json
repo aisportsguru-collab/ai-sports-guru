@@ -1,52 +1,16 @@
 {
   "expo": {
-    "name": "aisportsguru-mobile",
+    "name": "AISportsGuru",
     "slug": "aisportsguru-mobile",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "aisportsgurumobile",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.aisportsguru.app",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+    "scheme": "aisportsguru-mobile",
+    "ios": { "bundleIdentifier": "com.aisportsguru.app" },
+    "android": { "package": "com.aisportsguru.app" },
+    "splash": {
+      "backgroundColor": "#0b0f2a",
+      "image": "./assets/splash.png",
+      "resizeMode": "contain"
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
-        }
-      ],
-      "expo-secure-store"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "d7861c8f-a2c5-4f9e-a4f5-5b483dcaa789"
-      }
-    }
+    "icon": "./assets/icon.png",
+    "plugins": []
   }
 }

@@ -1,14 +1,9 @@
 {
-  "functions": {
-    "api/webhooks/stripe/route.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 10
-    }
-  },
+  "redirects": [
+    { "source": "http://www.aisportsguru.com/:path*", "destination": "https://aisportsguru.com/:path*", "permanent": true },
+    { "source": "https://www.aisportsguru.com/:path*", "destination": "https://aisportsguru.com/:path*", "permanent": true }
+  ],
   "crons": [
-    { "path": "/api/cron/run-daily?key=c52cb737a3232e82bb8e1a4264c7e187", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/run-daily?key=c52cb737a3232e82bb8e1a4264c7e187", "schedule": "0 16 * * *" },
-    { "path": "/api/cron/run-daily?key=c52cb737a3232e82bb8e1a4264c7e187", "schedule": "0 22 * * *" },
-    { "path": "/api/cron/grade-daily?key=c52cb737a3232e82bb8e1a4264c7e187", "schedule": "0 13 * * *" }
+    { "path": "/api/cron/warm-nfl", "schedule": "*/15 * * * *" }
   ]
 }
