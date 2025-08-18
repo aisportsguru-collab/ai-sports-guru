@@ -1,34 +1,26 @@
 import * as React from "react";
 import { View, Text, FlatList, RefreshControl, StyleSheet } from "react-native";
 import GameRow from "../../components/GameRow";
-import { listGames, type Game } from "../../data/api";
+import { listGames } from "../../lib/api";
+import type { Game } from "../../lib/api";
 
-function ymd(d: Date) {
-  const z = new Date(d);
-  const yyyy = z.getUTCFullYear();
-  const mm = String(z.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(z.getUTCDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
+const LEAGUE = "nhl" as const;
 
-export default function NFL() {
+export default function NHL() {
   const [games, setGames] = React.useState<Game[]>([]);
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
-  const window45 = React.useMemo(() => {
-    const from = new Date();
-    from.setUTCHours(0, 0, 0, 0);
-    const to = new Date(from);
-    to.setUTCDate(from.getUTCDate() + 45);
-    return { from: ymd(from), to: ymd(to) };
-  }, []);
-
   const fetchData = React.useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const data = await listGames("nfl", window45);
+      setError(null);
+      setLoading(true);
+      const from = new Date(); from.setHours(0,0,0,0);
+      const to = new Date(from); to.setDate(from.getDate() + 45);
+      const data = await listGames(LEAGUE, {
+        from: from.toISOString().slice(0,10),
+        to: to.toISOString().slice(0,10),
+      });
       setGames(Array.isArray(data) ? data : []);
     } catch (e: any) {
       setError(e?.message ?? "fetch_failed");
@@ -36,11 +28,9 @@ export default function NFL() {
     } finally {
       setLoading(false);
     }
-  }, [window45]);
+  }, []);
 
-  React.useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  React.useEffect(() => { fetchData(); }, [fetchData]);
 
   const Empty = (
     <View style={styles.empty}>
