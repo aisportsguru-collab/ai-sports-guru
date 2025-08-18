@@ -68,14 +68,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const json = await r.json().catch(() => ({}));
     const data: Game[] = Array.isArray(json?.data) ? json.data : [];
 
-    const withPreds: Game[] = data.map((g) => ({
-      ...g,
-      predictions: {
-        ...(pickMoneyline(g.odds?.moneyline) ?? {}),
-        ...(pickSpread(g.odds?.spread) ?? {}),
-        ...(pickTotal(g.odds?.total) ?? {}),
-      } as any,
-    }));
+    const withPreds: Game[] = data.map((g) => {
+      const moneyline = pickMoneyline(g.odds?.moneyline);
+      const spread    = pickSpread(g.odds?.spread);
+      const total     = pickTotal(g.odds?.total);
+      return {
+        ...g,
+        predictions: {
+          ...(moneyline ? { moneyline } : {}),
+          ...(spread ? { spread } : {}),
+          ...(total ? { total } : {}),
+        },
+      };
+    });
 
     return res.status(200).json({ meta: { ...(json?.meta || {}), predictionsAttached: true }, data: withPreds });
   } catch (err:any) {

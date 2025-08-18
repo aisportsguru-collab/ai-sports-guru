@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 /** Supported leagues */
 type League = "nfl" | "nba" | "mlb" | "nhl" | "ncaaf" | "ncaab" | "wnba";
 
-/** Unified Game shape expected by mobile */
+/** Unified Game shape expected by the app */
 type Game = {
   id: string;
   league: League;
