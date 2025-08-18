@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createClient } from "@supabase/supabase-js";
 
-type Game = {
+/**
+ * Public contract consumed by the mobile app.
+ */
+export type Game = {
   id: string;
-  league: "nfl";
-  kickoffISO: string;
+  league: "nfl" | "nba" | "mlb" | "nhl" | "ncaaf";
+  kickoffISO: string; // commence_time (UTC ISO)
   home: string;
   away: string;
   odds: {
@@ -27,183 +29,179 @@ type Game = {
   };
 };
 
-type OddsApiOutcome = { name: string; price: number; point?: number };
-type OddsApiMarket = { key: "h2h" | "spreads" | "totals"; outcomes: OddsApiOutcome[] };
-type OddsApiBookmaker = { key: string; markets: OddsApiMarket[] };
 type OddsApiEvent = {
   id: string;
-  sport_key: string;
-  commence_time: string;
+  commence_time: string; // ISO
   home_team: string;
   away_team: string;
-  bookmakers?: OddsApiBookmaker[];
+  bookmakers: Array<{
+    key: string;
+    title: string;
+    markets: Array<{
+      key: "h2h" | "spreads" | "totals";
+      outcomes: Array<{
+        name: string; // team OR "Over"/"Under"
+        price: number; // -110, +140
+        point?: number; // for spreads/totals
+      }>;
+    }>;
+  }>;
 };
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ODDS_API_KEY = process.env.ODDS_API_KEY!;
-const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
-const CACHE_TTL_SECONDS = 15 * 60;
+// Our leagues -> The Odds API keys
+const SPORT_MAP: Record<string, string> = {
+  nfl: "americanfootball_nfl",
+  ncaaf: "americanfootball_ncaaf",
+  nba: "basketball_nba",
+  mlb: "baseball_mlb",
+  nhl: "icehockey_nhl",
+};
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const PREFERRED_BOOKS = [
+  "draftkings",
+  "fanduel",
+  "caesars",
+  "betmgm",
+  "pointsbetus",
+  "barstool",
+  "williamhill_us",
+];
 
-function parseDateOnlyUTC(dateStr: string): Date {
-  return new Date(`${dateStr}T00:00:00Z`);
+function pickBook(bookmakers: OddsApiEvent["bookmakers"]) {
+  if (!Array.isArray(bookmakers) || bookmakers.length === 0) return null;
+  for (const key of PREFERRED_BOOKS) {
+    const m = bookmakers.find((b) => b.key === key);
+    if (m) return m;
+  }
+  return bookmakers[0] ?? null;
 }
 
-function withinWindowUTC(iso: string, from: Date, toExclusive: Date): boolean {
-  const t = new Date(iso).getTime();
-  return t >= from.getTime() && t < toExclusive.getTime();
+function findMarket(
+  bm: NonNullable<ReturnType<typeof pickBook>>,
+  key: "h2h" | "spreads" | "totals"
+) {
+  return bm?.markets?.find((m) => m.key === key) ?? null;
 }
 
-function pickBestBook(bookmakers: OddsApiBookmaker[] | undefined): OddsApiBookmaker | undefined {
-  if (!bookmakers || bookmakers.length === 0) return undefined;
+function asGame(league: Game["league"], e: OddsApiEvent): Game {
+  const bm = pickBook(e.bookmakers);
+  const h2h = bm ? findMarket(bm, "h2h") : null;
+  const spreads = bm ? findMarket(bm, "spreads") : null;
+  const totals = bm ? findMarket(bm, "totals") : null;
 
-  const scored = bookmakers.map((b) => {
-    const keys = new Set(b.markets?.map((m) => m.key) ?? []);
-    const hasAll = keys.has("h2h") && keys.has("spreads") && keys.has("totals");
-    const priority =
-      b.key.toLowerCase().includes("draftkings") || b.key.toLowerCase().includes("pinnacle") ? 1 : 2;
-    return { b, hasAll, marketsCount: keys.size, priority };
-  });
-
-  const withAll = scored.filter((s) => s.hasAll);
-  if (withAll.length) {
-    withAll.sort((a, b) => a.priority - b.priority);
-    return withAll[0].b;
+  // Moneyline
+  let moneyline: Game["odds"]["moneyline"] | undefined;
+  if (h2h?.outcomes?.length) {
+    const homeML = h2h.outcomes.find((o) => o.name === e.home_team)?.price;
+    const awayML = h2h.outcomes.find((o) => o.name === e.away_team)?.price;
+    if (homeML !== undefined || awayML !== undefined) {
+      moneyline = { home: homeML, away: awayML, book: bm?.key };
+    }
   }
 
-  scored.sort((a, b) => {
-    if (b.marketsCount !== a.marketsCount) return b.marketsCount - a.marketsCount;
-    return a.priority - b.priority;
-  });
-  return scored[0].b;
-}
-
-function flattenToGame(e: OddsApiEvent): Game {
-  const bm = pickBestBook(e.bookmakers);
-  const odds: Game["odds"] = {};
-
-  if (bm) {
-    const getMarket = (key: "h2h" | "spreads" | "totals") =>
-      bm.markets?.find((m) => m.key === key);
-
-    const h2h = getMarket("h2h");
-    if (h2h) {
-      const homeML = h2h.outcomes.find((o) => o.name === e.home_team)?.price;
-      const awayML = h2h.outcomes.find((o) => o.name === e.away_team)?.price;
-      odds.moneyline = { home: homeML, away: awayML, book: bm.key };
-    }
-
-    const spreads = getMarket("spreads");
-    if (spreads) {
-      const homeS = spreads.outcomes.find((o) => o.name === e.home_team);
-      const awayS = spreads.outcomes.find((o) => o.name === e.away_team);
-      odds.spread = {
-        home: homeS && homeS.point != null && homeS.price != null ? { point: homeS.point, price: homeS.price } : undefined,
-        away: awayS && awayS.point != null && awayS.price != null ? { point: awayS.point, price: awayS.price } : undefined,
-        book: bm.key,
-      };
-    }
-
-    const totals = getMarket("totals");
-    if (totals) {
-      const over = totals.outcomes.find((o) => o.name.toLowerCase() === "over");
-      const under = totals.outcomes.find((o) => o.name.toLowerCase() === "under");
-      odds.total = {
-        over: over && over.point != null && over.price != null ? { point: over.point, price: over.price } : undefined,
-        under: under && under.point != null && under.price != null ? { point: under.point, price: under.price } : undefined,
-        book: bm.key,
+  // Spreads
+  let spread: Game["odds"]["spread"] | undefined;
+  if (spreads?.outcomes?.length) {
+    const home = spreads.outcomes.find((o) => o.name === e.home_team);
+    const away = spreads.outcomes.find((o) => o.name === e.away_team);
+    if (home || away) {
+      spread = {
+        home:
+          home?.point !== undefined && home?.price !== undefined
+            ? { point: home.point!, price: home.price! }
+            : undefined,
+        away:
+          away?.point !== undefined && away?.price !== undefined
+            ? { point: away.point!, price: away.price! }
+            : undefined,
+        book: bm?.key,
       };
     }
   }
 
-  const g: Game = {
+  // Totals
+  let total: Game["odds"]["total"] | undefined;
+  if (totals?.outcomes?.length) {
+    const over = totals.outcomes.find((o) => o.name.toLowerCase() === "over");
+    const under = totals.outcomes.find((o) => o.name.toLowerCase() === "under");
+    if (over || under) {
+      total = {
+        over:
+          over?.point !== undefined && over?.price !== undefined
+            ? { point: over.point!, price: over.price! }
+            : undefined,
+        under:
+          under?.point !== undefined && under?.price !== undefined
+            ? { point: under.point!, price: under.price! }
+            : undefined,
+        book: bm?.key,
+      };
+    }
+  }
+
+  return {
     id: e.id,
-    league: "nfl",
+    league,
     kickoffISO: e.commence_time,
     home: e.home_team,
     away: e.away_team,
-    odds,
+    odds: { moneyline, spread, total },
   };
-  return g;
 }
 
-async function fetchOddsRawNFL(): Promise<OddsApiEvent[]> {
-  const url = `${ODDS_API_BASE}/sports/americanfootball_nfl/odds/?apiKey=${encodeURIComponent(
-    ODDS_API_KEY
-  )}&regions=us&markets=h2h,spreads,totals&oddsFormat=american`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Odds API error ${res.status}. ${text}`);
+async function fetchOdds(league: Game["league"]) {
+  const sportKey = SPORT_MAP[league];
+  if (!sportKey) {
+    throw new Error(`Unsupported league: ${league}`);
   }
-  const data = (await res.json()) as OddsApiEvent[];
-  return Array.isArray(data) ? data : [];
-}
+  const API_KEY = process.env.ODDS_API_KEY;
+  if (!API_KEY) throw new Error("Missing ODDS_API_KEY");
 
-function buildCacheKey(league: string, from: string, to: string) {
-  return `games:${league}:${from}:${to}`;
-}
+  const url = new URL(`https://api.the-odds-api.com/v4/sports/${sportKey}/odds`);
+  url.searchParams.set("regions", "us");
+  url.searchParams.set("markets", "h2h,spreads,totals");
+  url.searchParams.set("oddsFormat", "american");
+  url.searchParams.set("dateFormat", "iso");
+  url.searchParams.set("apiKey", API_KEY);
 
-async function getCache(cacheKey: string): Promise<Game[] | null> {
-  const { data, error } = await supabase
-    .from("odds_cache")
-    .select("data, expires_at")
-    .eq("cache_key", cacheKey)
-    .maybeSingle();
-  if (error || !data) return null;
-  const expiresAt = new Date(data.expires_at).getTime();
-  if (Date.now() >= expiresAt) return null;
-  return (data.data as Game[]) ?? null;
-}
-
-async function setCache(cacheKey: string, payload: Game[]) {
-  const expiresAt = new Date(Date.now() + CACHE_TTL_SECONDS * 1000).toISOString();
-  await supabase
-    .from("odds_cache")
-    .upsert({ cache_key: cacheKey, data: payload, expires_at: expiresAt }, { onConflict: "cache_key" });
+  const r = await fetch(url.toString(), { next: { revalidate: 60 } });
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`Odds API failed (${r.status}): ${text.slice(0, 300)}`);
+  }
+  const data = (await r.json()) as OddsApiEvent[];
+  return data;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    if (req.method !== "GET") {
-      res.setHeader("Allow", "GET");
-      return res.status(405).json({ error: "Method not allowed" });
+    const leagueParam = String(req.query.league || "").toLowerCase();
+    const league = (["nfl", "nba", "mlb", "nhl", "ncaaf"] as const).find((v) => v === leagueParam);
+    if (!league) return res.status(400).json({ error: `Unsupported league "${leagueParam}"` });
+
+    const from = String(req.query.from || "");
+    const to = String(req.query.to || "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      return res.status(400).json({ error: "from/to must be YYYY-MM-DD" });
     }
 
-    const league = String(req.query.league || "nfl").toLowerCase();
-    const fromStr = String(req.query.from || "");
-    const toStr = String(req.query.to || "");
+    const start = new Date(from + "T00:00:00Z").getTime();
+    const end = new Date(to + "T23:59:59Z").getTime();
 
-    if (league !== "nfl") {
-      return res.status(400).json({ error: "Only league nfl is supported here" });
-    }
-    if (!fromStr || !toStr) {
-      return res.status(400).json({ error: "from and to are required in YYYY MM DD" });
-    }
+    const events = await fetchOdds(league);
 
-    const fromUTC = parseDateOnlyUTC(fromStr);
-    const toUTCExclusive = parseDateOnlyUTC(toStr);
+    const filtered = events.filter((e) => {
+      const t = Date.parse(e.commence_time);
+      return Number.isFinite(t) && t >= start && t <= end;
+    });
 
-    const cacheKey = buildCacheKey(league, fromStr, toStr);
-    const cached = await getCache(cacheKey);
-    if (cached) {
-      return res.status(200).json({ data: cached, meta: { league, from: fromStr, to: toStr, source: "cache" } });
-    }
-
-    const raw = await fetchOddsRawNFL();
-    const normalized = raw.map(flattenToGame);
-    const filtered = normalized.filter((g) => withinWindowUTC(g.kickoffISO, fromUTC, toUTCExclusive));
-
-    await setCache(cacheKey, filtered);
+    const games: Game[] = filtered.map((e) => asGame(league, e));
 
     return res.status(200).json({
-      data: filtered,
-      meta: { league, from: fromStr, to: toStr, count: filtered.length, source: "fresh" },
+      meta: { league, from, to, count: games.length, source: "fresh" },
+      data: games,
     });
   } catch (err: any) {
-    console.error("GET /api/games error", err);
-    return res.status(500).json({ error: "Internal error", detail: String(err?.message || err) });
+    return res.status(500).json({ error: err?.message || "server_error" });
   }
 }
