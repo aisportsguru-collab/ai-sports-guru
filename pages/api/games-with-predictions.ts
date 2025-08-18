@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-/** Keep in sync with /api/games-v2 */
+/** Keep in sync with /api/games */
 type League = "nfl" | "nba" | "mlb" | "nhl" | "ncaaf" | "ncaab" | "wnba";
 type Game = {
   id: string;
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!host) return res.status(400).json({ ok:false, error:"Missing host" });
 
     const base = `${proto}://${host}`;
-    const url  = `${base}/api/games-v2?league=${encodeURIComponent(league)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+    const url  = `${base}/api/games?league=${encodeURIComponent(league)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
 
     const r = await fetch(url, { headers: { Accept: "application/json" } });
     const json = await r.json().catch(() => ({}));
