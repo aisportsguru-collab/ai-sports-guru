@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 /** Supported leagues */
 type League = "nfl" | "nba" | "mlb" | "nhl" | "ncaaf" | "ncaab" | "wnba";
 
-/** Game shape consumed by mobile/web */
+/** Game shape consumed by app */
 type Game = {
   id: string;
   league: League;
@@ -46,6 +46,13 @@ const SPORT_KEY: Record<League, string> = {
   ncaab: "basketball_ncaab",
   wnba:  "basketball_wnba",
 };
+
+const ALLOWED: League[] = ["nfl","nba","mlb","nhl","ncaaf","ncaab","wnba"];
+
+function normLeague(input: unknown): League | null {
+  const key = String(input ?? "").trim().toLowerCase() as League;
+  return (ALLOWED as string[]).includes(key) ? (key as League) : null;
+}
 
 function pickBook(e: OddsEvent) {
   const books = e.bookmakers || [];
@@ -132,36 +139,46 @@ async function fetchOdds(league: League): Promise<OddsEvent[]> {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const leagueParam = String(req.query.league || "").toLowerCase() as League;
-  const from = String(req.query.from || "");
-  const to   = String(req.query.to   || "");
-  try {
-    const allowed: League[] = ["nfl","nba","mlb","nhl","ncaaf","ncaab","wnba"];
-    if (!allowed.includes(leagueParam)) {
-      return res.status(400).json({ error: `Unsupported league "${leagueParam}"` });
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
-      return res.status(400).json({ error: "from/to must be YYYY-MM-DD" });
-    }
+  const league = normLeague(req.query.league);
+  const fromRaw = String(req.query.from ?? "").trim();
+  const toRaw   = String(req.query.to   ?? "").trim();
 
+  // Normalize YYYY-MM-DD safely
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(fromRaw) ? fromRaw : "";
+  const to   = /^\d{4}-\d{2}-\d{2}$/.test(toRaw)   ? toRaw   : "";
+
+  // Always respond with JSON + meta, even on param errors
+  if (!league) {
+    return res.status(200).json({
+      meta: { league: String(req.query.league || "unknown"), from, to, count: 0, source: "error", error: "unsupported_league" },
+      data: [],
+    });
+  }
+  if (!from || !to) {
+    return res.status(200).json({
+      meta: { league, from, to, count: 0, source: "error", error: "invalid_dates" },
+      data: [],
+    });
+  }
+
+  try {
     const start = new Date(from + "T00:00:00Z").getTime();
     const end   = new Date(to   + "T23:59:59Z").getTime();
 
-    const events = await fetchOdds(leagueParam);
+    const events = await fetchOdds(league);
     const filtered = events.filter((e) => {
       const t = Date.parse(e.commence_time);
       return Number.isFinite(t) && t >= start && t <= end;
     });
-    const games: Game[] = filtered.map((e) => toGame(leagueParam, e));
+    const games: Game[] = filtered.map((e) => toGame(league, e));
 
     return res.status(200).json({
-      meta: { league: leagueParam, from, to, count: games.length, source: "fresh" },
+      meta: { league, from, to, count: games.length, source: "fresh" },
       data: games,
     });
   } catch (err: any) {
-    // Always return JSON so clients/jq never get HTML
     return res.status(200).json({
-      meta: { league: leagueParam || "unknown", from, to, count: 0, source: "error", error: err?.message || "server_error" },
+      meta: { league, from, to, count: 0, source: "error", error: err?.message || "server_error" },
       data: [],
     });
   }

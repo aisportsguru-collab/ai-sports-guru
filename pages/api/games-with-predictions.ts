@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       (req.headers["x-forwarded-proto"] as string)?.split(",")[0] ||
       (req.headers.referer?.toString().startsWith("http://") ? "http" : "https") ||
       "https";
-    if (!host) return res.status(400).json({ ok:false, error:"Missing host" });
+    if (!host) return res.status(200).json({ meta: { source:"error", error:"missing_host" }, data: [] });
 
     const base = `${proto}://${host}`;
     const url  = `${base}/api/games?league=${encodeURIComponent(league)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
