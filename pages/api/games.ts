@@ -1,124 +1,122 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-/** Supported leagues */
-type League = "nfl" | "nba" | "mlb" | "nhl" | "ncaaf" | "wnba" | "ncaab";
+/** Leagues we support */
+type League = "nfl" | "nba" | "mlb" | "nhl" | "ncaaf" | "ncaab" | "wnba";
 
-/** The Odds API sport keys */
+/** The mobile Game shape you already use on NFL */
+type Game = {
+  id: string;
+  league: League;
+  kickoffISO: string; // from commence_time (UTC ISO)
+  home: string;
+  away: string;
+  odds: {
+    moneyline?: { home?: number; away?: number; book?: string };
+    spread?: {
+      home?: { point: number; price: number };
+      away?: { point: number; price: number };
+      book?: string;
+    };
+    total?: {
+      over?: { point: number; price: number };
+      under?: { point: number; price: number };
+      book?: string;
+    };
+  };
+};
+
+/** Odds API v4 sport keys by league */
 const SPORT_KEY: Record<League, string> = {
   nfl:   "americanfootball_nfl",
   nba:   "basketball_nba",
   mlb:   "baseball_mlb",
   nhl:   "icehockey_nhl",
   ncaaf: "americanfootball_ncaaf",
-  wnba:  "basketball_wnba",
   ncaab: "basketball_ncaab",
+  wnba:  "basketball_wnba",
 };
 
-type OddsApiOutcome = { name: string; price: number; point?: number | null };
-type OddsApiMarket = { key: string; outcomes: OddsApiOutcome[] };
-type OddsApiBookmaker = { key: string; title: string; markets: OddsApiMarket[] };
-type OddsApiEvent = {
+type OddsOutcome = { name: string; price?: number; point?: number | null };
+type OddsMarket  = { key: "h2h" | "spreads" | "totals"; outcomes?: OddsOutcome[] };
+type OddsBook    = { key: string; title?: string; markets?: OddsMarket[] };
+type OddsEvent   = {
   id: string;
-  commence_time: string;
+  commence_time: string; // ISO from provider
   home_team: string;
   away_team: string;
-  bookmakers: OddsApiBookmaker[];
+  bookmakers?: OddsBook[];
 };
 
-/** Unified Game shape your mobile/web UI already consumes */
-type Game = {
-  id: string;
-  league: League;
-  kickoff_iso: string;
-  home: string;
-  away: string;
-  odds: {
-    moneyline?: {
-      home?: { price: number; book: string };
-      away?: { price: number; book: string };
-    };
-    spread?: {
-      home?: { line: number; price: number; book: string };
-      away?: { line: number; price: number; book: string };
-    };
-    total?: {
-      over?: { line: number; price: number; book: string };
-      under?: { line: number; price: number; book: string };
-    };
-  };
-};
-
-/** Pick DraftKings if present, otherwise first book */
-function pickBook(e: OddsApiEvent) {
+function pickBook(e: OddsEvent) {
+  const books = e.bookmakers || [];
   return (
-    e.bookmakers.find((b) => b.key === "draftkings" || /draftkings/i.test(b.title)) ||
-    e.bookmakers[0]
+    books.find(b => b.key === "draftkings" || /draftkings/i.test(b.title || "")) ||
+    books[0]
   );
 }
 
-function findMarket(book: OddsApiBookmaker | undefined, key: string) {
-  return book?.markets.find((m) => m.key === key);
+function findMarket(book: OddsBook | undefined, key: OddsMarket["key"]) {
+  return book?.markets?.find(m => m.key === key);
 }
 
-function asGame(league: League, e: OddsApiEvent): Game {
-  const book = pickBook(e);
+function asGame(league: League, ev: OddsEvent): Game {
+  const book = pickBook(ev);
+  const bookName = book?.title || book?.key || "book";
   const h2h = findMarket(book, "h2h");
-  const spreads = findMarket(book, "spreads");
-  const totals = findMarket(book, "totals");
+  const sp  = findMarket(book, "spreads");
+  const tot = findMarket(book, "totals");
 
   // Moneyline
-  const ml: Game["odds"]["moneyline"] = {};
-  if (h2h?.outcomes?.length) {
-    for (const o of h2h.outcomes) {
-      if (o.name === e.home_team) ml.home = { price: o.price, book: book?.title || "" };
-      if (o.name === e.away_team) ml.away = { price: o.price, book: book?.title || "" };
-    }
-  }
+  const moneyline: Game["odds"]["moneyline"] | undefined = h2h?.outcomes?.length
+    ? {
+        home: h2h.outcomes?.find(o => o.name === ev.home_team)?.price,
+        away: h2h.outcomes?.find(o => o.name === ev.away_team)?.price,
+        book: bookName,
+      }
+    : undefined;
 
   // Spread
-  const sp: Game["odds"]["spread"] = {};
-  if (spreads?.outcomes?.length) {
-    for (const o of spreads.outcomes) {
-      if (o.name === e.home_team && o.point != null)
-        sp.home = { line: Number(o.point), price: o.price, book: book?.title || "" };
-      if (o.name === e.away_team && o.point != null)
-        sp.away = { line: Number(o.point), price: o.price, book: book?.title || "" };
-    }
+  let spread: Game["odds"]["spread"] | undefined;
+  if (sp?.outcomes?.length) {
+    const homeO = sp.outcomes.find(o => o.name === ev.home_team);
+    const awayO = sp.outcomes.find(o => o.name === ev.away_team);
+    const home = homeO?.point != null && homeO?.price != null
+      ? { point: Number(homeO.point), price: Number(homeO.price) }
+      : undefined;
+    const away = awayO?.point != null && awayO?.price != null
+      ? { point: Number(awayO.point), price: Number(awayO.price) }
+      : undefined;
+    if (home || away) spread = { home, away, book: bookName };
   }
 
   // Total
-  const tot: Game["odds"]["total"] = {};
-  if (totals?.outcomes?.length) {
-    for (const o of totals.outcomes) {
-      const isOver = /^over$/i.test(o.name);
-      const isUnder = /^under$/i.test(o.name);
-      if ((isOver || isUnder) && o.point != null) {
-        const entry = { line: Number(o.point), price: o.price, book: book?.title || "" };
-        if (isOver) tot.over = entry;
-        if (isUnder) tot.under = entry;
-      }
-    }
+  let total: Game["odds"]["total"] | undefined;
+  if (tot?.outcomes?.length) {
+    const overO  = tot.outcomes.find(o => typeof o.name === "string" && /^over$/i.test(o.name));
+    const underO = tot.outcomes.find(o => typeof o.name === "string" && /^under$/i.test(o.name));
+    const over  = overO?.point != null && overO?.price != null
+      ? { point: Number(overO.point),  price: Number(overO.price) }
+      : undefined;
+    const under = underO?.point != null && underO?.price != null
+      ? { point: Number(underO.point), price: Number(underO.price) }
+      : undefined;
+    if (over || under) total = { over, under, book: bookName };
   }
 
-  const odds: Game["odds"] = {};
-  if (ml.home || ml.away) odds.moneyline = ml;
-  if (sp.home || sp.away) odds.spread = sp;
-  if (tot.over || tot.under) odds.total = tot;
-
   return {
-    id: e.id,
+    id: String(ev.id),
     league,
-    kickoff_iso: new Date(e.commence_time).toISOString(),
-    home: e.home_team,
-    away: e.away_team,
-    odds,
+    kickoffISO: new Date(ev.commence_time).toISOString(),
+    home: ev.home_team,
+    away: ev.away_team,
+    odds: { moneyline, spread, total },
   };
 }
 
-async function fetchOdds(league: League): Promise<OddsApiEvent[]> {
+async function fetchOdds(league: League): Promise<OddsEvent[]> {
   const sport = SPORT_KEY[league];
   const base =
-    process.env.ODDS_API_BASE?.replace(/\/+$/, "") ||
+    (process.env.ODDS_API_BASE?.replace(/\/+$/, "")) ||
     "https://api.the-odds-api.com/v4/sports";
   const key = process.env.ODDS_API_KEY;
   if (!key) throw new Error("Missing ODDS_API_KEY");
@@ -126,23 +124,23 @@ async function fetchOdds(league: League): Promise<OddsApiEvent[]> {
   const url =
     `${base}/${encodeURIComponent(sport)}/odds/` +
     `?apiKey=${encodeURIComponent(key)}` +
-    `&regions=us&oddsFormat=american` +
-    `&markets=h2h,spreads,totals&bookmakers=draftkings`;
+    `&regions=us&oddsFormat=american&markets=h2h,spreads,totals&bookmakers=draftkings`;
 
   const r = await fetch(url, { headers: { Accept: "application/json" }, next: { revalidate: 0 } });
   if (!r.ok) {
     const text = await r.text();
-    throw new Error(`Odds API failed (${r.status}): ${text.slice(0, 300)}`);
+    throw new Error(`Odds API failed (${r.status}): ${text.slice(0,300)}`);
   }
-  return (await r.json()) as OddsApiEvent[];
+  return (await r.json()) as OddsEvent[];
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const leagueParam = String(req.query.league || "").toLowerCase();
-    const league = (["nfl","nba","mlb","nhl","ncaaf","wnba","ncaab"] as const)
-      .find((v) => v === (leagueParam as League));
-    if (!league) return res.status(400).json({ error: `Unsupported league "${leagueParam}"` });
+    const leagueParam = String(req.query.league || "").toLowerCase() as League;
+    const allowed: League[] = ["nfl","nba","mlb","nhl","ncaaf","ncaab","wnba"];
+    if (!allowed.includes(leagueParam)) {
+      return res.status(400).json({ error: `Unsupported league "${leagueParam}"` });
+    }
 
     const from = String(req.query.from || "");
     const to   = String(req.query.to   || "");
@@ -153,19 +151,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const start = new Date(from + "T00:00:00Z").getTime();
     const end   = new Date(to   + "T23:59:59Z").getTime();
 
-    const events = await fetchOdds(league);
+    const events = await fetchOdds(leagueParam);
     const filtered = events.filter((e) => {
       const t = Date.parse(e.commence_time);
       return Number.isFinite(t) && t >= start && t <= end;
     });
-
-    const games: Game[] = filtered.map((e) => asGame(league, e));
+    const games: Game[] = filtered.map((e) => asGame(leagueParam, e));
 
     return res.status(200).json({
-      meta: { league, from, to, count: games.length, source: "fresh" },
+      meta: { league: leagueParam, from, to, count: games.length, source: "fresh" },
       data: games,
     });
   } catch (err: any) {
-    return res.status(500).json({ error: err?.message || "server_error" });
+    const league = String(req.query.league || "").toLowerCase();
+    const from = String(req.query.from || "");
+    const to   = String(req.query.to   || "");
+    return res.status(200).json({
+      meta: { league, from, to, count: 0, source: "error", error: err?.message || "server_error" },
+      data: [],
+    });
   }
 }
