@@ -38,3 +38,8 @@ yarn-error.*
 
 app-example
 .vercel
+
+# local env files (do not commit)
+.env.dev
+.env.preview
+.env.prod
