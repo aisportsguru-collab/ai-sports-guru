@@ -7,11 +7,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const today = new Date();
     today.setUTCHours(0,0,0,0);
     const to = new Date(today); to.setDate(to.getDate() + 45);
+
     const fromStr = today.toISOString().slice(0,10);
     const toStr   = to.toISOString().slice(0,10);
 
     const host = req.headers.host!;
-    const proto = (req.headers["x-forwarded-proto"] as string)?.split(",")[0] || "https";
+    const proto =
+      (req.headers["x-forwarded-proto"] as string)?.split(",")[0] ||
+      (req.headers.referer?.toString().startsWith("http://") ? "http" : "https") ||
+      "https";
     const base = `${proto}://${host}`;
 
     const results: any[] = [];
