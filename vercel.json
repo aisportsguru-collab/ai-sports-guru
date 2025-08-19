@@ -2,12 +2,24 @@
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.aisportsguru.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.aisportsguru.com"
+        }
+      ],
       "destination": "https://aisportsguru.com/:path*",
       "permanent": true
     }
   ],
   "crons": [
-    { "path": "/api/cron/warm", "schedule": "*/15 * * * *" }
+    {
+      "path": "/api/cron/warm",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/warm-all",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }
