@@ -13,3 +13,8 @@ dist
 .vercel
 # local data captured from mobile ingest
 /.data/
+
+# local env files (do not commit)
+.env.dev
+.env.preview
+.env.prod
