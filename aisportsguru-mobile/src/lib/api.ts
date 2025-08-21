@@ -1,71 +1,94 @@
-const API_BASE =
-  process.env.EXPO_PUBLIC_API_BASE ||
-  process.env.API_BASE ||
-  "http://localhost:3000";
+/**
+ * Lightweight API client for the mobile app.
+ * - Tries multiple bases (env + known deploys)
+ * - Only parses JSON when response content-type is JSON
+ * - Returns { games, meta } with a graceful "error" source on failures
+ */
 
-async function getJSON(url: string) {
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
-  const j = await r.json();
-  return Array.isArray(j) ? j : j?.data ?? [];
+export type LeagueID = "nfl" | "nba" | "mlb" | "nhl" | "ncaaf" | "ncaab" | "wnba";
+
+export type MoneylineOdds = { away?: number | null; home?: number | null; book?: string | null };
+export type SpreadSide   = { line?: number | null; price?: number | null };
+export type TotalSide    = { line?: number | null; price?: number | null };
+export type SpreadOdds   = { away?: SpreadSide | null; home?: SpreadSide | null; book?: string | null };
+export type TotalOdds    = { over?: TotalSide | null;  under?: TotalSide | null;  book?: string | null };
+
+export type OddsPack = { moneyline?: MoneylineOdds | null; spread?: SpreadOdds | null; total?: TotalOdds | null };
+
+export type PredPick = "HOME" | "AWAY" | "OVER" | "UNDER";
+export type OnePrediction = { pick?: PredPick | null; confidencePct?: number | null; probability?: number | null; line?: number | null };
+export type Predictions = { moneyline?: OnePrediction | null; spread?: OnePrediction | null; total?: OnePrediction | null };
+
+export type LeagueGame = {
+  id: string;
+  league: LeagueID;
+  kickoffISO?: string | null;
+  away?: string | null;
+  home?: string | null;
+  awayTeam?: string | null; // sometimes present
+  homeTeam?: string | null;
+  odds?: OddsPack | null;
+  predictions?: Predictions | null;
+};
+
+type ApiResponse = { games: LeagueGame[]; meta: { league: LeagueID; count: number; source: string } };
+
+const API_BASES = [
+  process.env.EXPO_PUBLIC_API_BASE,
+  "https://ai-sports-guru-ek55nturj-jordan-smiths-projects-aba7b6c0.vercel.app",
+  "https://ai-sports-guru.vercel.app",
+].filter(Boolean) as string[];
+
+// Format YYYY-MM-DD
+function ymd(d: Date) {
+  return d.toISOString().slice(0, 10);
 }
 
-async function firstNonEmpty(urls: string[]): Promise<any[]> {
-  let lastEmpty: any[] = [];
-  for (const u of urls) {
+export function defaultDateWindow(): { from: string; to: string } {
+  const now = new Date();
+  const from = new Date(now);
+  const to = new Date(now);
+  to.setDate(to.getDate() + 45);
+  return { from: ymd(from), to: ymd(to) };
+}
+
+async function tryFetchJSON(url: string) {
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+    });
+    const ct = String(res.headers.get("content-type") || "");
+    if (!res.ok || !ct.includes("application/json")) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`HTTP ${res.status} ${res.statusText} (ct=${ct}) ${text?.slice(0,80)}`);
+    }
+    return await res.json();
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function listGames(league: LeagueID, fromISO?: string, toISO?: string): Promise<ApiResponse> {
+  const { from, to } = fromISO && toISO ? { from: fromISO, to: toISO } : defaultDateWindow();
+  const path = `/api/games-with-predictions?league=${encodeURIComponent(league)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+
+  for (const base of API_BASES) {
+    const url = `${base}${path}`;
     try {
-      const data = await getJSON(u);
-      if (Array.isArray(data) && data.length) return data;
-      lastEmpty = data;
-    } catch {
-      // ignore and try next shape
+      const json = await tryFetchJSON(url);
+      const games: LeagueGame[] = Array.isArray(json?.games) ? json.games : [];
+      const count = Number(json?.meta?.count ?? games.length ?? 0) || 0;
+      const source = String(json?.meta?.source ?? "fresh");
+      // eslint-disable-next-line no-console
+      console.log("[listGames] ok league=%s count=%d source=%s", league, count, source);
+      return { games, meta: { league, count, source } };
+    } catch (e: any) {
+      // eslint-disable-next-line no-console
+      console.log("[listGames] error league=%s %s", league, e?.message ?? e);
+      // Try the next base…
     }
   }
-  return lastEmpty; // may be empty, but best effort
+
+  // All bases failed – return safe empty
+  return { games: [], meta: { league, count: 0, source: "error" } };
 }
-
-export async function listGames(
-  league: string,
-  from?: string,
-  to?: string
-): Promise<any[]> {
-  const base = (qs: URLSearchParams) =>
-    `${API_BASE}/api/games?${qs.toString()}`;
-
-  const today = new Date().toISOString().slice(0, 10);
-  const _from = from ?? today;
-  const _to = to ?? _from;
-
-  const urls: string[] = [];
-
-  // 1) bare league (many backends return all upcoming)
-  {
-    const qs = new URLSearchParams({ league });
-    urls.push(base(qs));
-  }
-  // 2) single-day styles
-  {
-    const qDay = new URLSearchParams({ league, day: _from });
-    const qDate = new URLSearchParams({ league, date: _from });
-    urls.push(base(qDay), base(qDate));
-  }
-  // 3) range styles
-  {
-    const qFromTo = new URLSearchParams({ league, from: _from, to: _to });
-    const qStartEnd = new URLSearchParams({
-      league,
-      startDate: _from,
-      endDate: _to,
-    });
-    urls.push(base(qFromTo), base(qStartEnd));
-  }
-
-  return firstNonEmpty(urls);
-}
-
-export async function listPredictions(league: string): Promise<any[]> {
-  const qs = new URLSearchParams({ league });
-  return getJSON(`${API_BASE}/api/predictions?${qs.toString()}`);
-}
-
-export default { listGames, listPredictions };

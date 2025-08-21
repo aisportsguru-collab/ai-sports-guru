@@ -25,7 +25,7 @@ export default function Account() {
       <Text>Status: {pro ? 'Pro ✅' : 'Free'}</Text>
 
       {!pro && (
-        <Link href="/paywall" asChild>
+        <Link href="/(tabs)/sports" asChild>
           <Pressable style={{ padding: 12, borderRadius: 10, backgroundColor: '#111' }}>
             <Text style={{ color: 'white', textAlign: 'center' }}>View Paywall</Text>
           </Pressable>

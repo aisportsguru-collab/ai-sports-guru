@@ -6,7 +6,7 @@ export default function PremiumTools() {
   const { hasPro, loading } = usePro();
 
   if (loading) return null; // or a small spinner
-  if (!hasPro) return <Redirect href="/paywall" />;
+  if (!hasPro) return <Redirect href="/(tabs)/sports" />;
 
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>

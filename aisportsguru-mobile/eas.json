@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 3.17.0"
+    "version": ">= 3.17.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "production": {
@@ -22,9 +23,9 @@
   "submit": {
     "production": {
       "ios": {
-        /* You can leave this empty and EAS will resolve by bundleIdentifier.
-           If you already created the app in App Store Connect and want to pin it,
-           add: "ascAppId": "1234567890"  (as a STRING). */
+        /* Optional: after you create the app in App Store Connect, you may add:
+           "ascAppId": "1234567890"
+           Keep it a STRING. It's not required to build. */
       }
     }
   }

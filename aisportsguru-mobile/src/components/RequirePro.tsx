@@ -1,68 +1,36 @@
-import React from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useEntitlement } from '../providers/EntitlementAdapter';
+import React, { PropsWithChildren } from "react";
+import { Redirect } from "expo-router";
+// Our entitlement hook (if it exists)
+import { useEntitlement } from "../lib/admin";
 
-export default function RequirePro({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const { hasPro, loading } = useEntitlement();
+export default function RequirePro({ children }: PropsWithChildren) {
+  // Global kill-switch for dev/preview builds
+  const DISABLED = process.env.EXPO_PUBLIC_DISABLE_PAYWALL === "1";
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loading}>Checking your subscription…</Text>
-      </View>
-    );
+  // Default to "allowed" in case the hook isn't wired yet
+  let hasPro = true;
+  let loading = false;
+
+  try {
+    const ent = typeof useEntitlement === "function" ? useEntitlement() : null;
+    if (ent) {
+      hasPro = !!ent.hasPro;
+      loading = !!ent.loading;
+    }
+  } catch {
+    // ignore hook errors in dev
   }
 
+  // Never block when disabled via env flag
+  if (DISABLED) return <>{children}</>;
+
+  if (loading) return null;
+
   if (!hasPro) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Pro required</Text>
-        <Text style={styles.subtitle}>
-          Unlock AI-powered predictions, real-time odds updates, and premium insights.
-        </Text>
-
-        <TouchableOpacity
-          onPress={() => router.push('/(public)/paywall')}
-          style={styles.cta}
-          activeOpacity={0.9}
-        >
-          <Text style={styles.ctaText}>Upgrade to Pro</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.back()} style={{ paddingTop: 8 }}>
-          <Text style={styles.link}>Maybe later</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.legal}>
-          By using this app you agree to our <Text style={styles.link}>Terms</Text>,{' '}
-          <Text style={styles.link}>Privacy</Text>, and{' '}
-          <Text style={styles.link}>Responsible Gaming</Text>.
-        </Text>
-      </View>
-    );
+    // No paywall screen in dev — just send them to Sports
+    return <Redirect href="/(tabs)/sports" />;
+    // If you prefer a screen, swap with: return <Paywall />;
   }
 
   return <>{children}</>;
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loading: { color: '#fff', marginTop: 10 },
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
-  title: { color: '#fff', fontSize: 22, fontWeight: '800', marginBottom: 8 },
-  subtitle: { color: '#ffffffcc', textAlign: 'center', marginBottom: 20 },
-  cta: {
-    backgroundColor: '#3fc060',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    minWidth: 180,
-    alignItems: 'center',
-  },
-  ctaText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  link: { color: '#A0F3BD', textDecorationLine: 'underline' },
-  legal: { color: '#ffffff88', fontSize: 12, marginTop: 24, textAlign: 'center' },
-});

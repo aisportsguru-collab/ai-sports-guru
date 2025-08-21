@@ -3,14 +3,31 @@
     "name": "AISportsGuru",
     "slug": "aisportsguru-mobile",
     "scheme": "aisportsguru-mobile",
-    "ios": { "bundleIdentifier": "com.aisportsguru.app" },
-    "android": { "package": "com.aisportsguru.app" },
+    "ios": {
+      "bundleIdentifier": "com.aisportsguru.app",
+      "buildNumber": "1",
+      "runtimeVersion": "1.0.0"
+    },
+    "android": {
+      "package": "com.aisportsguru.app",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
+    },
     "splash": {
       "backgroundColor": "#0b0f2a",
       "image": "./assets/splash.png",
       "resizeMode": "contain"
     },
     "icon": "./assets/icon.png",
-    "plugins": []
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "764a46a7-2d12-4edb-b2c2-8dff7570ff3c"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/764a46a7-2d12-4edb-b2c2-8dff7570ff3c"
+    }
   }
 }

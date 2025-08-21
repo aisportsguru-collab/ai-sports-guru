@@ -5,24 +5,9 @@ import { useRouter } from 'expo-router';
 import Purchases from 'react-native-purchases';
 import { usePro } from '../providers/ProProvider';
 
-export default function Paywall() {
-  const router = useRouter();
-  const { refresh } = usePro();
-
-  const openSubscribe = () => {
-    // CHANGE this route to your real paywall screen if different
-    router.push('/paywall');
-  };
-
-  const restore = async () => {
-    try {
-      await Purchases.restorePurchases();
-      await refresh(); // re-check entitlement
-    } catch (e) {
-      console.warn('Restore failed', e);
-    }
-  };
-
+export default function Paywall(){
+  if (process.env.EXPO_PUBLIC_DISABLE_PAYWALL === "1") { const { Redirect } = require("expo-router"); return <Redirect href="/(tabs)/sports" />; }
+  if (process.env.EXPO_PUBLIC_DISABLE_PAYWALL === "1") { const { Redirect } = require("expo-router"); return <Redirect href="/(tabs)/sports" />; }
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <Text style={{ fontSize: 22, fontWeight: '700', marginBottom: 8 }}>Pro required</Text>

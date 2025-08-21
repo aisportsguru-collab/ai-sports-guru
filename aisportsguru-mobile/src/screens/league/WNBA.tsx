@@ -1,3 +1,3 @@
 import React from "react";
 import LeagueTemplate from "./LeagueTemplate";
-export default function MLB(){ return <LeagueTemplate league="mlb" /> }
+export default function WNBA(){ return <LeagueTemplate league="wnba" /> }

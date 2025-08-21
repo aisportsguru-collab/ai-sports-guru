@@ -1,59 +1,58 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import type { LeagueMarketPrediction } from '../data/leaguePredictions';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-/** Simple inline chips showing SPREAD / ML / TOTAL picks for a game. */
-export default function PredChips({ preds }: { preds: LeagueMarketPrediction[] }) {
-  if (!preds?.length) return null;
+type Prediction = {
+  moneyline?: { pick?: "home"|"away"; team?: string; probability?: number };
+  spread?:    { pick?: "home"|"away"; team?: string; points?: number; probability?: number };
+  total?:     { pick?: "over"|"under"; points?: number; probability?: number };
+};
+
+export default function PredChips({
+  pred,
+  homeName,
+  awayName
+}: {
+  pred: Prediction | undefined;
+  homeName: string;
+  awayName: string;
+}) {
+  if (!pred) return null;
+
+  const pct = (p?: number) => (typeof p === "number" ? `${Math.round(p * 100)}%` : "—");
+
+  const ml = pred.moneyline
+    ? `ML: ${pred.moneyline.team ?? (pred.moneyline.pick === "home" ? homeName : awayName)} ${pct(pred.moneyline.probability)}`
+    : null;
+
+  const sp = pred.spread
+    ? `Spread: ${pred.spread.team ?? (pred.spread.pick === "home" ? homeName : awayName)} ${pred.spread.points != null ? (pred.spread.points > 0 ? `+${pred.spread.points}` : `${pred.spread.points}`) : ""} • ${pct(pred.spread.probability)}`
+    : null;
+
+  const tt = pred.total
+    ? `Total: ${pred.total.pick === "over" ? "Over" : "Under"} ${pred.total.points ?? "—"} • ${pct(pred.total.probability)}`
+    : null;
+
+  if (!ml && !sp && !tt) return null;
+
   return (
-    <View style={styles.row}>
-      {preds.map((p, i) => (
-        <View key={i} style={[styles.chip, chipColor(p.market)]}>
-          <Text style={styles.chipText}>
-            {labelFor(p)}
-          </Text>
-        </View>
-      ))}
+    <View style={styles.block}>
+      <Text style={styles.title}>AI Predictions</Text>
+      <View style={styles.chipsRow}>
+        {ml && <View style={[styles.chip, styles.green]}><Text style={styles.chipTxt}>{ml}</Text></View>}
+        {sp && <View style={[styles.chip, styles.blue]}><Text style={styles.chipTxt}>{sp}</Text></View>}
+        {tt && <View style={[styles.chip, styles.gray]}><Text style={styles.chipTxt}>{tt}</Text></View>}
+      </View>
     </View>
   );
 }
 
-function labelFor(p: LeagueMarketPrediction) {
-  if (p.market === 'SPREAD') {
-    const side = p.pick === 'HOME' ? 'HOME' : 'AWAY';
-    const ln = p.line != null ? ` ${p.line > 0 ? '+' : ''}${p.line}` : '';
-    return `SPREAD: ${side}${ln}`;
-  }
-  if (p.market === 'ML') {
-    const side = p.pick === 'HOME' ? 'HOME' : 'AWAY';
-    return `ML: ${side}`;
-  }
-  if (p.market === 'TOTAL') {
-    const side = p.pick;
-    const ln = p.line != null ? ` ${p.line}` : '';
-    return `TOTAL: ${side}${ln}`;
-  }
-  return `${p.market}`;
-}
-
-function chipColor(market: 'ML'|'SPREAD'|'TOTAL') {
-  switch (market) {
-    case 'SPREAD': return { backgroundColor: 'rgba(147,247,189,0.12)', borderColor: '#2a6f59' };
-    case 'ML':     return { backgroundColor: 'rgba(168,184,255,0.12)', borderColor: '#263259' };
-    case 'TOTAL':  return { backgroundColor: 'rgba(255,196,77,0.12)',  borderColor: '#6a5a2a' };
-    default:       return { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: '#253055' };
-  }
-}
-
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-  chip: {
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    height: 26,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chipText: { color: '#e6eeff', fontSize: 12, fontWeight: '700' },
+  block: { gap: 8 },
+  title: { fontWeight: "700", color: "#111827" },
+  chipsRow: { flexDirection: "column", gap: 6 }, // stack on small screens
+  chip: { paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10, alignSelf: "flex-start" },
+  chipTxt: { color: "white", fontWeight: "700" },
+  green: { backgroundColor: "#15803D" },
+  blue:  { backgroundColor: "#2563EB" },
+  gray:  { backgroundColor: "#6B7280" }
 });
