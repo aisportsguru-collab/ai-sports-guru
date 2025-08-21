@@ -4,21 +4,27 @@
   },
   "build": {
     "production": {
-      "ios": {
-        "workflow": "managed",
-        "distribution": "app-store",
-        "resourceClass": "m-medium"
-      },
+      "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_BASE": "https://ai-sports-guru-ek55nturj-jordan-smiths-projects-aba7b6c0.vercel.app"
+        "EXPO_PUBLIC_API_BASE": "https://ai-sports-guru-ek55nturj-jordan-smiths-projects-aba7b6c0.vercel.app",
+        "EXPO_PUBLIC_DEFAULT_FROM": "2025-08-21",
+        "EXPO_PUBLIC_DEFAULT_TO": "2025-10-05",
+        "EXPO_PUBLIC_ADMIN_EMAILS": "smithajordan1992@gmail.com",
+        "EXPO_PUBLIC_PRIVACY_URL": "https://aisportsguru.com/privacy",
+        "EXPO_PUBLIC_TERMS_URL": "https://aisportsguru.com/terms"
+      },
+      "ios": {
+        "distribution": "store",
+        "resourceClass": "m-medium"
       }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        /* Leave empty and EAS will look up the app by bundleIdentifier.
-           Make sure your ios.bundleIdentifier is set in app.json/app.config.ts */
+        /* You can leave this empty and EAS will resolve by bundleIdentifier.
+           If you already created the app in App Store Connect and want to pin it,
+           add: "ascAppId": "1234567890"  (as a STRING). */
       }
     }
   }
