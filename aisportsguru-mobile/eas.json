@@ -1,8 +1,25 @@
 {
-  "cli": { "version": ">= 13.0.0", "appVersionSource": "remote" },
-  "build": {
-    "dev-sim": { "developmentClient": true, "distribution": "internal", "ios": { "simulator": true } },
-    "production": { "ios": {}, "android": {} }
+  "cli": {
+    "version": ">= 3.17.0"
   },
-  "submit": { "production": {} }
+  "build": {
+    "production": {
+      "ios": {
+        "workflow": "managed",
+        "distribution": "app-store",
+        "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE": "https://ai-sports-guru-ek55nturj-jordan-smiths-projects-aba7b6c0.vercel.app"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        /* Leave empty and EAS will look up the app by bundleIdentifier.
+           Make sure your ios.bundleIdentifier is set in app.json/app.config.ts */
+      }
+    }
+  }
 }
