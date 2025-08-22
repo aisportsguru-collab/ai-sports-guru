@@ -1,5 +1,6 @@
 platform :ios, '17.0'
 ENV['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 begin
@@ -7,23 +8,27 @@ begin
 rescue LoadError
   Pod::UI.warn '@react-native-community/cli-platform-ios native_modules not found; continuing (Expo autolinking will handle modules)'
 end
-require_relative '../node_modules/expo/scripts/autolinking'
+require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 
 target 'AISportsGuru' do
   use_expo_modules!
 
   config = defined?(use_native_modules!) ? use_native_modules! : { reactNativePath: '../node_modules/react-native' }
+
   use_react_native!(
     :path => config[:reactNativePath] || '../node_modules/react-native',
-    :hermes_enabled => true
+    :hermes_enabled => true,
+    :fabric_enabled => false
   )
 
-  # Important for RN Reanimated linking
   post_install do |installer|
     react_native_post_install(installer)
     installer.pods_project.targets.each do |t|
       t.build_configurations.each do |c|
         c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+        flags = c.build_settings['OTHER_LDFLAGS'] || ['$(inherited)']
+        flags |= ['$(inherited)', '-ObjC', '-lc++']
+        c.build_settings['OTHER_LDFLAGS'] = flags
       end
     end
   end
