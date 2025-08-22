@@ -7,7 +7,7 @@ begin
 rescue LoadError
   Pod::UI.warn '@react-native-community/cli-platform-ios native_modules not found; continuing (Expo autolinking will handle modules)'
 end
-require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
+require_relative '../node_modules/expo/scripts/autolinking'
 
 target 'AISportsGuru' do
   use_expo_modules!
@@ -18,12 +18,13 @@ target 'AISportsGuru' do
     :hermes_enabled => true
   )
 
+  # Important for RN Reanimated linking
   post_install do |installer|
     react_native_post_install(installer)
-    # Force 17.0 across the Pods project (doesn't affect resolver, but keeps build settings sane)
-    installer.pods_project.build_configurations.each { |bc| bc.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0' }
     installer.pods_project.targets.each do |t|
-      t.build_configurations.each { |c| c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0' }
+      t.build_configurations.each do |c|
+        c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+      end
     end
   end
 end
