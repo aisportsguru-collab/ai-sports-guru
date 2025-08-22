@@ -1,8 +1,7 @@
-platform :ios, '15.0'
-ENV['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+platform :ios, '17.0'
+ENV['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
 
 require_relative '../node_modules/react-native/scripts/react_native_pods'
-# Optional helper; if missing, Expo autolinking still handles modules
 begin
   require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 rescue LoadError
@@ -11,12 +10,9 @@ end
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 
 target 'AISportsGuru' do
-  platform :ios, '15.0'
-
-  # Autolink Expo & RN
   use_expo_modules!
-  config = defined?(use_native_modules!) ? use_native_modules! : { reactNativePath: '../node_modules/react-native' }
 
+  config = defined?(use_native_modules!) ? use_native_modules! : { reactNativePath: '../node_modules/react-native' }
   use_react_native!(
     :path => config[:reactNativePath] || '../node_modules/react-native',
     :hermes_enabled => true
@@ -24,15 +20,10 @@ target 'AISportsGuru' do
 
   post_install do |installer|
     react_native_post_install(installer)
-
-    # Force iOS 15.0 for every pod target + the Pods project build configs
-    installer.pods_project.build_configurations.each do |bc|
-      bc.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
-    end
+    # Force 17.0 across the Pods project (doesn't affect resolver, but keeps build settings sane)
+    installer.pods_project.build_configurations.each { |bc| bc.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0' }
     installer.pods_project.targets.each do |t|
-      t.build_configurations.each do |c|
-        c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
-      end
+      t.build_configurations.each { |c| c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0' }
     end
   end
 end
