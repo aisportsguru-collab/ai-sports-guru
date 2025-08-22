@@ -18,5 +18,12 @@
         "EXPO_PUBLIC_TERMS_URL": "https://aisportsguru.com/terms"
       }
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6751012729"
+      }
+    }
   }
 }
