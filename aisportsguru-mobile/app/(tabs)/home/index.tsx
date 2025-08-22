@@ -53,7 +53,7 @@ export default function Home() {
             <Text style={styles.tileSub}>Subscription & profile.</Text>
           </Pressable>
         </Link>
-        <Link href="/settings" asChild>
+        <Link href="/(tabs)/home/settings" asChild>
           <Pressable style={styles.tile}>
             <Text style={styles.tileTitle}>Settings</Text>
             <Text style={styles.tileSub}>Theme, preferences, more.</Text>
