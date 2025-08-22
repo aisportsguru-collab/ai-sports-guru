@@ -25,5 +25,8 @@
         "ascAppId": "6751012729"
       }
     }
+  },
+  "version": {
+    "source": "local"
   }
 }
