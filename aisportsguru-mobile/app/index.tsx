@@ -1,30 +1,62 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { Link } from 'expo-router';
 
-export default function Landing() {
+export default function Home() {
   return (
-    <View style={s.container}>
-      <Text style={s.title}>AI Sports Guru</Text>
-      <Text style={s.copy}>
-        Model-driven picks for NFL, NBA, MLB, NHL, NCAAF, NCAAB, and WNBA.
-      </Text>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 8,     // <— bumps the content down from the notch
+          paddingBottom: 24,
+          gap: 16,
+        }}
+      >
+        <View style={{ gap: 8, marginTop: 8 }}>
+          <Text style={{ fontSize: 28, fontWeight: '800', textAlign: 'center' }}>
+            AI Sports Guru
+          </Text>
+          <Text style={{ fontSize: 14, color: '#666', textAlign: 'center' }}>
+            Smarter picks, faster.
+          </Text>
+        </View>
 
-      <Pressable style={s.cta} onPress={() => router.push('/sign-up')}>
-        <Text style={s.ctaText}>Get Started</Text>
-      </Pressable>
+        <View style={{ gap: 12, marginTop: 12 }}>
+          <Link href="/sign-in" asChild>
+            <Pressable
+              style={{
+                backgroundColor: '#111',
+                borderRadius: 12,
+                paddingVertical: 14,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 16, fontWeight: '700' }}>
+                Sign in
+              </Text>
+            </Pressable>
+          </Link>
 
-      <Pressable onPress={() => router.push('/sign-in')}>
-        <Text style={s.link}>I already have an account</Text>
-      </Pressable>
-    </View>
+          <Link href="/sign-up" asChild>
+            <Pressable
+              style={{
+                backgroundColor: '#f3f4f6',
+                borderRadius: 12,
+                paddingVertical: 14,
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: '#e5e7eb',
+              }}
+            >
+              <Text style={{ color: '#111', fontSize: 16, fontWeight: '700' }}>
+                Create account
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', padding: 24, justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 34, fontWeight: '800', textAlign: 'center', marginBottom: 16 },
-  copy: { color: '#aaa', fontSize: 16, textAlign: 'center', marginBottom: 24 },
-  cta: { backgroundColor: '#FFCF33', paddingVertical: 16, borderRadius: 12, marginBottom: 14, alignItems: 'center' },
-  ctaText: { color: '#000', fontWeight: '800', fontSize: 16 },
-  link: { color: '#e5e7eb', textAlign: 'center', textDecorationLine: 'underline', marginTop: 6 },
-});
