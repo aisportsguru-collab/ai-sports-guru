@@ -1,4 +1,4 @@
 import { Redirect } from 'expo-router';
 export default function SportsTab() {
-  return <Redirect href="/" />;
+  return <Redirect href="/(tabs)/home" />;
 }
