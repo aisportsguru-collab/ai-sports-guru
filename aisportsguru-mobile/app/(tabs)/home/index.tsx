@@ -1,8 +1,8 @@
 import { Link } from "expo-router";
 import React from "react";
 import { ScrollView, View, Text, StyleSheet, Pressable } from "react-native";
-import { LEAGUES } from "../../src/constants/leagues";
-import LegalFooter from "../../src/components/LegalFooter";
+import { LEAGUES } from "../../../src/constants/leagues";
+import LegalFooter from "../../../src/components/LegalFooter";
 
 export default function Home() {
   return (

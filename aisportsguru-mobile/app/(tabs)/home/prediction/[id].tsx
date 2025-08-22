@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { cachedJSON } from '../../../src/data/api';
+import { cachedJSON } from '../../../../src/data/api';
 
 type Pred = {
   id: string;

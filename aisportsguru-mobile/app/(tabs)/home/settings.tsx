@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Linking, Pressable } from "react-native";
-import { ENV } from "../../src/config/env";
-import LegalNote from "../../src/components/LegalNote";
+import { ENV } from "../../../src/config/env";
+import LegalNote from "../../../src/components/LegalNote";
 
 const Row = ({ label, onPress }: { label: string; onPress: () => void }) => (
   <Pressable onPress={onPress} style={s.row}>

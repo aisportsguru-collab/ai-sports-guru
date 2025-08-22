@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Alert, ScrollView } from "react-native";
-import { isAdminEmail } from "../../src/state/isAdmin";
-import { ENV } from "../../src/config/env";
+import { isAdminEmail } from "../../../src/state/isAdmin";
+import { ENV } from "../../../src/config/env";
 
 /**
  * If you already have an auth hook, replace `currentEmail` with your real user email, e.g.:

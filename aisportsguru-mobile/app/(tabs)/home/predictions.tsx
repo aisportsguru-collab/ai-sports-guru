@@ -1,10 +1,10 @@
 import React from 'react';
-import { markPredictions } from '../../src/cta/primary';
+import { markPredictions } from '../../../src/cta/primary';
 import { View, Text, ScrollView, RefreshControl, StyleSheet, SafeAreaView } from 'react-native';
-import RequirePro from '../../src/components/RequirePro';
-import Disclaimer from '../../src/components/Disclaimer';
-import PredictionCard from '../../src/components/PredictionCard';
-import { usePredictions } from '../../src/hooks/usePredictions';
+import RequirePro from '../../../src/components/RequirePro';
+import Disclaimer from '../../../src/components/Disclaimer';
+import PredictionCard from '../../../src/components/PredictionCard';
+import { usePredictions } from '../../../src/hooks/usePredictions';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function PredictionsScreen() {
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
 });
 /* --- remember last predictions route --- */
 import { useEffect } from 'react';
-import { remember, MEM_LAST_PRED_ROUTE } from '../../src/lib/memory';
+import { remember, MEM_LAST_PRED_ROUTE } from '../../../src/lib/memory';
 
 useEffect(() => {
   remember(MEM_LAST_PRED_ROUTE, '/(tabs)/predictions').catch(() => {});
