@@ -1,11 +1,12 @@
 {
-  "cli": {
-    "version": ">= 3.17.0",
-    "appVersionSource": "remote"
-  },
+  "cli": { "appVersionSource": "remote" },
   "build": {
     "production": {
       "channel": "production",
+      "ios": {
+        "distribution": "store",
+        "resourceClass": "m-medium"
+      },
       "env": {
         "EXPO_PUBLIC_API_BASE": "https://ai-sports-guru-ek55nturj-jordan-smiths-projects-aba7b6c0.vercel.app",
         "EXPO_PUBLIC_DEFAULT_FROM": "2025-08-21",
@@ -13,19 +14,6 @@
         "EXPO_PUBLIC_ADMIN_EMAILS": "smithajordan1992@gmail.com",
         "EXPO_PUBLIC_PRIVACY_URL": "https://aisportsguru.com/privacy",
         "EXPO_PUBLIC_TERMS_URL": "https://aisportsguru.com/terms"
-      },
-      "ios": {
-        "distribution": "store",
-        "resourceClass": "m-medium"
-      }
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        /* Optional: after you create the app in App Store Connect, you may add:
-           "ascAppId": "1234567890"
-           Keep it a STRING. It's not required to build. */
       }
     }
   }
