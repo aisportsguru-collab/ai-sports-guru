@@ -6,7 +6,8 @@
     "ios": {
       "bundleIdentifier": "com.aisportsguru.app",
       "buildNumber": "1",
-      "runtimeVersion": "1.0.0"
+      "runtimeVersion": "1.0.0",
+      "deploymentTarget": "17.0"
     },
     "android": {
       "package": "com.aisportsguru.app",
