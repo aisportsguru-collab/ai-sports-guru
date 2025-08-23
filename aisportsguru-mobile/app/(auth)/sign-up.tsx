@@ -7,7 +7,7 @@ export default function SignUp() {
       <Text style={s.title}>Create account</Text>
       {/* TODO: replace with your real sign-up form */}
       <Pressable style={s.button} onPress={() => router.replace('/home')}>
-        <Text style={s.buttonText}>Create (placeholder)</Text>
+        <Text style={s.buttonText}>Create account</Text>
       </Pressable>
 
       <Pressable onPress={() => router.push('/sign-in')}>

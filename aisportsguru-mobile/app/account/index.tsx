@@ -1,33 +1,22 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { Link } from 'expo-router';
+import { View, Text, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function AccountScreen() {
+  const router = useRouter();
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>My Account</Text>
-      <Text style={styles.subtitle}>Manage your subscription and profile.</Text>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Subscription</Text>
-        <Text style={styles.cardText}>AI Sports Guru Pro — $49.99/mo</Text>
-        <Link href="/home/settings" asChild>
-          <Pressable style={styles.btn}>
-            <Text style={styles.btnText}>Manage settings</Text>
-          </Pressable>
-        </Link>
-      </View>
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: '#0b0b0c', padding: 24 }}>
+      <Text style={{ color: 'white', fontSize: 22, fontWeight: '700', marginBottom: 12 }}>
+        Account
+      </Text>
+      <Text style={{ color: '#c9c9c9', marginBottom: 24 }}>
+        Manage subscription & profile.
+      </Text>
+      <Pressable
+        onPress={() => router.push('/(tabs)/home')}
+        style={{ backgroundColor: '#d4af37', padding: 14, borderRadius: 12, alignItems: 'center' }}
+      >
+        <Text style={{ color: '#000', fontWeight: '700' }}>Back to Home</Text>
+      </Pressable>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: 16, paddingTop: 24, backgroundColor: '#0B0B0B', flexGrow: 1 },
-  title: { color: '#FFFFFF', fontSize: 28, fontWeight: '800', marginBottom: 8 },
-  subtitle: { color: '#A1AAB7', marginBottom: 16 },
-  card: { backgroundColor: '#111318', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#1F1F1F' },
-  cardTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  cardText: { color: '#D1D5DB', marginBottom: 12 },
-  btn: { backgroundColor: '#F5C451', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  btnText: { color: '#0B0B0B', fontWeight: '700' },
-});
