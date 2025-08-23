@@ -1,4 +1,6 @@
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -17,17 +19,17 @@ export async function GET(req: Request) {
       .from("v_predictions_api")
       .select("*")
       .eq("league", "nba")
-      .eq("season", season)
-      .order("start_time", { ascending: true });
+      .eq("season", season);
 
-    if (error) throw error;
+    if (error) {
+      return NextResponse.json({ error: `supabase error: ${error.message}` }, { status: 500 });
+    }
 
     return NextResponse.json(
       { data },
       { headers: { "Cache-Control": "s-maxage=120, stale-while-revalidate=600" } }
     );
-  } catch (err) {
-    console.error("NBA Predictions error:", err);
-    return NextResponse.json({ error: "Failed to fetch NBA predictions" }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: `handler error: ${err?.message || String(err)}` }, { status: 500 });
   }
 }
