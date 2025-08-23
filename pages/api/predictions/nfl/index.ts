@@ -11,9 +11,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const season = (req.query.season as string) || "2025";
 
     const { data, error } = await supabase
-      .from("predictions")
+      .from("nfl_predictions")
       .select("*")
-      .eq("league", "nfl")
       .eq("season", season)
       .order("start_time", { ascending: true });
 
