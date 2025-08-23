@@ -1,4 +1,2 @@
 import { Redirect } from 'expo-router';
-export default function PredictionsAlias() {
-  return <Redirect href="/(tabs)/home/predictions" />;
-}
+export default function Alias(){ return <Redirect href="/(tabs)/home/predictions" />; }
