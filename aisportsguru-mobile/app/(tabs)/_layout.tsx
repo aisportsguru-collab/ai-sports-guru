@@ -3,8 +3,6 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { THEME } from "../../src/theme/colors";
 
-const hide = { href: null as any, tabBarButton: () => null, tabBarItemStyle: { display: "none" } };
-
 export default function TabsLayout() {
   return (
     <Tabs
@@ -16,7 +14,7 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontSize: 11 },
       }}
     >
-      {/* The ONLY 3 visible tabs */}
+      {/* Visible tabs */}
       <Tabs.Screen
         name="home"
         options={{
@@ -39,12 +37,12 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Everything else is hidden from the tab bar */}
-      <Tabs.Screen name="index" options={hide} />
-      <Tabs.Screen name="home/league/[id]" options={hide} />
-      <Tabs.Screen name="account/settings" options={hide} />
-      <Tabs.Screen name="account/privacy" options={hide} />
-      <Tabs.Screen name="account/terms" options={hide} />
+      {/* Hidden internal routes — use ONLY href: null (no tabBarButton to avoid error) */}
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="home/league/[id]" options={{ href: null }} />
+      <Tabs.Screen name="account/settings" options={{ href: null }} />
+      <Tabs.Screen name="account/privacy" options={{ href: null }} />
+      <Tabs.Screen name="account/terms" options={{ href: null }} />
     </Tabs>
   );
 }
