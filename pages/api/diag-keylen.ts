@@ -1,7 +1,4 @@
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-import { NextResponse } from "next/server";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 function mask(v?: string | null) {
   if (!v) return { present: false, len: 0, head: "", tail: "" };
@@ -11,10 +8,10 @@ function mask(v?: string | null) {
   return { present: true, len, head, tail };
 }
 
-export async function GET() {
+export default function handler(_req: NextApiRequest, res: NextApiResponse) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const srk = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  return NextResponse.json({
+  res.status(200).json({
     NEXT_PUBLIC_SUPABASE_URL: mask(url),
     SUPABASE_SERVICE_ROLE_KEY: mask(srk),
   });
