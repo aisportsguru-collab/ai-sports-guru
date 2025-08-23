@@ -1,48 +1,104 @@
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
+import React, { useRef, useEffect } from "react";
+import { SafeAreaView, View, Text, Pressable, StyleSheet, Animated, Dimensions } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { THEME, shadows } from "../src/theme/colors";
+import { router } from "expo-router";
 
-const GOLD = '#F5C847';
-const BG   = '#0B0B0B';
-const CARD = '#121317';
-const MUTED= '#A6A6A6';
+const { width } = Dimensions.get("window");
 
 export default function Landing() {
-  return (
-    <ScrollView style={{ flex: 1, backgroundColor: BG }} contentInsetAdjustmentBehavior="automatic">
-      <View style={styles.heroWrap}>
-        <View style={styles.hero}>
-          <Text style={styles.title}>AI Sports Guru</Text>
-          <Text style={styles.copy}>
-            Premium, model-driven picks for NFL, NBA, MLB, NHL, NCAAF, NCAAB & WNBA.
-          </Text>
-          <View style={{ height: 8 }} />
-          <Text style={styles.bullets}>{'\u2022'} Daily predictions synced with live odds{'\n'}{'\u2022'} Confidence for Moneyline / Spread / Total{'\n'}{'\u2022'} Cancel anytime</Text>
-          <View style={{ height: 12 }} />
-          <Text style={styles.price}>From <Text style={{ fontWeight: '700', color: '#fff' }}>$49.99/mo</Text></Text>
-          <View style={{ height: 16 }} />
+  // Subtle pulse for premium feel
+  const pulse = useRef(new Animated.Value(0.9)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 1800, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.9, duration: 1800, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
 
-          <Link href="/(auth)/sign-up" asChild>
-            <Pressable style={styles.cta}>
+  return (
+    <View style={{ flex: 1, backgroundColor: THEME.BG }}>
+      {/* Background gradient / vignette */}
+      <LinearGradient
+        colors={["#0B0B0B", "#0B0B0B", "#121317"]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.heroWrap}>
+          <Animated.View style={[styles.halo, { transform: [{ scale: pulse }] }]} />
+          <Animated.View style={[styles.halo2, { transform: [{ scale: pulse }] }]} />
+          <Animated.View style={[styles.card, { transform: [{ scale: pulse.interpolate({ inputRange: [0.9, 1], outputRange: [0.99, 1] }) }] }]}>
+            <Text style={styles.title}>AI Sports Guru</Text>
+            <Text style={styles.subtitle}>Premium, model‑driven picks for NFL, NBA, MLB, NHL, NCAAF, NCAAB & WNBA.</Text>
+
+            <View style={styles.bullets}>
+              <Text style={styles.bullet}>• Daily predictions synced with live odds</Text>
+              <Text style={styles.bullet}>• Confidence for Moneyline / Spread / Total</Text>
+              <Text style={styles.bullet}>• Cancel anytime</Text>
+            </View>
+
+            <Text style={styles.price}>From <Text style={{ color: THEME.GOLD, fontWeight: "800" }}>$49.99/mo</Text></Text>
+
+            <Pressable onPress={() => router.replace("/(tabs)")} style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9 }]}>
               <Text style={styles.ctaText}>Get Started</Text>
             </Pressable>
-          </Link>
 
-          <View style={{ height: 14 }} />
-          <Link href="/(auth)/sign-in" style={styles.link}>Sign in</Link>
+            <Pressable onPress={() => router.push("/auth/sign-in")} style={({ pressed }) => [{ alignSelf: "center", marginTop: 10 }, pressed && { opacity: 0.8 }]}>
+              <Text style={styles.signIn}>Sign in</Text>
+            </Pressable>
+          </Animated.View>
         </View>
-      </View>
-    </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  heroWrap: { padding: 20 },
-  hero: { backgroundColor: CARD, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: '#232632' },
-  title: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  copy: { color: MUTED, marginTop: 8, lineHeight: 20 },
-  bullets: { color: MUTED, lineHeight: 20 },
-  price: { color: MUTED, marginTop: 8 },
-  cta: { backgroundColor: GOLD, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  ctaText: { color: '#0B0B0B', fontWeight: '800', fontSize: 16 },
-  link: { color: '#5AA7FF', textAlign: 'center', marginTop: 8 }
+  safe: { flex: 1, justifyContent: "center" },
+  heroWrap: { alignItems: "center", justifyContent: "center" },
+  halo: {
+    position: "absolute",
+    width: width * 0.9,
+    height: width * 0.9,
+    borderRadius: 9999,
+    backgroundColor: "#11131B",
+    opacity: 0.35,
+    top: 40,
+    ...shadows.sm,
+  },
+  halo2: {
+    position: "absolute",
+    width: width * 0.6,
+    height: width * 0.6,
+    borderRadius: 9999,
+    backgroundColor: THEME.GOLD,
+    opacity: 0.06,
+    top: 120,
+    filter: "blur(30px)" as any, // ignored on native but helps on web preview
+  },
+  card: {
+    backgroundColor: THEME.CARD,
+    borderColor: THEME.BORDER,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 20,
+    width: "90%",
+    maxWidth: 420,
+    alignSelf: "center",
+    ...shadows.sm,
+  },
+  title: { color: THEME.TEXT, fontSize: 24, fontWeight: "900" },
+  subtitle: { color: THEME.MUTED, fontSize: 14, marginTop: 8 },
+  bullets: { marginTop: 12, gap: 6 },
+  bullet: { color: THEME.MUTED, fontSize: 13 },
+  price: { color: THEME.MUTED, marginTop: 12 },
+  cta: { backgroundColor: THEME.GOLD, paddingVertical: 12, borderRadius: 12, marginTop: 14 },
+  ctaText: { color: "#171717", textAlign: "center", fontWeight: "900" },
+  signIn: { color: THEME.MUTED, textAlign: "center", textDecorationLine: "underline" },
 });

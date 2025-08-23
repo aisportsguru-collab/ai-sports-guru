@@ -43,3 +43,4 @@ app-example
 .env.dev
 .env.preview
 .env.prod
+.env

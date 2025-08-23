@@ -1,2 +1,4 @@
-import { Redirect } from 'expo-router';
-export default function Alias(){ return <Redirect href="/(tabs)/home/predictions" />; }
+import { Redirect } from "expo-router";
+export default function LegacyPredictionsRedirect() {
+  return <Redirect href="/(tabs)/sports" />;
+}

@@ -1,10 +1,11 @@
-import { Slot } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from "react";
+import { Stack } from "expo-router";
 
-export default function HomeLayout() {
+export default function HomeStackLayout() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }} edges={['top','bottom']}>
-      <Slot />
-    </SafeAreaView>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="league/[id]" />
+    </Stack>
   );
 }
