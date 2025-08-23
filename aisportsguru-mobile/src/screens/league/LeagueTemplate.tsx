@@ -1,25 +1,64 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView, RefreshControl } from "react-native";
 import { THEME, shadows } from "../../theme/colors";
-import { useQuery } from "@tanstack/react-query";
-import { api, Game } from "../../lib/api";
+import { usePredictions } from "../../hooks/usePredictions";
 
-type Props = {
-  leagueId?: string;
+type GameRow = {
+  id: string;
+  away: string;
+  home: string;
+  start: string;
+  spread?: string;
+  total?: string;
+  mlAway?: string;
+  mlHome?: string;
+  pick?: string;
+  edge?: string;
 };
 
-export default function LeagueTemplate({ leagueId }: Props) {
-  const lid = (leagueId ?? "league").toLowerCase();
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["games", lid],
-    queryFn: () => api.gamesByLeague(lid),
-  });
+// Normalize various backend shapes into our UI shape
+function normalize(payload: any, sport: string): GameRow[] {
+  const list = Array.isArray(payload?.games) ? payload.games : Array.isArray(payload) ? payload : [];
+  return list.map((g: any, idx: number) => {
+    const id = g.id ?? g.gameId ?? `${sport}-${idx}`;
+    const away = g.away ?? g.awayTeam ?? g.teams?.away ?? "Away";
+    const home = g.home ?? g.homeTeam ?? g.teams?.home ?? "Home";
+    const start = g.start ?? g.startTime ?? g.kickoff ?? new Date().toISOString();
 
-  const title = lid.toUpperCase();
+    // odds
+    const spread =
+      g.spread ??
+      g.odds?.spread ??
+      (g.odds?.spreadHome != null ? `${home} ${g.odds.spreadHome}` : g.odds?.spreadAway != null ? `${away} ${g.odds.spreadAway}` : undefined);
+
+    const total =
+      g.total ??
+      g.odds?.total ??
+      (g.odds?.ou != null ? `O/U ${g.odds.ou}` : g.odds?.totalPoints != null ? `O/U ${g.odds.totalPoints}` : undefined);
+
+    const mlAway = g.mlAway ?? g.odds?.moneyline?.away ?? g.odds?.mlAway;
+    const mlHome = g.mlHome ?? g.odds?.moneyline?.home ?? g.odds?.mlHome;
+
+    // model
+    const pick = g.pick ?? g.modelPick?.summary ?? g.model?.pick ?? undefined;
+    const edge = g.edge ?? g.modelPick?.edge ?? g.model?.edge ?? undefined;
+
+    return { id, away, home, start, spread, total, mlAway, mlHome, pick, edge };
+  });
+}
+
+export default function LeagueTemplate({ leagueId }: { leagueId?: string }) {
+  const sport = (leagueId ?? "league").toLowerCase();
+  const { data, isLoading, isError, refetch, isRefetching } = usePredictions(sport);
+  const games = normalize(data, sport);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>{title} Predictions</Text>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: THEME.BG }}
+      contentContainerStyle={styles.container}
+      refreshControl={<RefreshControl tintColor={THEME.GOLD} refreshing={isRefetching} onRefresh={() => refetch()} />}
+    >
+      <Text style={styles.header}>{sport.toUpperCase()} Predictions</Text>
 
       {isLoading && (
         <View style={styles.card}>
@@ -28,22 +67,22 @@ export default function LeagueTemplate({ leagueId }: Props) {
         </View>
       )}
 
-      {isError && (
+      {isError && !isLoading && (
         <View style={styles.card}>
-          <Text style={styles.cardMuted}>Could not load data. Check connection and try again.</Text>
+          <Text style={styles.cardMuted}>Could not load data from {process.env.EXPO_PUBLIC_API_BASE}.</Text>
           <Pressable onPress={() => refetch()} style={styles.btn}>
             <Text style={styles.btnText}>Retry</Text>
           </Pressable>
         </View>
       )}
 
-      {!isLoading && !isError && (data?.length ?? 0) === 0 && (
+      {!isLoading && !isError && games.length === 0 && (
         <View style={styles.card}>
-          <Text style={styles.cardMuted}>No games available. Pull to refresh later.</Text>
+          <Text style={styles.cardMuted}>No games found. Pull to refresh later.</Text>
         </View>
       )}
 
-      {(data ?? []).map((g: Game) => (
+      {games.map((g) => (
         <View key={g.id} style={styles.game}>
           <View style={styles.row}>
             <Text style={styles.match}>{g.away} @ {g.home}</Text>
@@ -54,13 +93,13 @@ export default function LeagueTemplate({ leagueId }: Props) {
             {g.spread ? <View style={styles.pill}><Text style={styles.pillText}>{g.spread}</Text></View> : null}
             {g.total ? <View style={styles.pill}><Text style={styles.pillText}>{g.total}</Text></View> : null}
             {(g.mlAway || g.mlHome) ? (
-              <View style={styles.pill}><Text style={styles.pillText}>ML {g.mlAway ?? ""}/{g.mlHome ?? ""}</Text></View>
+              <View style={styles.pill}><Text style={styles.pillText}>ML {g.mlAway ?? "—"}/{g.mlHome ?? "—"}</Text></View>
             ) : null}
           </View>
 
           <View style={styles.pickRow}>
             <Text style={styles.pick}>Pick: <Text style={{ color: THEME.GOLD }}>{g.pick ?? "—"}</Text></Text>
-            <Text style={styles.edge}>{g.edge ?? ""}</Text>
+            {g.edge ? <Text style={styles.edge}>{g.edge}</Text> : null}
           </View>
 
           <Pressable style={({ pressed }) => [styles.btn, pressed && { opacity: 0.9 }]} onPress={() => {}}>
@@ -68,12 +107,12 @@ export default function LeagueTemplate({ leagueId }: Props) {
           </Pressable>
         </View>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 12, paddingTop: 4, paddingBottom: 8 },
+  container: { gap: 12, padding: 16, paddingTop: 8 },
   header: { color: THEME.TEXT, fontSize: 24, fontWeight: "800", marginBottom: 4 },
 
   card: {
