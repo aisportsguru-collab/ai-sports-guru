@@ -1,96 +1,65 @@
-import { Link } from "expo-router";
-import React from "react";
-import { ScrollView, View, Text, StyleSheet, Pressable } from "react-native";
-import { LEAGUES } from "../../../src/constants/leagues";
-import LegalFooter from "../../../src/components/LegalFooter";
+import { useRouter, Link } from 'expo-router';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { LEAGUES } from '../../../src/constants/leagues';
+// Optional footer; remove if you prefer
+import LegalFooter from '../../../src/components/LegalFooter';
+
+const GOLD = '#F5C847';
+const BG   = '#0B0B0B';
+const CARD = '#121317';
+const BORDER = '#232632';
+const MUTED= '#A6A6A6';
 
 export default function Home() {
+  const router = useRouter();
+
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.cc}>
-      <View style={styles.hero}>
-        <Text style={styles.appTitle}>AI Sports Guru</Text>
-        <Text style={styles.tagline}>Premium predictions, beautiful experience.</Text>
-
-        <Link href="/(tabs)/sports" asChild>
-          <Pressable style={styles.cta} accessibilityRole="button">
-            <Text style={styles.ctaText}>Go to Predictions</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: BG }} contentInsetAdjustmentBehavior="automatic">
+      <View style={styles.container}>
+        <View style={styles.banner}>
+          <Text style={styles.bannerTitle}>AI Sports Guru</Text>
+          <Text style={styles.bannerSub}>Premium predictions, beautiful experience.</Text>
+          <Pressable style={styles.primary} onPress={() => router.push('/(tabs)/sports')}>
+            <Text style={styles.primaryText}>Go to Predictions</Text>
           </Pressable>
-        </Link>
+        </View>
+
+        <Text style={styles.section}>Leagues</Text>
+
+        <View style={styles.grid}>
+          {LEAGUES.map((lg) => (
+            <Pressable key={lg.id} style={styles.card} onPress={() => router.push(`/(tabs)/home/league/${lg.id}`)}>
+              <Text style={styles.cardTitle}>{lg.title}</Text>
+              <Text style={styles.cardSub}>View odds & picks →</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.section}>More</Text>
+
+        <View style={styles.row}>
+          <Link href="/account" style={styles.bigLink}>Account{'\n'}<Text style={{ color: MUTED, fontWeight: '400' }}>Subscription & profile.</Text></Link>
+          <Link href="/(tabs)/home/settings" style={styles.bigLink}>Settings{'\n'}<Text style={{ color: MUTED, fontWeight: '400' }}>Theme, preferences, more.</Text></Link>
+        </View>
+
+        <LegalFooter />
       </View>
-
-      <Text style={styles.sectionTitle}>Leagues</Text>
-      <View style={styles.grid}>
-        {LEAGUES.map((lg) => {
-          const L: any = lg;
-          const display =
-            L.name ??
-            L.short ??
-            L.label ??
-            L.title ??
-            L.code ??
-            String(L.id ?? "").toUpperCase();
-
-          return (
-            <Link
-              key={L.id}
-              href={{ pathname: "/(tabs)/league/[id]", params: { id: L.id } }}
-              asChild
-            >
-              <Pressable style={styles.tile} accessibilityRole="button">
-                <Text style={styles.tileTitle}>{display}</Text>
-                <Text style={styles.tileSub}>View odds & picks →</Text>
-              </Pressable>
-            </Link>
-          );
-        })}
-      </View>
-
-      <Text style={styles.sectionTitle}>More</Text>
-      <View style={styles.grid}>
-        <Link href="/account/index" asChild>
-          <Pressable style={styles.tile}>
-            <Text style={styles.tileTitle}>Account</Text>
-            <Text style={styles.tileSub}>Subscription & profile.</Text>
-          </Pressable>
-        </Link>
-        <Link href="/(tabs)/home/settings" asChild>
-          <Pressable style={styles.tile}>
-            <Text style={styles.tileTitle}>Settings</Text>
-            <Text style={styles.tileSub}>Theme, preferences, more.</Text>
-          </Pressable>
-        </Link>
-      </View>
-
-      <View style={{ height: 12 }} />
-      <LegalFooter />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#0B1220" },
-  cc: { padding: 16, gap: 16 },
-  hero: {
-    backgroundColor: "#121A2C",
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "#24324D"
-  },
-  appTitle: { color: "white", fontSize: 22, fontWeight: "800" },
-  tagline: { color: "#93A0B5", marginTop: 4 },
-  cta: { backgroundColor: "#16A34A", paddingVertical: 12, borderRadius: 12, alignItems: "center", marginTop: 14 },
-  ctaText: { color: "white", fontWeight: "800" },
-  sectionTitle: { color: "white", fontSize: 16, fontWeight: "700", marginTop: 8 },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  tile: {
-    width: "48%",
-    backgroundColor: "#111827",
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#1F2937"
-  },
-  tileTitle: { color: "#E5E7EB", fontWeight: "800", fontSize: 16 },
-  tileSub: { color: "#93A0B5", marginTop: 2, fontSize: 12 }
+  container: { padding: 16 },
+  banner: { backgroundColor: CARD, borderColor: BORDER, borderWidth: 1, padding: 16, borderRadius: 16, marginBottom: 12 },
+  bannerTitle: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  bannerSub: { color: MUTED, marginTop: 6 },
+  primary: { backgroundColor: GOLD, borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  primaryText: { color: '#0B0B0B', fontWeight: '800' },
+  section: { color: '#fff', fontWeight: '800', fontSize: 18, marginTop: 16, marginBottom: 8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  card: { backgroundColor: CARD, borderColor: BORDER, borderWidth: 1, borderRadius: 14, padding: 16, width: '48%' },
+  cardTitle: { color: '#fff', fontWeight: '800', marginBottom: 8 },
+  cardSub: { color: MUTED },
+  row: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  bigLink: { flex: 1, backgroundColor: CARD, borderColor: BORDER, borderWidth: 1, padding: 16, borderRadius: 14, color: '#fff', fontWeight: '800' },
 });

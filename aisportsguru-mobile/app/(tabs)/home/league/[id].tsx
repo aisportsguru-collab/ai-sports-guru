@@ -1,12 +1,20 @@
-import { useLocalSearchParams } from "expo-router";
 import React from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { THEME } from "../../../../src/theme/colors";
 import LeagueTemplate from "../../../../src/screens/league/LeagueTemplate";
 
-export default function LeagueById() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const key = String(id ?? "").toLowerCase();
-  const titleMap: Record<string, string> = {
-    nfl: "NFL", nba: "NBA", mlb: "MLB", nhl: "NHL", ncaaf: "NCAA Football", ncaab: "NCAA Basketball", wnba: "WNBA",
-  };
-  return <LeagueTemplate league={key || "nfl"} title={titleMap[key] ?? key.toUpperCase()} />;
+export default function LeagueScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  return (
+    <View style={styles.root}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+        <LeagueTemplate leagueId={String(id || "")} />
+      </ScrollView>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: THEME.BG, paddingHorizontal: 16, paddingTop: 12 },
+});
