@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, PostgrestError } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -18,13 +18,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const season = (req.query.season as string) || String(new Date().getFullYear());
 
-  try {
-    const { data, error } = await supabase
+  async function fetchBy(col: "league" | "sport") {
+    return supabase
       .from("v_predictions_api")
       .select("*")
-      .eq("league", league)
+      .eq(col, league)
       .eq("season", season)
       .order("start_time", { ascending: true });
+  }
+
+  try {
+    // First try with 'league'
+    let { data, error } = await fetchBy("league");
+
+    // If column doesn't exist, retry with 'sport'
+    const code = (error as PostgrestError | null)?.code;
+    if (code === "42703") {
+      const retry = await fetchBy("sport");
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) return res.status(500).json({ error: `supabase error: ${error.message}` });
 
