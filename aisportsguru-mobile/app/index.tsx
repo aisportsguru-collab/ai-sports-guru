@@ -7,7 +7,6 @@ import { router } from "expo-router";
 const { width } = Dimensions.get("window");
 
 export default function Landing() {
-  // Subtle pulse for premium feel
   const pulse = useRef(new Animated.Value(0.9)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -22,7 +21,6 @@ export default function Landing() {
 
   return (
     <View style={{ flex: 1, backgroundColor: THEME.BG }}>
-      {/* Background gradient / vignette */}
       <LinearGradient
         colors={["#0B0B0B", "#0B0B0B", "#121317"]}
         style={StyleSheet.absoluteFill}
@@ -34,19 +32,28 @@ export default function Landing() {
           <Animated.View style={[styles.halo, { transform: [{ scale: pulse }] }]} />
           <Animated.View style={[styles.halo2, { transform: [{ scale: pulse }] }]} />
           <Animated.View style={[styles.card, { transform: [{ scale: pulse.interpolate({ inputRange: [0.9, 1], outputRange: [0.99, 1] }) }] }]}>
+            <Text style={styles.kicker}>BETTER BETS START HERE</Text>
             <Text style={styles.title}>AI Sports Guru</Text>
-            <Text style={styles.subtitle}>Premium, model‑driven picks for NFL, NBA, MLB, NHL, NCAAF, NCAAB & WNBA.</Text>
+            <Text style={styles.subtitle}>
+              Model‑driven picks + live odds for NFL, NBA, MLB, NHL, NCAAF, NCAAB & WNBA.
+            </Text>
 
             <View style={styles.bullets}>
-              <Text style={styles.bullet}>• Daily predictions synced with live odds</Text>
-              <Text style={styles.bullet}>• Confidence for Moneyline / Spread / Total</Text>
-              <Text style={styles.bullet}>• Cancel anytime</Text>
+              <Text style={styles.bullet}>• Daily projections with confidence ratings</Text>
+              <Text style={styles.bullet}>• Moneyline / Spread / Total — all in one place</Text>
+              <Text style={styles.bullet}>• Track results to improve over time</Text>
             </View>
 
-            <Text style={styles.price}>From <Text style={{ color: THEME.GOLD, fontWeight: "800" }}>$49.99/mo</Text></Text>
+            <View style={styles.valueBox}>
+              <Text style={styles.valueBig}>+$</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.valueTitle}>Join winning members</Text>
+                <Text style={styles.valueSub}>From <Text style={{ color: THEME.GOLD, fontWeight: "800" }}>$49.99/mo</Text>. Cancel anytime.</Text>
+              </View>
+            </View>
 
-            <Pressable onPress={() => router.replace("/(tabs)")} style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9 }]}>
-              <Text style={styles.ctaText}>Get Started</Text>
+            <Pressable onPress={() => router.replace("/(tabs)/home")} style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9 }]}>
+              <Text style={styles.ctaText}>Start 7‑day free trial</Text>
             </Pressable>
 
             <Pressable onPress={() => router.push("/auth/sign-in")} style={({ pressed }) => [{ alignSelf: "center", marginTop: 10 }, pressed && { opacity: 0.8 }]}>
@@ -80,7 +87,6 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.GOLD,
     opacity: 0.06,
     top: 120,
-    filter: "blur(30px)" as any, // ignored on native but helps on web preview
   },
   card: {
     backgroundColor: THEME.CARD,
@@ -93,11 +99,25 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     ...shadows.sm,
   },
-  title: { color: THEME.TEXT, fontSize: 24, fontWeight: "900" },
+  kicker: { color: THEME.GOLD, fontWeight: "800", letterSpacing: 1, marginBottom: 4, fontSize: 12 },
+  title: { color: THEME.TEXT, fontSize: 28, fontWeight: "900" },
   subtitle: { color: THEME.MUTED, fontSize: 14, marginTop: 8 },
   bullets: { marginTop: 12, gap: 6 },
   bullet: { color: THEME.MUTED, fontSize: 13 },
-  price: { color: THEME.MUTED, marginTop: 12 },
+  valueBox: {
+    marginTop: 14,
+    backgroundColor: "#15161B",
+    borderColor: THEME.BORDER,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+  },
+  valueBig: { color: THEME.GOLD, fontWeight: "900", fontSize: 20 },
+  valueTitle: { color: THEME.TEXT, fontWeight: "800" },
+  valueSub: { color: THEME.MUTED, marginTop: 2, fontSize: 12 },
   cta: { backgroundColor: THEME.GOLD, paddingVertical: 12, borderRadius: 12, marginTop: 14 },
   ctaText: { color: "#171717", textAlign: "center", fontWeight: "900" },
   signIn: { color: THEME.MUTED, textAlign: "center", textDecorationLine: "underline" },

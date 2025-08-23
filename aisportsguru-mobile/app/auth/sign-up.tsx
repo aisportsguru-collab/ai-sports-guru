@@ -49,7 +49,7 @@ export default function SignUp() {
           />
         </View>
 
-        <Pressable onPress={() => router.replace("/(tabs)")} style={({ pressed }) => [styles.btn, pressed && { opacity: 0.9 }]}>
+        <Pressable onPress={() => router.replace("/(tabs)/home")} style={({ pressed }) => [styles.btn, pressed && { opacity: 0.9 }]}>
           <Text style={styles.btnText}>Create account</Text>
         </Pressable>
 
