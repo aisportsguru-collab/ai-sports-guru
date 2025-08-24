@@ -4,14 +4,13 @@ const LEAGUES = ["all", "nfl", "nba", "mlb", "nhl", "ncaaf", "ncaab", "wnba"] as
 
 async function getData(searchParams: { [k: string]: string | string[] | undefined }) {
   const sp = new URLSearchParams();
-  if (typeof searchParams.league === "string" && searchParams.league !== "all") sp.set("league", searchParams.league);
+  const league = typeof searchParams.league === "string" ? searchParams.league : "all";
   if (typeof searchParams.dateFrom === "string") sp.set("dateFrom", searchParams.dateFrom);
   if (typeof searchParams.dateTo === "string") sp.set("dateTo", searchParams.dateTo);
   if (typeof searchParams.publicThreshold === "string") sp.set("publicThreshold", searchParams.publicThreshold);
   if (typeof searchParams.minConfidence === "string") sp.set("minConfidence", searchParams.minConfidence);
 
-  const base = process.env.NEXT_PUBLIC_APP_URL || "";
-  const url = `${base}/api/fades/${sp.get("league") || "all"}?${sp.toString()}`;
+  const url = `/api/fades/${league}?${sp.toString()}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Fades API ${res.status}`);
   return res.json();
@@ -49,9 +48,15 @@ export default async function FadesPage({ searchParams }: { searchParams: { [k: 
         })}
       </div>
 
+      {data.note ? (
+        <div className="mb-4 rounded-2xl border border-[#232632] bg-[#121317] p-4 text-[#A6A6A6]">
+          {String(data.note)}
+        </div>
+      ) : null}
+
       {data.count === 0 ? (
         <div className="rounded-2xl border border-[#232632] bg-[#121317] p-6 text-center text-[#A6A6A6]">
-          No fade opportunities found for the selected filters{data.note ? ` — ${data.note}` : ""}.
+          No fade opportunities found for the selected filters.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5">
