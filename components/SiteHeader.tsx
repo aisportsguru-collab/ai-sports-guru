@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,41 +10,38 @@ const nav = [
   { href: "/ncaaf", label: "NCAAF" },
   { href: "/ncaab", label: "NCAAB" },
   { href: "/wnba", label: "WNBA" },
+  { href: "/fades", label: "Fades" }, // ✅ Added new nav item
   { href: "/pricing", label: "Pricing" },
 ];
 
 export default function SiteHeader() {
-  const path = usePathname();
+  const pathname = usePathname();
+
   return (
-    <div className="sticky top-0 z-50 border-b border-[#232632] bg-[#0B0B0B]/80 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
-        <Link href="/" className="text-white font-semibold tracking-wide">
-          AI Sports Guru <span className="text-[#F5C847]">•</span>
+    <header className="border-b border-[#232632] bg-[#0B0B0B]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        <Link href="/" className="text-xl font-bold text-[#F5C847]">
+          AI Sports Guru
         </Link>
-        <nav className="hidden md:flex items-center gap-4">
-          {nav.map((n) => {
-            const active = path?.startsWith(n.href);
+        <nav className="flex gap-4">
+          {nav.map((item) => {
+            const active = pathname.startsWith(item.href);
             return (
               <Link
-                key={n.href}
-                href={n.href}
-                className={`text-sm ${active ? "text-white" : "text-[#A6A6A6]"} hover:text-white transition`}
+                key={item.href}
+                href={item.href}
+                className={`text-sm font-medium px-3 py-1.5 rounded-md ${
+                  active
+                    ? "bg-[#121317] text-white border border-[#F5C847]"
+                    : "text-[#A6A6A6] hover:text-white"
+                }`}
               >
-                {n.label}
+                {item.label}
               </Link>
             );
           })}
         </nav>
-        <div className="ml-auto flex items-center gap-3">
-          <Link href="/login" className="text-sm text-[#A6A6A6] hover:text-white">Log in</Link>
-          <Link
-            href="/sign-up"
-            className="rounded-xl border border-[#F5C847]/30 bg-[#121317] px-3 py-1.5 text-sm font-medium text-white hover:shadow"
-          >
-            Get Pro
-          </Link>
-        </div>
       </div>
-    </div>
+    </header>
   );
 }
