@@ -1,5 +1,2 @@
-import PredictionsGrid from "@/components/PredictionsGrid";
-
-export default function MLBPage() {
-  return <PredictionsGrid sport="mlb" initialDaysFrom={0} />;
-}
+import LeaguePage from "@/components/LeaguePage";
+export default function Page() { return <LeaguePage league="mlb" />; }
