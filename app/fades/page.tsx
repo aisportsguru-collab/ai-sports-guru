@@ -16,9 +16,9 @@ type FadeRow = {
   total_under_price?: number | null;
 
   predicted_winner?: string | null;
-  pick_moneyline?: string | null; // "HOME" | "AWAY"
-  pick_spread?: string | null;    // e.g. "HOME -2.5"
-  pick_total?: string | null;     // e.g. "UNDER 171"
+  pick_moneyline?: string | null;
+  pick_spread?: string | null;
+  pick_total?: string | null;
   conf_moneyline?: number | null;
   conf_spread?: number | null;
   conf_total?: number | null;
@@ -30,7 +30,9 @@ type FadeRow = {
 
 export const metadata = { title: "Fades | AI Sports Guru" };
 
-// keep it fresh but cache lightly to keep TTFB snappy
+// Important for calling pages/api/* safely
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const revalidate = 30;
 
 const BG = "#0B0B0B";
@@ -163,19 +165,37 @@ export default async function Page({
   const league = (searchParams?.league as string) || "all";
   const publicThreshold = Number(searchParams?.publicThreshold ?? 60);
   const minConfidence = Number(searchParams?.minConfidence ?? 55);
-  const sort = (searchParams?.sort as string) || "public"; // "public" | "confidence" | "time"
+  const sort = (searchParams?.sort as string) || "public";
 
   const query = new URLSearchParams({
     publicThreshold: String(publicThreshold),
     minConfidence: String(minConfidence),
   });
 
-  // use relative path so this works on all envs (no domain ping-pong)
   const apiPath = `/api/fades/${league}?${query.toString()}`;
-  const res = await fetch(apiPath, { next: { revalidate } });
-  const data = (await res.json()) as { count: number; rows: FadeRow[]; note?: string };
 
-  // client-side-ish sorting on the server for now (simple & cheap)
+  let data: { count: number; rows: FadeRow[]; note?: string } = {
+    count: 0,
+    rows: [],
+    note: undefined,
+  };
+
+  try {
+    const res = await fetch(apiPath, { cache: "no-store" });
+    if (!res.ok) {
+      data.note = `API error ${res.status}`;
+    } else {
+      const json = await res.json();
+      data = {
+        count: Number(json?.count ?? 0),
+        rows: Array.isArray(json?.rows) ? json.rows : [],
+        note: json?.note,
+      };
+    }
+  } catch (err: any) {
+    data.note = `Fetch failed: ${String(err?.message || err)}`;
+  }
+
   const rows = [...(data.rows || [])].sort((a, b) => {
     if (sort === "confidence") {
       const ca = a.conf_moneyline ?? a.conf_spread ?? a.conf_total ?? 0;
@@ -187,7 +207,6 @@ export default async function Page({
       const tb = b.commence_time ? Date.parse(b.commence_time) : 0;
       return ta - tb;
     }
-    // default: sort by public strength desc
     const pa = a.public_strength_pct ?? 0;
     const pb = b.public_strength_pct ?? 0;
     return pb - pa;
@@ -201,7 +220,7 @@ export default async function Page({
         </h1>
         <p className="mt-2 text-sm md:text-base" style={{ color: MUTED }}>
           We flag games where the <span style={{ color: GOLD }}>public’s heavy side</span> conflicts with our model pick.
-          Filters default to <strong>{publicThreshold}% public</strong> and <strong>{minConfidence}% model confidence</strong>.
+          Filters default to <strong>{publicThreshold}% public</strong> and <strong>{minConfidence}% confidence</strong>.
         </p>
         {data.note ? (
           <p className="mt-2 text-xs" style={{ color: MUTED }}>
@@ -210,7 +229,6 @@ export default async function Page({
         ) : null}
       </header>
 
-      {/* controls */}
       <div className="mb-5 flex flex-wrap items-center gap-2">
         {LEAGUES.map((l) => {
           const href = `/fades?league=${l}&publicThreshold=${publicThreshold}&minConfidence=${minConfidence}&sort=${sort}`;
