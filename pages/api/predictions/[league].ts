@@ -1,83 +1,81 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createClient, PostgrestError } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
-
-const ALLOWED = new Set(["nfl","nba","mlb","nhl","ncaaf","ncaab","wnba"]);
-
-// Try selecting with a key; if 42703 (undefined column), we know the column doesn't exist.
-async function trySelect(opts: {
-  league: string;
-  season?: string | null;
-  columnForLeague: "league" | "sport";
-  seasonColumn?: string | null; // e.g. "season" if it exists
-  fromISO?: string;
-  toISO?: string;
-}) {
-  const { league, season, columnForLeague, seasonColumn, fromISO, toISO } = opts;
-
-  let q = supabase
-    .from("v_predictions_api")
-    .select("*")
-    .eq(columnForLeague, league)
-    .order("commence_time", { ascending: true });
-
-  if (season && seasonColumn) {
-    q = q.eq(seasonColumn, season);
-  } else if (fromISO && toISO) {
-    q = q.gte("commence_time", fromISO).lt("commence_time", toISO);
-  }
-
-  const { data, error } = await q;
-  return { data, error };
-}
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!supabaseUrl || !serviceKey) {
-    return res.status(500).json({ error: "Missing Supabase envs" });
-  }
+  const league = (req.query.league as string || "").toLowerCase();
+  if (!league) return res.status(400).json({ error: "league is required" });
 
-  const league = String(req.query.league || "").toLowerCase();
-  if (!ALLOWED.has(league)) return res.status(400).json({ error: "Invalid league" });
-
-  const season = (req.query.season as string) || String(new Date().getFullYear());
-
-  // Build a date window for the whole season year as a fallback (UTC boundaries)
-  const fromISO = `${season}-01-01T00:00:00.000Z`;
-  const toISO   = `${String(Number(season) + 1)}-01-01T00:00:00.000Z`;
+  const seasonParam = req.query.season as string | undefined;
+  const dateParam = req.query.date as string | undefined;
 
   try {
-    // 1) league column may actually be "sport"
-    let colForLeague: "league" | "sport" = "league";
-    let r = await trySelect({ league, season, columnForLeague: colForLeague, seasonColumn: "season", fromISO, toISO });
+    let q = supabaseAdmin
+      .from("ai_research_predictions")
+      .select([
+        "external_id","sport","season","game_date","commence_time",
+        "home_team","away_team",
+        "moneyline_home","moneyline_away",
+        "spread_line","spread_price_home","spread_price_away",
+        "total_line","total_over_price","total_under_price",
+        "predicted_winner",
+        "pick_moneyline","pick_spread","pick_total",
+        "conf_moneyline","conf_spread","conf_total",
+      ].join(","))
+      .eq("sport", league);
 
-    // If league column doesn't exist, retry with "sport"
-    if ((r.error as PostgrestError | null)?.code === "42703") {
-      colForLeague = "sport";
-      r = await trySelect({ league, season, columnForLeague: colForLeague, seasonColumn: "season", fromISO, toISO });
+    if (seasonParam) {
+      const seasonNum = Number(seasonParam);
+      if (!Number.isFinite(seasonNum)) return res.status(400).json({ error: "season must be a number" });
+      q = q.eq("season", seasonNum);
     }
+    if (dateParam) q = q.eq("game_date", dateParam);
 
-    // If season column doesn't exist, retry without season eq and use date window
-    if ((r.error as PostgrestError | null)?.code === "42703") {
-      r = await trySelect({ league, season, columnForLeague: colForLeague, seasonColumn: null, fromISO, toISO });
-    }
+    q = q.order("commence_time", { ascending: true });
 
-    if (r.error) {
-      return res.status(500).json({ error: `supabase error: ${r.error.message}` });
-    }
+    const { data, error } = await q;
+    if (error) return res.status(500).json({ error: error.message });
 
-    res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
-    return res.status(200).json({
-      usedColumns: {
-        league: colForLeague,
-        season: r.error ? null : "auto",
-        dateRange: { fromISO, toISO }
-      },
-      data: r.data
+    const mapped = (data || []).map((r: any) => {
+      const predictedByTeam =
+        r.predicted_winner === "home" ? r.home_team :
+        r.predicted_winner === "away" ? r.away_team :
+        r.predicted_winner;
+
+      return {
+        // legacy/compat
+        game_id: r.external_id,
+        total_points: r.total_line,
+        over_odds: r.total_over_price,
+        under_odds: r.total_under_price,
+        predicted_winner: predictedByTeam,
+
+        // canonical
+        external_id: r.external_id,
+        sport: r.sport,
+        season: r.season,
+        game_date: r.game_date,
+        commence_time: r.commence_time,
+        home_team: r.home_team,
+        away_team: r.away_team,
+        moneyline_home: r.moneyline_home,
+        moneyline_away: r.moneyline_away,
+        spread_line: r.spread_line,
+        spread_price_home: r.spread_price_home,
+        spread_price_away: r.spread_price_away,
+        total_line: r.total_line,
+        total_over_price: r.total_over_price,
+        total_under_price: r.total_under_price,
+        pick_moneyline: r.pick_moneyline,
+        pick_spread: r.pick_spread,
+        pick_total: r.pick_total,
+        conf_moneyline: r.conf_moneyline,
+        conf_spread: r.conf_spread,
+        conf_total: r.conf_total,
+      };
     });
+
+    return res.status(200).json({ data: mapped, count: mapped.length });
   } catch (e: any) {
-    return res.status(500).json({ error: `handler error: ${e?.message || String(e)}` });
+    return res.status(500).json({ error: String(e?.message || e) });
   }
 }
