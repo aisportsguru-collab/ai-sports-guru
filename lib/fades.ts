@@ -1,20 +1,39 @@
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false }
-});
+const BASE =
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, '') ||
+  'https://aisportsguru.com';
 
 type FadeQuery = {
-  league?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  publicThreshold?: number;
-  minConfidence?: number;
+  league?: string;       // "nfl" | "nba" | "mlb" | ... | "all"
+  dateFrom?: string;     // "YYYY-MM-DD" (optional)
+  dateTo?: string;       // "YYYY-MM-DD" (optional)
+  publicThreshold?: number; // default 60
+  minConfidence?: number;   // default 55
 };
 
+type Pred = {
+  sport: string;
+  game_date: string | null;
+  commence_time?: string | null;
+  home_team: string;
+  away_team: string;
+  moneyline_home?: number | null;
+  moneyline_away?: number | null;
+  spread_line?: number | null;
+  spread_price_home?: number | null;
+  spread_price_away?: number | null;
+  total_line?: number | null;
+  total_over_price?: number | null;
+  total_under_price?: number | null;
+  predicted_winner?: string | null;
+  pick_moneyline?: string | null;
+  pick_spread?: string | null;
+  pick_total?: string | null;
+  conf_moneyline?: number | null;
+  conf_spread?: number | null;
+  conf_total?: number | null;
+};
+
+// pick which side is the favorite from moneylines
 function impliedFavorite(
   homeTeam: string,
   awayTeam: string,
@@ -26,64 +45,59 @@ function impliedFavorite(
   return mlHome < mlAway ? { side: 'HOME', team: homeTeam } : { side: 'AWAY', team: awayTeam };
 }
 
-// proxy “public strength” based on moneyline gap
+// crude “public strength” proxy using ML gap
 function publicStrengthPct(mlHome?: number | null, mlAway?: number | null): number | null {
   if (typeof mlHome !== 'number' || typeof mlAway !== 'number') return null;
   const diff = Math.abs(Math.abs(mlHome) - Math.abs(mlAway));
-  const pct = 50 + Math.min(25, (diff / 400) * 25);
+  const pct = 50 + Math.min(25, (diff / 400) * 25); // caps at ~75%
   return Math.round(pct);
 }
 
+const ALL_LEAGUES = ['nfl','nba','mlb','nhl','ncaaf','ncaab','wnba'];
+
+async function fetchLeaguePreds(league: string): Promise<Pred[]> {
+  const url = `${BASE}/api/predictions/${league}`;
+  const res = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+  if (!res.ok) throw new Error(`predictions ${league} ${res.status}`);
+  const json = await res.json();
+  return Array.isArray(json?.data) ? (json.data as Pred[]) : [];
+}
+
 export async function fetchFades(q: FadeQuery) {
-  const league = q.league?.toLowerCase();
-  const dateFrom = q.dateFrom;
-  const dateTo = q.dateTo;
+  const leagues = q.league && q.league !== 'all'
+    ? [q.league.toLowerCase()]
+    : ALL_LEAGUES;
+
   const publicThreshold = q.publicThreshold ?? 60;
   const minConfidence = q.minConfidence ?? 55;
+  const dateFrom = q.dateFrom;
+  const dateTo = q.dateTo;
 
-  // Select only columns known to exist in your predictions table
-  let sel = supabase
-    .from('predictions')
-    .select(
-      [
-        'sport',
-        'game_date',
-        'commence_time',
-        'home_team',
-        'away_team',
-        'moneyline_home',
-        'moneyline_away',
-        'spread_line',
-        'spread_price_home',
-        'spread_price_away',
-        'total_line',
-        'total_over_price',
-        'total_under_price',
-        'predicted_winner',
-        'pick_moneyline',
-        'pick_spread',
-        'pick_total',
-        'conf_moneyline',
-        'conf_spread',
-        'conf_total'
-      ].join(',')
-    )
-    .order('game_date', { ascending: false })
-    .limit(400);
+  // fetch all selected leagues in parallel
+  const lists = await Promise.allSettled(leagues.map(fetchLeaguePreds));
+  const preds: Pred[] = [];
+  const notes: string[] = [];
 
-  if (league && league !== 'all') sel = sel.eq('sport', league);
-  if (dateFrom) sel = sel.gte('game_date', dateFrom);
-  if (dateTo) sel = sel.lte('game_date', dateTo);
+  lists.forEach((r, i) => {
+    const lg = leagues[i];
+    if (r.status === 'fulfilled') preds.push(...r.value);
+    else notes.push(`predictions ${lg} failed: ${r.reason}`);
+  });
 
-  const { data, error } = await sel;
-
-  if (error) return { count: 0, rows: [], note: `predictions error: ${error.message}` };
-  if (!data || data.length === 0) return { count: 0, rows: [], note: 'no predictions found for filters' };
+  // optional date filtering
+  const inRange = (d: string | null | undefined) => {
+    if (!d || typeof d !== 'string') return true;
+    if (dateFrom && d < dateFrom) return false;
+    if (dateTo && d > dateTo) return false;
+    return true;
+  };
 
   const rows = [];
-  for (const r of data) {
-    const fav = impliedFavorite(r.home_team, r.away_team, r.moneyline_home, r.moneyline_away);
-    const publicPct = publicStrengthPct(r.moneyline_home, r.moneyline_away);
+  for (const r of preds) {
+    if (!inRange(r.game_date)) continue;
+
+    const fav = impliedFavorite(r.home_team, r.away_team, r.moneyline_home ?? null, r.moneyline_away ?? null);
+    const publicPct = publicStrengthPct(r.moneyline_home ?? null, r.moneyline_away ?? null);
     if (!fav.side || publicPct == null) continue;
 
     const modelWinner = r.predicted_winner || null;
@@ -124,6 +138,9 @@ export async function fetchFades(q: FadeQuery) {
   return {
     count: rows.length,
     rows,
-    note: rows.length === 0 ? 'no fade candidates with current thresholds (using moneyline gap as public proxy)' : undefined
+    note:
+      rows.length === 0
+        ? (notes.length ? `no fades; (${notes.join(' | ')})` : 'no fade candidates with current thresholds')
+        : undefined,
   };
 }
