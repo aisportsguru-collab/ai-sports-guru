@@ -1,6 +1,19 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supa = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
+let _supa: SupabaseClient | null = null;
+
+function getSupa(): SupabaseClient {
+  if (_supa) return _supa;
+
+  const url = process.env.SUPABASE_URL;
+  const anon = process.env.SUPABASE_ANON_KEY;
+  if (!url || !anon) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY at runtime.");
+  }
+
+  _supa = createClient(url, anon, { auth: { persistSession: false } });
+  return _supa;
+}
 
 type GradeInput = {
   sport: string;              // 'mlb','nba','nfl',...
@@ -22,19 +35,16 @@ function decideMoneyline(predictedWinner: "home" | "away", home_score: number, a
 function decideSpread(spread_pick: any, home_score: number, away_score: number, spread_close?: number | null) {
   if (!spread_pick || spread_pick?.team == null || (spread_pick?.line == null && spread_close == null)) return null;
 
-  // pickLine: if model gave a line use that; else use close
   const pickTeam = spread_pick.team as "home" | "away";
   const line = typeof spread_pick.line === "number" ? spread_pick.line : (spread_close ?? null);
   if (line == null) return null;
 
   const margin = home_score - away_score; // home minus away
-  // If we picked home -1.5, we win if margin > 1.5; if we picked away +1.5, we win if -margin > 1.5
   const pickedHome = pickTeam === "home";
-  const covered = pickedHome ? margin + line > 0 : -margin + line > 0;
-
-  // Push if exactly equals
   const push = pickedHome ? margin + line === 0 : -margin + line === 0;
   if (push) return "push";
+
+  const covered = pickedHome ? margin + line > 0 : -margin + line > 0;
   return covered ? "win" : "loss";
 }
 
@@ -57,6 +67,8 @@ function decideTotal(ou_pick: any, home_score: number, away_score: number, total
  */
 export async function gradeResults(items: GradeInput[]) {
   if (!Array.isArray(items) || items.length === 0) return { ok: true, updated: 0 };
+
+  const supa = getSupa();
 
   // Fetch candidate predictions for all dates in one go to minimize calls
   const byDate = Array.from(new Set(items.map(i => i.game_date)));
@@ -99,7 +111,10 @@ export async function gradeResults(items: GradeInput[]) {
         grade: score,
         settled_at: new Date().toISOString(),
       })
-      .eq("id", row.id);
+      .eq("sport", item.sport)
+      .eq("game_date", item.game_date)
+      .eq("home_team", item.home_team)
+      .eq("away_team", item.away_team);
 
     if (!uerr) updated++;
   }

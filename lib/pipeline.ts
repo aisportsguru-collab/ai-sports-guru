@@ -1,16 +1,26 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 type Sport = "mlb" | "nfl" | "nba" | "nhl" | "ncaaf" | "ncaab" | "wnba";
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ODDS_API_KEY = process.env.ODDS_API_KEY!;
+let _admin: SupabaseClient | null = null;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
+function getAdmin(): SupabaseClient {
+  if (_admin) return _admin;
+
+  const url = process.env.SUPABASE_URL;
+  const svc = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !svc) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY at runtime.");
+  }
+  _admin = createClient(url, svc, { auth: { persistSession: false } });
+  return _admin;
+}
+
+const ODDS_API_KEY = process.env.ODDS_API_KEY;
 
 export async function runPipelineOnce(sport: Sport, dateISO: string) {
+  if (!ODDS_API_KEY) throw new Error("Missing ODDS_API_KEY at runtime.");
+
   const odds = await fetchOdds(sport, dateISO);
 
   const rows: any[] = [];
@@ -62,6 +72,7 @@ export async function runPipelineOnce(sport: Sport, dateISO: string) {
 
   if (!rows.length) return { upserted: 0, note: "No valid games" };
 
+  const supabase = getAdmin();
   const { data, error } = await supabase
     .from("ai_research_predictions")
     .upsert(rows, { onConflict: "external_id" })
@@ -161,7 +172,7 @@ async function fetchOdds(sport: Sport, dateISO: string) {
   url.searchParams.set("markets", "h2h,spreads,totals");
   url.searchParams.set("oddsFormat", "american");
   url.searchParams.set("dateFormat", "iso");
-  url.searchParams.set("apiKey", ODDS_API_KEY);
+  url.searchParams.set("apiKey", ODDS_API_KEY!);
 
   const res = await fetch(url.toString(), { cache: "no-store" });
   if (!res.ok) {
