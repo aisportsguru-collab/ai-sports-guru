@@ -14,7 +14,6 @@ type FadeRow = {
   total_line?: number | null;
   total_over_price?: number | null;
   total_under_price?: number | null;
-
   predicted_winner?: string | null;
   pick_moneyline?: string | null;
   pick_spread?: string | null;
@@ -22,15 +21,12 @@ type FadeRow = {
   conf_moneyline?: number | null;
   conf_spread?: number | null;
   conf_total?: number | null;
-
   public_side?: "HOME" | "AWAY";
   public_team?: string | null;
   public_strength_pct?: number | null;
 };
 
 export const metadata = { title: "Fades | AI Sports Guru" };
-
-// Important for calling pages/api/* safely
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 30;
@@ -44,22 +40,23 @@ const MUTED = "#A6A6A6";
 
 const LEAGUES = ["all","nfl","nba","mlb","nhl","ncaaf","ncaab","wnba"] as const;
 
-function fmtOdds(n?: number | null) {
-  if (n == null) return "—";
-  return n > 0 ? `+${Math.round(n)}` : `${Math.round(n)}`;
+function getBaseUrl() {
+  const explicit = process.env.NEXT_PUBLIC_APP_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+  const vercel = process.env.VERCEL_URL;
+  if (vercel) return `https://${vercel}`;
+  return "http://localhost:3000";
 }
+
+function fmtOdds(n?: number | null) { if (n == null) return "—"; return n > 0 ? `+${Math.round(n)}` : `${Math.round(n)}`; }
 function fmtDate(s?: string | null) {
   if (!s) return "—";
-  try {
-    const d = new Date(s);
-    return d.toUTCString().replace(":00 GMT"," GMT");
-  } catch { return s; }
+  try { const d = new Date(s); return d.toUTCString().replace(":00 GMT"," GMT"); } catch { return s; }
 }
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col rounded-xl border px-3 py-2"
-         style={{ borderColor: BORDER, backgroundColor: BG }}>
+    <div className="flex flex-col rounded-xl border px-3 py-2" style={{ borderColor: BORDER, backgroundColor: BG }}>
       <span className="text-xs" style={{ color: MUTED }}>{label}</span>
       <span className="text-sm font-medium" style={{ color: TEXT }}>{value}</span>
     </div>
@@ -67,25 +64,16 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-full px-2.5 py-1 text-xs font-semibold"
-          style={{ backgroundColor: GOLD, color: "#000" }}>
-      {children}
-    </span>
-  );
+  return <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: GOLD, color: "#000" }}>{children}</span>;
 }
 
 function FadeCard({ row }: { row: FadeRow }) {
-  const conflict =
-    row.public_team &&
-    row.predicted_winner &&
+  const conflict = row.public_team && row.predicted_winner &&
     row.public_team.toLowerCase() !== row.predicted_winner.toLowerCase();
-
   const confPct = row.conf_moneyline ?? row.conf_spread ?? row.conf_total ?? null;
 
   return (
-    <div className="rounded-2xl border p-4 md:p-5"
-         style={{ borderColor: BORDER, backgroundColor: CARD }}>
+    <div className="rounded-2xl border p-4 md:p-5" style={{ borderColor: BORDER, backgroundColor: CARD }}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2">
@@ -97,18 +85,14 @@ function FadeCard({ row }: { row: FadeRow }) {
           <h3 className="truncate text-lg font-semibold" style={{ color: TEXT }}>
             {row.away_team} @ {row.home_team}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: MUTED }}>
-            {fmtDate(row.commence_time)}
-          </p>
+          <p className="mt-1 text-sm" style={{ color: MUTED }}>{fmtDate(row.commence_time)}</p>
         </div>
-
         <div className="hidden md:flex flex-col items-end gap-2">
           {row.predicted_winner ? (
             <div className="text-sm">
               <span style={{ color: MUTED }}>Model: </span>
               <span className="font-medium" style={{ color: TEXT }}>
-                {row.predicted_winner}
-                {confPct != null ? ` · ${Math.round(confPct)}%` : ""}
+                {row.predicted_winner}{confPct != null ? ` · ${Math.round(confPct)}%` : ""}
               </span>
             </div>
           ) : null}
@@ -116,8 +100,7 @@ function FadeCard({ row }: { row: FadeRow }) {
             <div className="text-sm">
               <span style={{ color: MUTED }}>Public: </span>
               <span className="font-medium" style={{ color: TEXT }}>
-                {row.public_team}
-                {row.public_strength_pct != null ? ` · ${row.public_strength_pct}%` : ""}
+                {row.public_team}{row.public_strength_pct != null ? ` · ${row.public_strength_pct}%` : ""}
               </span>
             </div>
           ) : null}
@@ -140,15 +123,13 @@ function FadeCard({ row }: { row: FadeRow }) {
       <div className="mt-4 flex flex-wrap items-center gap-3 md:hidden">
         {row.predicted_winner ? (
           <span className="text-sm" style={{ color: TEXT }}>
-            <span style={{ color: MUTED }}>Model:</span>{" "}
-            <strong>{row.predicted_winner}</strong>
+            <span style={{ color: MUTED }}>Model:</span> <strong>{row.predicted_winner}</strong>
             {confPct != null ? ` · ${Math.round(confPct)}%` : ""}
           </span>
         ) : null}
         {row.public_team ? (
           <span className="text-sm" style={{ color: TEXT }}>
-            <span style={{ color: MUTED }}>Public:</span>{" "}
-            <strong>{row.public_team}</strong>
+            <span style={{ color: MUTED }}>Public:</span> <strong>{row.public_team}</strong>
             {row.public_strength_pct != null ? ` · ${row.public_strength_pct}%` : ""}
           </span>
         ) : null}
@@ -157,11 +138,7 @@ function FadeCard({ row }: { row: FadeRow }) {
   );
 }
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams?: Record<string, string | string[] | undefined>;
-}) {
+export default async function Page({ searchParams }: { searchParams?: Record<string, string | string[] | undefined>; }) {
   const league = (searchParams?.league as string) || "all";
   const publicThreshold = Number(searchParams?.publicThreshold ?? 60);
   const minConfidence = Number(searchParams?.minConfidence ?? 55);
@@ -172,16 +149,12 @@ export default async function Page({
     minConfidence: String(minConfidence),
   });
 
-  const apiPath = `/api/fades/${league}?${query.toString()}`;
+  const apiUrl = `${getBaseUrl()}/api/fades/${league}?${query.toString()}`;
 
-  let data: { count: number; rows: FadeRow[]; note?: string } = {
-    count: 0,
-    rows: [],
-    note: undefined,
-  };
+  let data: { count: number; rows: FadeRow[]; note?: string } = { count: 0, rows: [], note: undefined };
 
   try {
-    const res = await fetch(apiPath, { cache: "no-store" });
+    const res = await fetch(apiUrl, { cache: "no-store" });
     if (!res.ok) {
       data.note = `API error ${res.status}`;
     } else {
@@ -219,14 +192,10 @@ export default async function Page({
           Fades — Bet Against the Public
         </h1>
         <p className="mt-2 text-sm md:text-base" style={{ color: MUTED }}>
-          We flag games where the <span style={{ color: GOLD }}>public’s heavy side</span> conflicts with our model pick.
-          Filters default to <strong>{publicThreshold}% public</strong> and <strong>{minConfidence}% confidence</strong>.
+          This tool highlights games where <span style={{ color: GOLD }}>the public’s betting majority</span> is opposite our AI model’s prediction.
+          These situations often indicate sharp edges where sportsbooks expect to profit and casual money is leaning the wrong way.
         </p>
-        {data.note ? (
-          <p className="mt-2 text-xs" style={{ color: MUTED }}>
-            Note: {data.note}
-          </p>
-        ) : null}
+        {data.note ? <p className="mt-2 text-xs" style={{ color: MUTED }}>Note: {data.note}</p> : null}
       </header>
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
@@ -273,8 +242,7 @@ export default async function Page({
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl border p-6 text-center"
-             style={{ borderColor: BORDER, backgroundColor: CARD, color: MUTED }}>
+        <div className="rounded-2xl border p-6 text-center" style={{ borderColor: BORDER, backgroundColor: CARD, color: MUTED }}>
           No fade opportunities found for the selected filters.
         </div>
       ) : (
