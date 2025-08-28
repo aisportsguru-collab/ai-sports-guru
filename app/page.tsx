@@ -49,7 +49,7 @@ export default function HomePage() {
             {
               title: "Simple. Fast. Smart.",
               desc:
-                "No analysis needed. Log in, view picks, place bets. Whether you're casual or sharp, it's plug-and-play.",
+                "No analysis needed. Log in, view odds & AI picks, and make informed decisions. Whether you're casual or sharp, it's plug-and-play.",
             },
           ].map((item, i) => (
             <div key={i} className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
