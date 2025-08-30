@@ -2602,5 +2602,755 @@
     "spread": "Philadelphia Eagles -4.5",
     "total": "Over 46.5",
     "confidence": 85
+  },
+  "bbde7751a144b98ed150d7a5f7dc8f87": {
+    "moneyline": "Oklahoma City Thunder",
+    "spread": "Oklahoma City Thunder -6.5",
+    "total": "Over 224.5",
+    "confidence": 75
+  },
+  "df4b9f35b66ef20724b6b3e81081ddfd": {
+    "moneyline": "Los Angeles Lakers",
+    "spread": "Los Angeles Lakers -3.5",
+    "total": "Over 225.5",
+    "confidence": 75
+  },
+  "2c566908fd21c1179a1affda3f24b101": {
+    "moneyline": "Charlotte Hornets",
+    "spread": "Charlotte Hornets -3",
+    "total": "Over 220",
+    "confidence": 65
+  },
+  "aa92da00abef11a7ee1f773cb708d710": {
+    "moneyline": "New York Knicks",
+    "spread": "New York Knicks -4",
+    "total": "Over 227.5",
+    "confidence": 75
+  },
+  "b6dc11956532645db427ed48107dd05b": {
+    "moneyline": "Orlando Magic",
+    "spread": "Orlando Magic -7.5",
+    "total": "Over 207",
+    "confidence": 75
+  },
+  "cf5a3b9aeb20f4bc8fc824f2e84ce67f": {
+    "moneyline": "Atlanta Hawks",
+    "spread": "Atlanta Hawks -6",
+    "total": "Over 236.5",
+    "confidence": 75
+  },
+  "13917a414157bda81dd6b417d440e1a6": {
+    "moneyline": "Boston Celtics",
+    "spread": "Boston Celtics -2",
+    "total": "Over 222",
+    "confidence": 65
+  },
+  "89733f00ce9f9896e48c1e0e9b45048e": {
+    "moneyline": "Detroit Pistons",
+    "spread": "Detroit Pistons -2",
+    "total": "Over 236.5",
+    "confidence": 65
+  },
+  "a8db154fca88077a84df28acdd7d2f5a": {
+    "moneyline": "Memphis Grizzlies",
+    "spread": "Memphis Grizzlies -6.5",
+    "total": "Over 238",
+    "confidence": 75
+  },
+  "61f18a914904dd9e20703519f00edf24": {
+    "moneyline": "Milwaukee Bucks",
+    "spread": "Milwaukee Bucks -8.5",
+    "total": "Over 225",
+    "confidence": 75
+  },
+  "dfa56bede06bbf73e18d8c019c3e5626": {
+    "moneyline": "Los Angeles Clippers",
+    "spread": "Los Angeles Clippers -8",
+    "total": "Over 227.5",
+    "confidence": 75
+  },
+  "e9b75400f975f37c5d4c03414110530d": {
+    "moneyline": "Dallas Mavericks",
+    "spread": "Dallas Mavericks +1",
+    "total": "Over 226.5",
+    "confidence": 65
+  },
+  "18a8312266521477423664257e995981": {
+    "moneyline": "Minnesota Timberwolves",
+    "spread": "Minnesota Timberwolves -2.5",
+    "total": "Over 216",
+    "confidence": 65
+  },
+  "0042b0009547d8a7c9827977546613de": {
+    "moneyline": "Phoenix Suns",
+    "spread": "Phoenix Suns -1",
+    "total": "Over 229",
+    "confidence": 65
+  },
+  "072f959e31211e7c805451ce92a5f4e5": {
+    "moneyline": "Oklahoma City Thunder",
+    "spread": "Oklahoma City Thunder -7.5",
+    "total": "Over 225.5",
+    "confidence": 75
+  },
+  "94f35a6d58c57801c32a564d04e32270": {
+    "moneyline": "Golden State Warriors",
+    "spread": "Denver Nuggets +1",
+    "total": "Over 234.5",
+    "confidence": 65
+  },
+  "600dfc9979b72eeef44b5545ba9fe18f": {
+    "moneyline": "New York Knicks",
+    "spread": "New York Knicks -6.5",
+    "total": "Over 226.5",
+    "confidence": 75
+  },
+  "00eb7e982d3c341cdc68795c73d901e1": {
+    "moneyline": "Los Angeles Lakers",
+    "spread": "Los Angeles Lakers -2.5",
+    "total": "Over 220",
+    "confidence": 75
+  },
+  "5c3141a83aab2381b9837f56079156fd": {
+    "moneyline": "Cleveland Cavaliers",
+    "spread": "Cleveland Cavaliers -1.5",
+    "total": "Over 227.5",
+    "confidence": 65
+  },
+  "3a6b0d7961360bd22e31e59ea415ff57": {
+    "moneyline": "Minnesota Timberwolves",
+    "spread": "Denver Nuggets +1.5",
+    "total": "Over 221.5",
+    "confidence": 65
+  },
+  "3784e9747b97bec1c1aab8f693656f18": {
+    "moneyline": "Philadelphia 76ers",
+    "spread": "Philadelphia 76ers -4",
+    "total": "Over 221.5",
+    "confidence": 75
+  },
+  "8cf5f0182f14070fbb4decdff17134ed": {
+    "moneyline": "Los Angeles Lakers",
+    "spread": "Los Angeles Lakers -1.5",
+    "total": "Over 235.5",
+    "confidence": 75
+  },
+  "1269706534827fc185ca0d61405ecd99": {
+    "moneyline": "Houston Rockets",
+    "spread": "Houston Rockets -3",
+    "total": "Over 227",
+    "confidence": 65
+  },
+  "930e0687ebe1ad6186e1db0d88fe7f4a": {
+    "moneyline": "Denver Nuggets",
+    "spread": "Denver Nuggets -5.5",
+    "total": "Over 234.5",
+    "confidence": 75
+  },
+  "63016986bd7402f9433def9ec4be4fe1": {
+    "moneyline": "New York Knicks",
+    "spread": "New York Knicks -8",
+    "total": "Over 215",
+    "confidence": 75
+  },
+  "46fc9b98835561f7bfa81c7275b3ed37": {
+    "moneyline": "Golden State Warriors",
+    "spread": "Golden State Warriors -1",
+    "total": "Over 231.5",
+    "confidence": 60
+  },
+  "58c5d4f9449efc54b2a2ceb71ca6878b": {
+    "moneyline": "Cleveland Cavaliers",
+    "spread": "Cleveland Cavaliers -10",
+    "total": "Over 227",
+    "confidence": 75
+  },
+  "8162993fb172c214bf7e7338079a0e79": {
+    "moneyline": "Houston Rockets",
+    "spread": "Houston Rockets -3.5",
+    "total": "Over 229",
+    "confidence": 65
+  },
+  "a43d5e85ccdf728d56f44bfda12b9d06": {
+    "moneyline": "Orlando Magic",
+    "spread": "Orlando Magic -1",
+    "total": "Over 214.5",
+    "confidence": 65
+  },
+  "b7209d3aae71bb2dc1ca8f9412a95a4a": {
+    "moneyline": "Los Angeles Clippers",
+    "spread": "Los Angeles Clippers -1",
+    "total": "Over 219.5",
+    "confidence": 55
+  },
+  "e69335f9f4054ca683c7219dabdeac53": {
+    "moneyline": "Boston Celtics",
+    "spread": "Boston Celtics -1",
+    "total": "Over 226.5",
+    "confidence": 65
+  },
+  "63748218430054c9c947b1beeab351c9": {
+    "moneyline": "Oklahoma City Thunder",
+    "spread": "Oklahoma City Thunder -8",
+    "total": "Over 226.5",
+    "confidence": 75
+  },
+  "c728773fb406fb68e411f28e838ef9ed": {
+    "moneyline": "Houston Rockets",
+    "spread": "Houston Rockets -1",
+    "total": "Over 221.5",
+    "confidence": 65
+  },
+  "7352c74ba8dbdb543d750f378fc002d5": {
+    "moneyline": "New York Knicks",
+    "spread": "Milwaukee Bucks +6",
+    "total": "Over 224",
+    "confidence": 65
+  },
+  "78aabf080c02d6b74d6d5a15ae2d2a81": {
+    "moneyline": "Los Angeles Lakers",
+    "spread": "Los Angeles Lakers -6.5",
+    "total": "Over 227",
+    "confidence": 75
+  },
+  "f557c9173a46a3c7c87afb4bd68f6644": {
+    "moneyline": "New York Knicks",
+    "spread": "New York Knicks -2.5",
+    "total": "Over 229.5",
+    "confidence": 65
+  },
+  "4ca0a40cec306fd9a3c9b36b1e76500e": {
+    "moneyline": "Oklahoma City Thunder",
+    "spread": "Oklahoma City Thunder -10",
+    "total": "Over 227",
+    "confidence": 75
+  },
+  "9010f7d8f26d5880c63b67355800f997": {
+    "moneyline": "Golden State Warriors",
+    "spread": "Golden State Warriors -4.5",
+    "total": "Over 225.5",
+    "confidence": 75
+  },
+  "d54afb5b752a199f93e39afc2b39d091": {
+    "moneyline": "Los Angeles Lakers",
+    "spread": "Los Angeles Lakers -1",
+    "total": "Over 224.5",
+    "confidence": 65
+  },
+  "6b9d46fb1b22af30b771b5f6b8a4c6f8": {
+    "moneyline": "Denver Nuggets",
+    "spread": "Denver Nuggets -5",
+    "total": "Over 229",
+    "confidence": 75
+  },
+  "60b04efecd19028a2eb20c81649abaf1": {
+    "moneyline": "Atlanta Hawks",
+    "spread": "Atlanta Hawks -5",
+    "total": "Over 236.5",
+    "confidence": 75
+  },
+  "d9b1ce3cf25e2645fdb24e89d4f1a38e": {
+    "moneyline": "Cleveland Cavaliers",
+    "spread": "Cleveland Cavaliers -1",
+    "total": "Over 230.5",
+    "confidence": 55
+  },
+  "e7f04ed48f026208a6d078b5b3bc118b": {
+    "moneyline": "New York Knicks",
+    "spread": "New York Knicks -6",
+    "total": "Over 227.5",
+    "confidence": 75
+  },
+  "df230babfc6ef1362f740fbb16136e77": {
+    "moneyline": "Detroit Pistons",
+    "spread": "Boston Celtics +4.5",
+    "total": "Over 228.5",
+    "confidence": 65
+  },
+  "9e7b8f83c1f3ae0e86bdcddbe2a83720": {
+    "moneyline": "New York Mets",
+    "spread": "Miami Marlins +1.5",
+    "total": "Over/Under 8",
+    "confidence": 75
+  },
+  "b9ea6b96bfc805e4d22edc5731dce7bd": {
+    "moneyline": "New York Yankees",
+    "spread": "New York Yankees -7.5",
+    "total": "Under 12.5",
+    "confidence": 75
+  },
+  "f7927d88b553c6e416267d7afe2c286c": {
+    "moneyline": "Houston Astros",
+    "spread": "Houston Astros -1.5",
+    "total": "Under 2.5",
+    "confidence": 85
+  },
+  "30edcdb0f5e3ce56cc3731f84f3dad2f": {
+    "moneyline": "Detroit Tigers",
+    "spread": "Detroit Tigers -1.5",
+    "total": "Under 9.5",
+    "confidence": 75
+  },
+  "32c5b7013169806351d16408fe5eee89": {
+    "moneyline": "Minnesota Twins",
+    "spread": "San Diego Padres +2.5",
+    "total": "Over 13.5",
+    "confidence": 75
+  },
+  "4093621de4947b6190013147697beb2f": {
+    "moneyline": "Colorado Rockies",
+    "spread": "Chicago Cubs -8.5",
+    "total": "Over 16.5",
+    "confidence": 65
+  },
+  "b7716877a265b9a44084698ef5a1fbc9": {
+    "moneyline": "Texas Rangers",
+    "spread": "Texas Rangers -1.5",
+    "total": "Over 9.5",
+    "confidence": 75
+  },
+  "deafdcccc626ebe594d2462a74152829": {
+    "moneyline": "Los Angeles Dodgers",
+    "spread": "Arizona Diamondbacks +1.5",
+    "total": "Over 6.5",
+    "confidence": 75
+  },
+  "184c27bdc4cba67ccc2612cdb76b363f": {
+    "moneyline": "San Francisco Giants",
+    "spread": "San Francisco Giants -2.5",
+    "total": "Under 11.5",
+    "confidence": 75
+  },
+  "6fc1fd8446176b5bf132c04d0f03e167": {
+    "moneyline": "Toronto Blue Jays",
+    "spread": "Milwaukee Brewers +1.5",
+    "total": "Over 8.5",
+    "confidence": 65
+  },
+  "af58fcd52164f958b637dec303ec5cb4": {
+    "moneyline": "Tampa Bay Rays",
+    "spread": "Tampa Bay Rays -1.5",
+    "total": "Over 9",
+    "confidence": 75
+  },
+  "955ab2dbc6ff10398cdc914135fb6267": {
+    "moneyline": "Boston Red Sox",
+    "spread": "Boston Red Sox -1.5",
+    "total": "Over 9",
+    "confidence": 65
+  },
+  "3f5697d9a88962345c5d5623de413d8d": {
+    "moneyline": "New York Mets",
+    "spread": "Miami Marlins +1.5",
+    "total": "Under 8",
+    "confidence": 65
+  },
+  "fae1615ba4b12538922cc6571b59e778": {
+    "moneyline": "Atlanta Braves",
+    "spread": "Atlanta Braves -1.5",
+    "total": "Over/Under 9",
+    "confidence": 75
+  },
+  "3daafbb7f6c6f6b618c9b6d3323dc9ea": {
+    "moneyline": "Cincinnati Reds",
+    "spread": "Cincinnati Reds -1.5",
+    "total": "Over 8.5",
+    "confidence": 65
+  },
+  "8240a59cc68a378dbb46d68deb1df611": {
+    "moneyline": "New York Yankees",
+    "spread": "New York Yankees -1.5",
+    "total": "Under 9",
+    "confidence": 75
+  },
+  "e37d7e3a0f7de4fbd67263a5568f115d": {
+    "moneyline": "Houston Astros",
+    "spread": "Houston Astros -1.5",
+    "total": "Over 9",
+    "confidence": 65
+  },
+  "af4d7584cb5334dd1bc603f432c4d481": {
+    "moneyline": "San Diego Padres",
+    "spread": "San Diego Padres -1.5",
+    "total": "Over/Under 8",
+    "confidence": 75
+  },
+  "9b9e4eb9f94e491825bf6adc2175ebbf": {
+    "moneyline": "Baltimore Orioles",
+    "spread": "Baltimore Orioles -1.5",
+    "total": "Over/Under 8",
+    "confidence": 75
+  },
+  "11d674134a61019f1d5115baaaddff2b": {
+    "moneyline": "Seattle Mariners",
+    "spread": "Cleveland Guardians -1.5",
+    "total": "Over 7.5",
+    "confidence": 65
+  },
+  "93f8f2d7ee14ea7340edae23a7c08eaa": {
+    "moneyline": "Kansas City Royals",
+    "spread": "Detroit Tigers +1.5",
+    "total": "Over/Under 9",
+    "confidence": 65
+  },
+  "5b6441efbf453b1e27d0eddce6f0e1c8": {
+    "moneyline": "Chicago Cubs",
+    "spread": "Chicago Cubs -1.5",
+    "total": "Over 11",
+    "confidence": 75
+  },
+  "236530035c5d477cb56ec7f49c6d9391": {
+    "moneyline": "Los Angeles Dodgers",
+    "spread": "Los Angeles Dodgers -1.5",
+    "total": "Over 8.5",
+    "confidence": 65
+  },
+  "5a3128645784cad46eb5bde204e7d618": {
+    "moneyline": "Illinois Fighting Illini",
+    "spread": "Illinois Fighting Illini -48.5",
+    "total": "Over 54.5",
+    "confidence": 75
+  },
+  "a3ec71fa36e9de13e2f1306b1ae4e8b6": {
+    "moneyline": "Kansas Jayhawks",
+    "spread": "Kansas Jayhawks -39.5",
+    "total": "Under 53.5",
+    "confidence": 85
+  },
+  "7658b924afd85474454c6b96f1fde759": {
+    "moneyline": "Florida International Panthers",
+    "spread": "Florida International Panthers -39.5",
+    "total": "Over 64.5",
+    "confidence": 75
+  },
+  "478ec5b3fbf88e66161f1c6b60122955": {
+    "moneyline": "Pittsburgh Panthers",
+    "spread": "Pittsburgh Panthers -37.5",
+    "total": "Over 55.5",
+    "confidence": 75
+  },
+  "c046e0640625fe9ab9661a89eea14e88": {
+    "moneyline": "Kent State Golden Flashes",
+    "spread": "Kent State Golden Flashes -7.5",
+    "total": "Over 50.5",
+    "confidence": 75
+  },
+  "50308f92d57c1fdb7b19c12ce8ef1159": {
+    "moneyline": "Navy Midshipmen",
+    "spread": "Navy Midshipmen -41.5",
+    "total": "Over 50.5",
+    "confidence": 75
+  },
+  "33d9786fcff3fcf5e281d2e750883421": {
+    "moneyline": "Boston College Eagles",
+    "spread": "Boston College Eagles -35.5",
+    "total": "Over 56.5",
+    "confidence": 85
+  },
+  "e06ac6b6ae06cd0ab15d16967d2bbed6": {
+    "moneyline": "UConn Huskies",
+    "spread": "UConn Huskies -25.5",
+    "total": "Over 51.5",
+    "confidence": 85
+  },
+  "9bdaf2860fd82da8bc0fcc5c38d66323": {
+    "moneyline": "West Virginia Mountaineers",
+    "spread": "West Virginia Mountaineers -38.5",
+    "total": "Over 55.5",
+    "confidence": 75
+  },
+  "fcdc35425f50cb7bda3057b6a43b7fab": {
+    "moneyline": "Louisville Cardinals",
+    "spread": "Louisville Cardinals -38.5",
+    "total": "Over 56.5",
+    "confidence": 75
+  },
+  "901815b907870c08f831bcec682fcd7c": {
+    "moneyline": "Air Force Falcons",
+    "spread": "Air Force Falcons -32.5",
+    "total": "Over 54.5",
+    "confidence": 85
+  },
+  "922b6299efbf42689d115cb571231c4e": {
+    "moneyline": "Northern Illinois Huskies",
+    "spread": "Northern Illinois Huskies -10.5",
+    "total": "Over 51.5",
+    "confidence": 75
+  },
+  "aeb1e8186d2e362190477db433dab5f7": {
+    "moneyline": "Iowa State Cyclones",
+    "spread": "Iowa State Cyclones -14.5",
+    "total": "Over 46.5",
+    "confidence": 75
+  },
+  "9ec692ed45038a7318dd884505ec19c0": {
+    "moneyline": "Liberty Flames",
+    "spread": "Liberty Flames -26.5",
+    "total": "Over 52.5",
+    "confidence": 85
+  },
+  "ec583779fa6cdf81885b9c785cf4da5a": {
+    "moneyline": "Oregon Ducks",
+    "spread": "Oregon Ducks -26.5",
+    "total": "Over 55.5",
+    "confidence": 85
+  },
+  "9ca7b95362e9caa4742659555a1765f4": {
+    "moneyline": "Arkansas Razorbacks",
+    "spread": "Arkansas Razorbacks -46.5",
+    "total": "Over 62.5",
+    "confidence": 75
+  },
+  "0f885b0193a77ef9cf18cde250f58c17": {
+    "moneyline": "Memphis Tigers",
+    "spread": "Memphis Tigers -27.5",
+    "total": "Over 55.5",
+    "confidence": 85
+  },
+  "24dfea2363dac7a2a0f4f460d175580d": {
+    "moneyline": "Iowa Hawkeyes",
+    "spread": "Iowa Hawkeyes -38.5",
+    "total": "Over 50.5",
+    "confidence": 75
+  },
+  "411a22839a0415e8122bf6655d692dcb": {
+    "moneyline": "Oklahoma Sooners",
+    "spread": "Oklahoma Sooners -35.5",
+    "total": "Over 61.5",
+    "confidence": 75
+  },
+  "8d1ce3fa873b4adc946c19ef1778e235": {
+    "moneyline": "James Madison Dukes",
+    "spread": "James Madison Dukes -27.5",
+    "total": "Over 54.5",
+    "confidence": 85
+  },
+  "d368359056ae756db52495aec9e68aca": {
+    "moneyline": "Arkansas State Red Wolves",
+    "spread": "Arkansas State Red Wolves -10.5",
+    "total": "Over 59.5",
+    "confidence": 75
+  },
+  "b9b7362cde9dff460a263d4b19c8e462": {
+    "moneyline": "Middle Tennessee Blue Raiders",
+    "spread": "Middle Tennessee Blue Raiders -10.5",
+    "total": "Over 53.5",
+    "confidence": 75
+  },
+  "80f3010fb9711b746dc8ebab53fe7c47": {
+    "moneyline": "Vanderbilt Commodores",
+    "spread": "Vanderbilt Commodores -36.5",
+    "total": "Over 48.5",
+    "confidence": 75
+  },
+  "5e25531fbb1876c4c48cd017d5b5671c": {
+    "moneyline": "Florida Gators",
+    "spread": "Florida Gators -45.5",
+    "total": "Over 56.5",
+    "confidence": 85
+  },
+  "5af5d9416c9a7a1c9aeee7272f64782d": {
+    "moneyline": "Kansas State Wildcats",
+    "spread": "Kansas State Wildcats -25.5",
+    "total": "Over 55.5",
+    "confidence": 85
+  },
+  "5518ec42aea2d53d95ae0525da16dcce": {
+    "moneyline": "South Alabama Jaguars",
+    "spread": "South Alabama Jaguars -28.5",
+    "total": "Over 51.5",
+    "confidence": 85
+  },
+  "7aed5f886c986b97e83d23faa060e65d": {
+    "moneyline": "Troy Trojans",
+    "spread": "Troy Trojans -20.5",
+    "total": "Over 48.5",
+    "confidence": 85
+  },
+  "b16c8fc4179692cae0332f7b65e14b39": {
+    "moneyline": "Western Kentucky Hilltoppers",
+    "spread": "Western Kentucky Hilltoppers -28.5",
+    "total": "Over 60.5",
+    "confidence": 85
+  },
+  "60004aaab0613df8d1081256ed66e212": {
+    "moneyline": "Texas Tech Red Raiders",
+    "spread": "Texas Tech Red Raiders -52.5",
+    "total": "Over 62.5",
+    "confidence": 85
+  },
+  "b9644727bdb769f76dccd79898ddd02f": {
+    "moneyline": "Louisiana Tech Bulldogs",
+    "spread": "Louisiana Tech Bulldogs -14",
+    "total": "Over 50.5",
+    "confidence": 75
+  },
+  "ebc2af05ee84f4ad5485349875442fa4": {
+    "moneyline": "Tulsa Golden Hurricane",
+    "spread": "Tulsa Golden Hurricane -4.5",
+    "total": "Over 63.5",
+    "confidence": 65
+  },
+  "fb72179c63f6d05558016847bcf47a8d": {
+    "moneyline": "BYU Cougars",
+    "spread": "BYU Cougars -42.5",
+    "total": "Over 61.5",
+    "confidence": 75
+  },
+  "309c300c69b10173f523cb8a47a24f27": {
+    "moneyline": "North Texas Mean Green",
+    "spread": "North Texas Mean Green -24.5",
+    "total": "Over 63.5",
+    "confidence": 85
+  },
+  "73835ae319d1f5533c2322dc70375c77": {
+    "moneyline": "New Mexico State Aggies",
+    "spread": "New Mexico State Aggies -19.5",
+    "total": "Over 53.5",
+    "confidence": 75
+  },
+  "e621163d95de7f9f309e5c46fe4e8457": {
+    "moneyline": "East Texas A&M Lions",
+    "spread": "East Texas A&M Lions -47.5",
+    "total": "Over 63.5",
+    "confidence": 65
+  },
+  "793c5f3c22499efa9d6968b2bccfad4c": {
+    "moneyline": "Arizona State Sun Devils",
+    "spread": "Arizona State Sun Devils -28.5",
+    "total": "Over 52.5",
+    "confidence": 85
+  },
+  "55bbfffac34b3738268dbdcc78b58dc8": {
+    "moneyline": "Washington State Cougars",
+    "spread": "Washington State Cougars -14.5",
+    "total": "Over 50.5",
+    "confidence": 75
+  },
+  "3e06ec27bf0f5024ab751815479d9c4e": {
+    "moneyline": "Louisville Cardinals",
+    "spread": "Louisville Cardinals -14.5",
+    "total": "Over/Under X",
+    "confidence": 65
+  },
+  "d531b8e12cb18d265d2a68e50008904c": {
+    "moneyline": "Ole Miss Rebels",
+    "spread": "Ole Miss Rebels -9.5",
+    "total": "Over/Under X",
+    "confidence": 65
+  },
+  "98c92ca46c07070ed67047af259e07a9": {
+    "moneyline": "Arizona State Sun Devils",
+    "spread": "Arizona State Sun Devils -10",
+    "total": "Over/Under X",
+    "confidence": 65
+  },
+  "1a3f2c51d3af5b356c44b737195a5b46": {
+    "moneyline": "Vanderbilt Commodores",
+    "spread": "Vanderbilt Commodores +3",
+    "total": "Over/Under X",
+    "confidence": 55
+  },
+  "0169b39d461abff544e93d0287c1fab1": {
+    "moneyline": "Alabama Crimson Tide",
+    "spread": "Alabama Crimson Tide -21",
+    "total": "Over/Under 58",
+    "confidence": 85
+  },
+  "6850ce38681c03906af201d68cdd70e7": {
+    "moneyline": "Ohio State Buckeyes",
+    "spread": "Ohio State Buckeyes -14",
+    "total": "Over/Under 55",
+    "confidence": 85
+  },
+  "7d42c9f08d93cc592f5540348561ddb3": {
+    "moneyline": "Penn State Nittany Lions",
+    "spread": "Penn State Nittany Lions -3",
+    "total": "Over/Under 45",
+    "confidence": 75
+  },
+  "e18c1f37c95bf989baf40bc9692ad742": {
+    "moneyline": "Utah Utes",
+    "spread": "Utah Utes -3",
+    "total": "Over/Under 55",
+    "confidence": 75
+  },
+  "7f8f24a59d3218a96bb68c20dbc593de": {
+    "moneyline": "Penn State Nittany Lions",
+    "spread": "Penn State Nittany Lions -10",
+    "total": "Over/Under 50",
+    "confidence": 75
+  },
+  "3ff98544de6910e3e7332504955f64df": {
+    "moneyline": "Oklahoma Sooners",
+    "spread": "Missouri Tigers +7",
+    "total": "Over/Under 58",
+    "confidence": 75
+  },
+  "76916d758d1a2bc57d840d9d1c63aaa3": {
+    "moneyline": "Iowa Hawkeyes",
+    "spread": "Iowa Hawkeyes -3",
+    "total": "Over/Under 45",
+    "confidence": 75
+  },
+  "f959699d770536ccda4fc4df72a954ea": {
+    "moneyline": "Ole Miss Rebels",
+    "spread": "Ole Miss Rebels -3",
+    "total": "Over/Under 55",
+    "confidence": 75
+  },
+  "48a0d56354caf6da69d210132615c809": {
+    "moneyline": "North Carolina Tar Heels",
+    "spread": "North Carolina Tar Heels -3",
+    "total": "Over/Under 58",
+    "confidence": 75
+  },
+  "fe77fe6907d7f59b072642391c5e162c": {
+    "moneyline": "Los Angeles Sparks",
+    "spread": "Los Angeles Sparks -2.5",
+    "total": "Over 178.5",
+    "confidence": 75
+  },
+  "e724d07fec26761d0f701ea390c74ece": {
+    "moneyline": "Minnesota Lynx",
+    "spread": "Minnesota Lynx -14.5",
+    "total": "Over 163.5",
+    "confidence": 75
+  },
+  "c06b1541d0cb2e689f00d8668d3213da": {
+    "moneyline": "Golden State Valkyries",
+    "spread": "Golden State Valkyries -5",
+    "total": "Over 150.5",
+    "confidence": 75
+  },
+  "1701bc58d01f8c26e6a264fa8485fbcf": {
+    "moneyline": "Seattle Storm",
+    "spread": "Seattle Storm -12",
+    "total": "Over 162.5",
+    "confidence": 75
+  },
+  "1b7866984f18c3c089f850096031b313": {
+    "moneyline": "Phoenix Mercury",
+    "spread": "New York Liberty +1",
+    "total": "Over 166",
+    "confidence": 55
+  },
+  "4aef88f9d8b3d2e4895fc1e01503ae40": {
+    "moneyline": "Indiana Fever",
+    "spread": "Indiana Fever -1.5",
+    "total": "Over/Under 158.5",
+    "confidence": 75
+  },
+  "fab9db676c30fbe07f8cdb3a343da685": {
+    "moneyline": "Los Angeles Sparks",
+    "spread": "Los Angeles Sparks -7.5",
+    "total": "Over/Under 171.5",
+    "confidence": 80
+  },
+  "c7950f739489150f651db30ba45a6342": {
+    "moneyline": "Texas Rangers",
+    "spread": "Texas Rangers -1.5",
+    "total": "Over/Under 10.5",
+    "confidence": 80
   }
 }

@@ -1,87 +1,68 @@
-// updateGamesForSport.mjs
 import fs from "fs";
 import path from "path";
 import fetch from "node-fetch";
 import OpenAI from "openai";
-import dotenv from "dotenv";
+import env from "./env.mjs";
 
-dotenv.config({ path: "../.env.local" });
+env.requireEnv([
+  "OPENAI_API_KEY",
+  "NEXT_PUBLIC_THE_ODDS_API_KEY",
+]);
 
-const apiKey = process.env.NEXT_PUBLIC_THE_ODDS_API_KEY;
+const ODDS_API_KEY = process.env.NEXT_PUBLIC_THE_ODDS_API_KEY;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const gamesFile = path.resolve("./gamesData.json");
+const gamesFile = path.resolve("backend/gamesData.json");
+const predictionsFile = path.resolve("backend/predictionsData.json");
 
-// Load existing data
-function loadGames() {
-  if (!fs.existsSync(gamesFile)) return {};
-  return JSON.parse(fs.readFileSync(gamesFile, "utf-8"));
+function loadJSON(file) {
+  if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, "utf8"));
+  return {};
+}
+function saveJSON(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-// Save updated data
-function saveGames(data) {
-  fs.writeFileSync(gamesFile, JSON.stringify(data, null, 2));
-  console.log(`All new games and predictions saved to ./gamesData.json`);
-}
-
-// Fetch odds from TheOddsAPI
-async function fetchOdds(sportKey) {
-  const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?daysFrom=7&regions=us&markets=h2h,spreads&oddsFormat=american&apiKey=${apiKey}`;
+async function fetchOdds(sportKey, daysFrom = 7) {
+  const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?daysFrom=${daysFrom}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&apiKey=${ODDS_API_KEY}`;
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch odds: ${response.statusText}`);
-  }
+  if (!response.ok) throw new Error(`Failed to fetch odds: ${response.statusText}`);
   return await response.json();
 }
 
-// Generate prediction using OpenAI
-async function generatePrediction(homeTeam, awayTeam, bookmakers) {
-  const prompt = `
-You are an AI sports analyst. Based on these bookmakers odds, predict the game outcome.
+function buildPrompt(game) {
+  const sample = JSON.stringify(game.bookmakers?.[0]?.markets ?? [], null, 2);
+  return `
+You are an expert US sports betting model. Use the odds snapshot to recommend:
+- moneyline winner (team string exactly as listed),
+- spread pick "Team +/-X.X"
+- total "Over/Under X.X"
+- confidence 1–100
+Return strict JSON only:
 
-Match: ${homeTeam} vs ${awayTeam}
-Odds data: ${JSON.stringify(bookmakers, null, 2)}
+{"moneyline":"Team","spread":"Team +/-X.X","total":"Over/Under X.X","confidence":75}
 
-Respond ONLY in strict JSON format with the following fields:
-{
-  "moneyline": "Team Name",
-  "spread": "Team Name -X.X",
-  "total": "Over", "Under", or a number (e.g., 48),
-  "confidence": integer between 1 and 100
+Match: ${game.away_team} @ ${game.home_team}
+Markets (first book):
+${sample}
+`.trim();
 }
-No extra commentary, no code blocks, no text outside the JSON.
-`;
 
-  const completion = await openai.chat.completions.create({
+async function getPredictionFromAI(game) {
+  const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
-    max_tokens: 300,
+    messages: [{ role: "user", content: buildPrompt(game) }],
+    temperature: 0.2,
+    max_tokens: 220,
   });
-
-  let raw = completion.choices[0].message.content.trim();
-  console.log(`AI raw response: ${raw}`);
-
-  // Clean code fences if they exist
-  raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
-
+  let raw = (response.choices?.[0]?.message?.content ?? "").trim();
+  raw = raw.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
   try {
-    const prediction = JSON.parse(raw);
-
-    // Validate confidence
-    if (
-      !prediction.confidence ||
-      typeof prediction.confidence !== "number" ||
-      prediction.confidence <= 0 ||
-      prediction.confidence > 100
-    ) {
-      prediction.confidence = 50;
-    }
-
-    return prediction;
-  } catch (err) {
-    console.error(
-      `Prediction failed for ${homeTeam} vs ${awayTeam}: ${err}\nResponse: ${raw}`
-    );
+    const parsed = JSON.parse(raw);
+    const conf = Number(parsed.confidence);
+    if (!Number.isFinite(conf) || conf < 1 || conf > 100) parsed.confidence = 60;
+    return parsed;
+  } catch {
     return null;
   }
 }
@@ -89,50 +70,54 @@ No extra commentary, no code blocks, no text outside the JSON.
 async function main() {
   const sportKey = process.argv[2];
   if (!sportKey) {
-    console.error("Usage: node updateGamesForSport.mjs <sport_key>");
+    console.error("Usage: node backend/updateGamesForSport.mjs <sport_key> [daysFrom]");
     process.exit(1);
   }
+  const daysFrom = Number(process.argv[3]) || (sportKey === "americanfootball_nfl" ? 14 : 7);
 
-  console.log(`Fetching odds for ${sportKey}...`);
-  const odds = await fetchOdds(sportKey);
+  const odds = await fetchOdds(sportKey, daysFrom);
 
-  const data = loadGames();
-  if (!data[sportKey]) data[sportKey] = [];
+  const gamesData = loadJSON(gamesFile);
+  const predictionsData = loadJSON(predictionsFile);
+  gamesData[sportKey] = gamesData[sportKey] || [];
 
-  for (const game of odds) {
-    const exists = data[sportKey].some((g) => g.id === game.id);
-    if (exists) continue;
+  const incoming = odds.map((g) => ({
+    id: g.id,
+    sport_key: g.sport_key,
+    sport_title: g.sport_title,
+    commence_time: g.commence_time,
+    home_team: g.home_team,
+    away_team: g.away_team,
+    bookmakers: (g.bookmakers || []).filter((b) => b.key === "draftkings"),
+  }));
 
-    const bookmakers = game.bookmakers || [];
-    let prediction = null;
-
-    if (bookmakers.length > 0) {
-      console.log(
-        `Generating prediction for ${game.home_team} vs ${game.away_team}`
-      );
-      prediction = await generatePrediction(
-        game.home_team,
-        game.away_team,
-        bookmakers
-      );
-    }
-
-    data[sportKey].push({
-      ...game,
-      prediction: prediction || null,
-      result: { winner: null, spreadResult: null, totalResult: null },
-    });
+  // Merge by id (keep existing, add new)
+  const existingIds = new Set(gamesData[sportKey].map((x) => x.id));
+  for (const g of incoming) {
+    if (!existingIds.has(g.id)) gamesData[sportKey].push(g);
   }
 
-  // Sort by game date
-  data[sportKey].sort(
-    (a, b) => new Date(a.commence_time) - new Date(b.commence_time)
-  );
+  // Predict for new ones
+  let added = 0;
+  for (const g of incoming) {
+    if (!g.bookmakers?.length) continue;
+    if (predictionsData[g.id]) continue;
+    const pred = await getPredictionFromAI(g);
+    if (pred) {
+      predictionsData[g.id] = pred;
+      added++;
+    }
+  }
 
-  saveGames(data);
+  // Sort by time
+  gamesData[sportKey].sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+  saveJSON(gamesFile, gamesData);
+  saveJSON(predictionsFile, predictionsData);
+
+  console.log(`✅ Updated ${sportKey}. New predictions: ${added}`);
 }
 
-main().catch((err) => {
-  console.error("Error:", err);
+main().catch((e) => {
+  console.error("❌ Error:", e);
   process.exit(1);
 });
