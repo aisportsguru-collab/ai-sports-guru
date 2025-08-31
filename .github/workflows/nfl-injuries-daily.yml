@@ -12,12 +12,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m venv .venv && . .venv/bin/activate && pip install --upgrade pip
-      - run: . .venv/bin/activate && pip install nfl_data_py==0.3.2 pandas==2.2.2 numpy==1.26.4 pyarrow==16.1.0 requests==2.32.3
+      - name: Create venv & upgrade pip
+        run: python -m venv .venv && . .venv/bin/activate && pip install --upgrade pip
+      - name: Install deps in venv
+        run: . .venv/bin/activate && pip install nfl_data_py==0.3.2 pandas==2.2.2 numpy==1.26.4 pyarrow==16.1.0 requests==2.32.3
       - name: Install psql client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Run injuries sync (nfl_data_py → ESPN fallback)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           INJURY_SEASONS: "2023,2024,2025"
-        run: scripts/data-sync/injuries_sync.sh
+        run: . .venv/bin/activate && scripts/data-sync/injuries_sync.sh
