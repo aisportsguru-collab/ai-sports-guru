@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import logging, datetime, requests, pandas as pd
+import logging, datetime, re, requests, pandas as pd
 from bs4 import BeautifulSoup
 
 logging.basicConfig(level=logging.INFO)
@@ -34,12 +34,12 @@ for sec in sections:
             continue
         player_name, pos, est_return, status, description = cols[:5]
         designation = status if "IL" in status else None
+
         il_days = None
-        try:
-            if designation:
-                il_days = int(designation.split("-")[0])
-        except:
-            pass
+        m = re.search(r'(\d+)\s*-\s*?Day', status, re.I)
+        if m:
+            il_days = int(m.group(1))
+
         rec.append(dict(
             season=season, date_report=today, team_id=team_id, team_abbr=team_abbr,
             player_id=None, player_name=player_name, pos=pos, status=status,
@@ -48,5 +48,9 @@ for sec in sections:
         ))
 
 df = pd.DataFrame(rec)
+# Ensure integer output (no 15.0)
+df["il_days"] = pd.to_numeric(df["il_days"], errors="coerce").astype("Int64")
+df["team_id"] = pd.to_numeric(df["team_id"], errors="coerce").astype("Int64")
+
 df.to_csv("mlb_injuries.csv", index=False)
 log.info(f"ESPN fallback wrote rows {len(df)}")

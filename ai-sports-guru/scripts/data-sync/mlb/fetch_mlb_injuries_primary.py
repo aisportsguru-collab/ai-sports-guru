@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-import logging, datetime, time, requests, pandas as pd
-
+import logging, datetime, time, re, requests, pandas as pd
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("injuries-primary")
 
@@ -21,19 +20,23 @@ for t in teams:
         if rec.get("typeCode") != "SC":
             continue
         player = rec.get("player") or {}
-        desc = rec.get("description","")
+        desc = (rec.get("description") or "").strip()
         status = None
         designation = None
         il_days = None
+
         low = desc.lower()
-        if "injured list" in low or "il" in low:
+        if "injured list" in low or " il " in f" {low} " or low.endswith(" il"):
             status = "IL"
-            if "10-day" in low:
-                designation, il_days = "10-Day-IL", 10
-            elif "15-day" in low:
-                designation, il_days = "15-Day-IL", 15
-            elif "60-day" in low:
-                designation, il_days = "60-Day-IL", 60
+            if "10-day" in low or "10 day" in low:  designation, il_days = "10-Day-IL", 10
+            elif "15-day" in low or "15 day" in low: designation, il_days = "15-Day-IL", 15
+            elif "60-day" in low or "60 day" in low: designation, il_days = "60-Day-IL", 60
+            else:
+                m = re.search(r'(\d+)\s*-\s*day', low)
+                if m:
+                    il_days = int(m.group(1))
+                    designation = f"{il_days}-Day-IL"
+
         rows.append(dict(
             season=season,
             date_report=(rec.get("effectiveDate","") or "").split("T")[0] or today.isoformat(),
@@ -50,8 +53,18 @@ for t in teams:
             description=desc,
             source="statsapi"
         ))
-        time.sleep(0.05)
+        time.sleep(0.03)
 
 df = pd.DataFrame(rows)
+
+# Normalize types so CSV has ints, not floats like "15.0"
+for c in ["team_id","player_id","il_days"]:
+    if c in df.columns:
+        df[c] = pd.to_numeric(df[c], errors="coerce").astype("Int64")
+
+for c in ["date_report","retro_date"]:
+    if c in df.columns:
+        df[c] = pd.to_datetime(df[c], errors="coerce").dt.date.astype("string")
+
 df.to_csv("mlb_injuries.csv", index=False)
 log.info(f"Wrote mlb_injuries.csv rows {len(df)} from StatsAPI")
