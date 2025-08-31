@@ -1,0 +1,22 @@
+name: Weekly NFL sync
+on:
+  schedule:
+    - cron: "0 13 * * TUE"   # Tue 13:00 UTC (~6am PT)
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m venv .venv && . .venv/bin/activate && pip install --upgrade pip
+      - run: . .venv/bin/activate && pip install nfl_data_py==0.3.2 pandas==2.2.2 numpy==1.26.4 pyarrow==16.1.0 requests==2.32.3
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Run sync
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: scripts/data-sync/sync.sh
