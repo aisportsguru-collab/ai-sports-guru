@@ -1,0 +1,27 @@
+name: Daily MLB injuries sync
+on:
+  schedule:
+    - cron: "30 14 * * *"
+  workflow_dispatch: {}
+jobs:
+  injuries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Run MLB daily injuries sync
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          . .venv/bin/activate
+          bash scripts/data-sync/mlb/injuries_sync_mlb.sh
