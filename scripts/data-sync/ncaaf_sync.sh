@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Resolve repo root regardless of CWD
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
 # --- auto-venv / ensure requests ---
-if [[ -d ".venv" ]]; then
+if [[ -d "${ROOT_DIR}/.venv" ]]; then
   # shellcheck disable=SC1091
-  . .venv/bin/activate
+  . "${ROOT_DIR}/.venv/bin/activate"
 fi
 python3 - <<'PY' || true
 try:
@@ -19,9 +23,6 @@ if [[ "${PIPESTATUS[0]}" != "0" ]]; then
 fi
 # -----------------------------------
 
-# -----------------------------
-# NCAAF weekly stats sync (FBS)
-# -----------------------------
 if [[ -z "${SUPABASE_DB_URL:-}" ]]; then
   echo "ERROR: SUPABASE_DB_URL is not set." >&2
   exit 1
@@ -39,20 +40,20 @@ python3 --version
 
 echo "==> Fetching stats via CFBD (seasons=${SEASONS})"
 export SEASONS
-if ! python3 scripts/data-sync/fetch_ncaaf_cfbd.py; then
+if ! python3 "${ROOT_DIR}/scripts/data-sync/fetch_ncaaf_cfbd.py"; then
   echo "WARN: CFBD fetch failed; running fallback" >&2
-  python3 scripts/data-sync/scrape_ncaaf_espn_current.py
+  python3 "${ROOT_DIR}/scripts/data-sync/scrape_ncaaf_espn_current.py"
 fi
 
 TEAMS_CSV="/tmp/ncaaf_teams.csv"
 PLAYERS_CSV="/tmp/ncaaf_players.csv"
 if [[ ! -s "$TEAMS_CSV" || ! -s "$PLAYERS_CSV" ]]; then
-  echo "ERROR: Missing CSVs."; exit 1
+  echo "ERROR: Missing CSVs at /tmp."; exit 1
 fi
 wc -l "$TEAMS_CSV" "$PLAYERS_CSV" || true
 
 echo "==> Ensuring base schema exists"
-psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f scripts/data-sync/ncaaf_schema.sql
+psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "${ROOT_DIR}/scripts/data-sync/ncaaf_schema.sql"
 
 echo "==> Creating staging tables"
 psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "drop table if exists public._stg_ncaaf_teams;   create table public._stg_ncaaf_teams   (like public.ncaaf_teams);"
@@ -83,7 +84,7 @@ psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "\
 ) from '${PLAYERS_CSV}' csv header null ''"
 
 echo "==> Upserting into public tables"
-psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f scripts/data-sync/upsert_ncaaf.sql
+psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "${ROOT_DIR}/scripts/data-sync/upsert_ncaaf.sql"
 
 echo "==> Row counts by season"
 psql "$SUPABASE_DB_URL" -c "select season, count(*) as team_rows    from public.ncaaf_teams    group by season order by season;"
