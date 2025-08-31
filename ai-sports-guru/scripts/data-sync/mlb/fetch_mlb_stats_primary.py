@@ -39,17 +39,15 @@ def fetch_active_teams():
     return teams, abbr_to_id
 
 def roster_id_map(season, team_id):
-    # returns {player_name: player_id} for one team season
     j = get_json(f"{STATSAPI}/teams/{team_id}/roster", {"season": season})
     out = {}
     for it in j.get("roster", []):
         p = it.get("person", {})
-        out[p.get("fullName","").strip()] = p.get("id")
+        out[(p.get("fullName","") or "").strip()] = p.get("id")
     return out
 
 def league_standings(season):
-    # map team_id to W L G
-    j = get_json(f"{STATSAPI}/standings", {"season": season, "leagueId": "103,104"})  # AL 103 NL 104
+    j = get_json(f"{STATSAPI}/standings", {"season": season, "leagueId": "103,104"})
     wlg = {}
     for rec in j.get("records", []):
         for t in rec.get("teamRecords", []):
@@ -70,7 +68,6 @@ def safe_div(a, b):
 
 teams_map, abbr_to_id = fetch_active_teams()
 
-# get player season stats from pybaseball
 from pybaseball import batting_stats, pitching_stats
 
 players_rows = []
@@ -79,75 +76,91 @@ teams_rows = []
 for season in SEASONS:
     log.info(f"Season {season} fetch start")
 
-    # build player name to id mapping per team then combine
+    # Build player name -> id map
     name_to_id = {}
     for team_id in teams_map.keys():
         try:
             name_to_id.update(roster_id_map(season, team_id))
-            time.sleep(0.15)
+            time.sleep(0.12)
         except Exception:
             continue
 
-    # batting
+    # ------- Batting -------
     dfb = batting_stats(season, season)
+    # normalize to lowercase columns so renames are stable
+    dfb.columns = [c.lower() for c in dfb.columns]
+
     dfb = dfb.rename(columns={
-        'Name': 'player_name', 'Team': 'team_abbr',
-        'PA': 'pa','AB': 'ab','R':'r','H':'h','2B':'double','3B':'triple','HR':'hr',
-        'RBI':'rbi','BB':'bb','IBB':'ibb','SO':'so','HBP':'hbp','SB':'sb','CS':'cs',
-        'BA':'avg','OBP':'obp','SLG':'slg','OPS':'ops'
+        'name': 'player_name',
+        'team': 'team_abbr',
+        'pa': 'pa', 'ab': 'ab', 'r': 'r', 'h': 'h',
+        '2b': 'double', '3b': 'triple', 'hr': 'hr',
+        'rbi': 'rbi', 'bb': 'bb', 'ibb': 'ibb', 'so': 'so',
+        'hbp': 'hbp', 'sb': 'sb', 'cs': 'cs',
+        # batting rate stats (handle ba/avg variants)
+        'ba': 'avg', 'avg': 'avg',
+        'obp': 'obp', 'slg': 'slg', 'ops': 'ops',
+        'sf': 'sf'
     })
-    dfb['iso'] = dfb['slg'] - dfb['avg']
-    # BABIP = (H - HR) / (AB - SO - HR + SF) where SF in pybaseball is 'SF'
-    if 'SF' in dfb.columns:
-        sf = dfb['SF'].fillna(0)
-    else:
-        sf = 0
-    dfb['babip'] = (dfb['h'] - dfb['hr']) / (dfb['ab'] - dfb['so'] - dfb['hr'] + sf).replace(0, np.nan)
+
+    # ensure optional columns exist
+    for c in ['avg','obp','slg','ops','sf']:
+        if c not in dfb.columns:
+            dfb[c] = np.nan
+
+    # ISO = SLG - AVG if both present
+    dfb['iso'] = (dfb['slg'] - dfb['avg']) if ('slg' in dfb and 'avg' in dfb) else np.nan
+
+    # BABIP = (H - HR) / (AB - SO - HR + SF)
+    denom = (dfb['ab'] - dfb['so'] - dfb['hr'] + dfb['sf']).replace(0, np.nan)
+    dfb['babip'] = (dfb['h'] - dfb['hr']) / denom
+
     dfb['woba'] = pd.NA
     dfb['wrc_plus'] = pd.NA
 
-    # pitching
+    # ------- Pitching -------
     dfp = pitching_stats(season, season)
+    dfp.columns = [c.lower() for c in dfp.columns]
     dfp = dfp.rename(columns={
-        'Name': 'player_name', 'Team': 'team_abbr',
-        'H': 'h_allowed', 'ER': 'er', 'HR': 'hr_allowed', 'BB':'bb_allowed',
-        'SO':'so_pitch', 'IP':'ip', 'BF':'bf', 'ERA':'era', 'WHIP':'whip'
+        'name': 'player_name',
+        'team': 'team_abbr',
+        'h': 'h_allowed',
+        'er': 'er',
+        'hr': 'hr_allowed',
+        'bb': 'bb_allowed',
+        'so': 'so_pitch',
+        'ip': 'ip',
+        'bf': 'bf',
+        'era': 'era',
+        'whip': 'whip'
     })
+
     if 'whip' not in dfp.columns:
         dfp['whip'] = (dfp['bb_allowed'] + dfp['h_allowed']) / dfp['ip'].replace(0, np.nan)
     dfp['k_pct'] = dfp['so_pitch'] / dfp['bf'].replace(0, np.nan)
     dfp['bb_pct'] = dfp['bb_allowed'] / dfp['bf'].replace(0, np.nan)
     dfp['k_bb_pct'] = dfp['k_pct'] - dfp['bb_pct']
-    dfp['fip'] = pd.NA
-    dfp['xfip'] = pd.NA
-    dfp['gb_pct'] = pd.NA
-    dfp['fb_pct'] = pd.NA
-    dfp['hr_fb_pct'] = pd.NA
+    for c in ['fip','xfip','gb_pct','fb_pct','hr_fb_pct']:
+        dfp[c] = pd.NA
 
-    # merge outer
+    # Merge outer
     df = pd.merge(dfb, dfp, on=['player_name','team_abbr'], how='outer', suffixes=('','_pit'))
 
-    # last known team
+    # Last known team + player id
     df['last_known_team_abbr'] = df['team_abbr']
     df['last_known_team_id'] = df['last_known_team_abbr'].map(abbr_to_id)
-
-    # player id from roster map by name
     df['player_id'] = df['player_name'].map(name_to_id)
 
-    # nullables not available here
-    df['primary_pos'] = pd.NA
-    df['age'] = pd.NA
-    df['bats'] = pd.NA
-    df['throws'] = pd.NA
-
-    # fielding block null
-    for c in ['innings_field','chances','putouts','assists','errors','drs','uzr']:
+    # Nullables
+    for c in ['primary_pos','age','bats','throws']:
         df[c] = pd.NA
+    for c in ['innings_field','chances','putouts','assists','errors','drs','uzr']:
+        if c not in df.columns:
+            df[c] = pd.NA
 
     df['season'] = season
     df['source'] = 'statsapi+pybaseball'
 
-    # enforce columns and dtypes
     players_cols = [
         "season","player_id","player_name","last_known_team_id","last_known_team_abbr","primary_pos","age","bats","throws",
         "pa","ab","r","h","double","triple","hr","rbi","bb","ibb","so","hbp","sb","cs",
@@ -162,7 +175,7 @@ for season in SEASONS:
             df[c] = pd.NA
     players_rows.append(df[players_cols])
 
-    # team aggregates
+    # ------- Team aggregates -------
     wl = league_standings(season)
     team_rows = []
     for team_id, meta in teams_map.items():
@@ -173,7 +186,7 @@ for season in SEASONS:
         h = sub['h'].sum(min_count=1)
         bb = sub['bb'].sum(min_count=1)
         hbp = sub['hbp'].sum(min_count=1)
-        sf = 0
+        sf = sub['cs'].apply(lambda x: 0).sum() * 0  # placeholder; most seasons SF not in pybaseball rows
         obp_num = (h or 0) + (bb or 0) + (hbp or 0)
         obp_den = (ab or 0) + (bb or 0) + (hbp or 0) + sf
         team_avg = safe_div(h, ab)
@@ -187,8 +200,6 @@ for season in SEASONS:
         team_whip = safe_div((sub['bb_allowed'].sum(min_count=1) or 0) + (sub['h_allowed'].sum(min_count=1) or 0), total_ip)
 
         runs_scored = sub['r'].sum(min_count=1)
-        runs_allowed = sub['so_pitch'].apply(lambda x: np.nan)  # not directly available
-        runs_allowed = sub['h_allowed'].sum(min_count=1) * np.nan  # keep null
         team_rows.append(dict(
             season=season, team_id=team_id, team_abbr=meta['abbr'], team_name=meta['name'],
             league=meta['league'], division=meta['division'],
@@ -199,12 +210,12 @@ for season in SEASONS:
             team_woba=None, team_wrc_plus=None,
             source='statsapi+pybaseball'
         ))
-    teams_rows.append(pd.DataFrame(team_rows))
+    if team_rows:
+        teams_rows.append(pd.DataFrame(team_rows))
 
-# combine and write
+# Write CSVs
 if players_rows:
     players = pd.concat(players_rows, ignore_index=True)
-    # downcast
     for c in ['pa','ab','r','h','double','triple','hr','rbi','bb','ibb','so','hbp','sb','cs','bf','h_allowed','er','bb_allowed','so_pitch','hr_allowed',
               'chances','putouts','assists','errors']:
         if c in players.columns:
