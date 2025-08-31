@@ -13,12 +13,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install deps
+      - name: Install deps (global, no venv)
         working-directory: ai-sports-guru
         run: |
-          python -m venv .venv
-          . .venv/bin/activate
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Install psql
@@ -29,5 +27,4 @@ jobs:
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          . .venv/bin/activate
           bash scripts/data-sync/mlb/injuries_sync_mlb.sh
