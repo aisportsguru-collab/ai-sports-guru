@@ -80,7 +80,10 @@ for season in SEASONS:
             continue
 
     # ---------------- Batting ----------------
-    dfb = batting_stats(season, season)
+    try:
+        dfb = batting_stats(season, season, qual=0)  # ALL players
+    except TypeError:
+        dfb = batting_stats(season, season)  # fallback for older pybaseball
     dfb.columns = [c.lower() for c in dfb.columns]
     dfb = dfb.rename(columns={
         'name':'player_name','team':'team_abbr','pa':'pa','ab':'ab','r':'r','h':'h',
@@ -89,34 +92,30 @@ for season in SEASONS:
     })
     for c in ['avg','obp','slg','ops','sf']:
         if c not in dfb.columns: dfb[c] = np.nan
-
-    # ISO / BABIP
     dfb['iso'] = (dfb['slg'] - dfb['avg']) if ('slg' in dfb and 'avg' in dfb) else np.nan
-    denom = (dfb['ab'] - dfb['so'] - dfb['hr'] + dfb['sf']).replace(0, np.nan)
-    dfb['babip'] = (dfb['h'] - dfb['hr']) / denom
+    denom_babip = (dfb['ab'] - dfb['so'] - dfb['hr'] + dfb['sf']).replace(0, np.nan)
+    dfb['babip'] = (dfb['h'] - dfb['hr']) / denom_babip
     dfb['woba'] = pd.NA
     dfb['wrc_plus'] = pd.NA
 
     # ---------------- Pitching ----------------
-    dfp = pitching_stats(season, season)
+    try:
+        dfp = pitching_stats(season, season, qual=0)  # ALL players
+    except TypeError:
+        dfp = pitching_stats(season, season)
     dfp.columns = [c.lower() for c in dfp.columns]
     dfp = dfp.rename(columns={
         'name':'player_name','team':'team_abbr',
         'h':'h_allowed','er':'er','hr':'hr_allowed','bb':'bb_allowed',
         'so':'so_pitch','ip':'ip','era':'era','whip':'whip'
     })
-
-    # normalize BF (batters faced) from possible variants
     bf_src = next((c for c in ['bf','tbf','batters_faced'] if c in dfp.columns), None)
     if bf_src is not None:
         dfp['bf'] = pd.to_numeric(dfp[bf_src], errors='coerce')
     else:
-        dfp['bf'] = np.nan  # unavailable
-
+        dfp['bf'] = np.nan
     if 'whip' not in dfp.columns:
         dfp['whip'] = (dfp['bb_allowed'] + dfp['h_allowed']) / pd.to_numeric(dfp.get('ip'), errors='coerce').replace(0, np.nan)
-
-    # Guard k% / bb% if bf missing
     denom = dfp['bf'].replace(0, np.nan)
     dfp['k_pct'] = dfp['so_pitch'] / denom if 'so_pitch' in dfp else np.nan
     dfp['bb_pct'] = dfp['bb_allowed'] / denom if 'bb_allowed' in dfp else np.nan
