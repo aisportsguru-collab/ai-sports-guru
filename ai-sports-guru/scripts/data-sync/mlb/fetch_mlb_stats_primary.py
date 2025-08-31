@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, logging, time
+import os, sys, logging, time, math
 import pandas as pd
 import numpy as np
 import requests
@@ -61,6 +61,10 @@ def safe_div(a, b):
     except Exception:
         return np.nan
 
+def prefer_last_non_tot(series):
+    vals = [v for v in series.tolist() if pd.notna(v) and str(v).upper() != 'TOT']
+    return vals[-1] if vals else (series.dropna().tolist()[-1] if series.dropna().size else None)
+
 teams_map, abbr_to_id = fetch_active_teams()
 
 from pybaseball import batting_stats, pitching_stats
@@ -70,7 +74,7 @@ players_rows, teams_rows = [], []
 for season in SEASONS:
     log.info(f"Season {season} fetch start")
 
-    # name -> id map
+    # name -> id map via rosters
     name_to_id = {}
     for team_id in teams_map.keys():
         try:
@@ -83,7 +87,7 @@ for season in SEASONS:
     try:
         dfb = batting_stats(season, season, qual=0)  # ALL players
     except TypeError:
-        dfb = batting_stats(season, season)  # fallback for older pybaseball
+        dfb = batting_stats(season, season)
     dfb.columns = [c.lower() for c in dfb.columns]
     dfb = dfb.rename(columns={
         'name':'player_name','team':'team_abbr','pa':'pa','ab':'ab','r':'r','h':'h',
@@ -92,11 +96,6 @@ for season in SEASONS:
     })
     for c in ['avg','obp','slg','ops','sf']:
         if c not in dfb.columns: dfb[c] = np.nan
-    dfb['iso'] = (dfb['slg'] - dfb['avg']) if ('slg' in dfb and 'avg' in dfb) else np.nan
-    denom_babip = (dfb['ab'] - dfb['so'] - dfb['hr'] + dfb['sf']).replace(0, np.nan)
-    dfb['babip'] = (dfb['h'] - dfb['hr']) / denom_babip
-    dfb['woba'] = pd.NA
-    dfb['wrc_plus'] = pd.NA
 
     # ---------------- Pitching ----------------
     try:
@@ -114,30 +113,92 @@ for season in SEASONS:
         dfp['bf'] = pd.to_numeric(dfp[bf_src], errors='coerce')
     else:
         dfp['bf'] = np.nan
+
     if 'whip' not in dfp.columns:
         dfp['whip'] = (dfp['bb_allowed'] + dfp['h_allowed']) / pd.to_numeric(dfp.get('ip'), errors='coerce').replace(0, np.nan)
-    denom = dfp['bf'].replace(0, np.nan)
-    dfp['k_pct'] = dfp['so_pitch'] / denom if 'so_pitch' in dfp else np.nan
-    dfp['bb_pct'] = dfp['bb_allowed'] / denom if 'bb_allowed' in dfp else np.nan
-    dfp['k_bb_pct'] = dfp['k_pct'] - dfp['bb_pct']
-    for c in ['fip','xfip','gb_pct','fb_pct','hr_fb_pct']:
-        dfp[c] = pd.NA
 
     # ---------------- Merge ----------------
     df = pd.merge(dfb, dfp, on=['player_name','team_abbr'], how='outer', suffixes=('','_pit'))
 
-    df['last_known_team_abbr'] = df['team_abbr']
-    df['last_known_team_id'] = df['last_known_team_abbr'].map(abbr_to_id)
+    # Attach ids/season
     df['player_id'] = df['player_name'].map(name_to_id)
-
-    for c in ['primary_pos','age','bats','throws']:
-        df[c] = pd.NA
-    for c in ['innings_field','chances','putouts','assists','errors','drs','uzr']:
-        if c not in df.columns: df[c] = pd.NA
-
     df['season'] = season
-    df['source'] = 'statsapi+pybaseball'
+    df['last_known_team_abbr'] = df['team_abbr']
 
+    # Build group key: prefer player_id, fall back to name
+    df['group_key'] = df['player_id'].astype('Int64').astype('string')
+    df.loc[df['group_key'] == '<NA>', 'group_key'] = 'name:' + df['player_name'].fillna('unknown')
+
+    # ---- Aggregate across teams per player-season ----
+    count_cols = ['pa','ab','r','h','double','triple','hr','rbi','bb','ibb','so','hbp','sb','cs',
+                  'bf','h_allowed','er','bb_allowed','so_pitch','hr_allowed',
+                  'chances','putouts','assists','errors']
+    for c in count_cols:
+        if c not in df.columns: df[c] = np.nan
+
+    if 'ip' not in df.columns: df['ip'] = np.nan
+    if 'sf' not in df.columns: df['sf'] = 0
+
+    def agg_one(g: pd.DataFrame):
+        out = {}
+        out['season'] = season
+        # identity
+        pid = pd.to_numeric(g['player_id'], errors='coerce').dropna()
+        out['player_id'] = int(pid.iloc[-1]) if not pid.empty else None
+        out['player_name'] = g['player_name'].dropna().iloc[-1] if g['player_name'].notna().any() else None
+        # last known team (prefer last non-TOT)
+        abbr = prefer_last_non_tot(g['last_known_team_abbr'])
+        out['last_known_team_abbr'] = abbr
+        out['last_known_team_id'] = abbr_to_id.get(abbr) if abbr else None
+
+        # simple attrs
+        out['primary_pos'] = None
+        out['age'] = None
+        out['bats'] = None
+        out['throws'] = None
+
+        # sums
+        for c in count_cols:
+            out[c] = pd.to_numeric(g[c], errors='coerce').sum(min_count=1)
+
+        # innings pitched sum (pybaseball returns decimal innings; summing OK)
+        out['ip'] = pd.to_numeric(g['ip'], errors='coerce').sum(min_count=1)
+
+        # batting rates
+        ab = out['ab']; h = out['h']; bb = out['bb']; hbp = out['hbp']; hr = out['hr']; so = out['so']; sf = (pd.to_numeric(g['sf'], errors='coerce').sum(min_count=1) or 0)
+        out['avg'] = safe_div(h, ab)
+        out['obp'] = safe_div((h or 0) + (bb or 0) + (hbp or 0), (ab or 0) + (bb or 0) + (hbp or 0) + sf)
+        singles = (h or 0) - (out['double'] or 0) - (out['triple'] or 0) - (hr or 0)
+        tb = (singles or 0) + 2*(out['double'] or 0) + 3*(out['triple'] or 0) + 4*(hr or 0)
+        out['slg'] = safe_div(tb, ab)
+        out['ops'] = (out['obp'] + out['slg']) if (pd.notna(out['obp']) and pd.notna(out['slg'])) else np.nan
+        out['iso'] = (out['slg'] - out['avg']) if (pd.notna(out['slg']) and pd.notna(out['avg'])) else np.nan
+        denom_babip = (ab or 0) - (so or 0) - (hr or 0) + sf
+        out['babip'] = safe_div((h or 0) - (hr or 0), denom_babip)
+
+        # advanced batting placeholders
+        out['woba'] = None
+        out['wrc_plus'] = None
+
+        # pitching rates
+        bf = out['bf']
+        out['era']   = safe_div((out['er'] or 0)*9.0, out['ip'])
+        out['whip']  = safe_div((out['bb_allowed'] or 0) + (out['h_allowed'] or 0), out['ip'])
+        out['k_pct'] = safe_div(out['so_pitch'], bf)
+        out['bb_pct']= safe_div(out['bb_allowed'], bf)
+        out['k_bb_pct'] = (out['k_pct'] - out['bb_pct']) if (pd.notna(out['k_pct']) and pd.notna(out['bb_pct'])) else np.nan
+        out['fip'] = None; out['xfip'] = None; out['gb_pct'] = None; out['fb_pct'] = None; out['hr_fb_pct'] = None
+
+        # fielding
+        out['innings_field'] = None
+        out['drs'] = None; out['uzr'] = None
+
+        out['source'] = 'statsapi+pybaseball'
+        return pd.Series(out)
+
+    grouped = df.groupby('group_key', sort=False).apply(agg_one).reset_index(drop=True)
+
+    # enforce column order
     players_cols = [
         "season","player_id","player_name","last_known_team_id","last_known_team_abbr","primary_pos","age","bats","throws",
         "pa","ab","r","h","double","triple","hr","rbi","bb","ibb","so","hbp","sb","cs",
@@ -148,36 +209,42 @@ for season in SEASONS:
         "source"
     ]
     for c in players_cols:
-        if c not in df.columns: df[c] = pd.NA
-    players_rows.append(df[players_cols])
+        if c not in grouped.columns: grouped[c] = pd.NA
 
-    # ---------------- Team aggregates ----------------
+    players_rows.append(grouped[players_cols])
+
+    # ---------------- Team aggregates (simple) ----------------
     wl = league_standings(season)
     rows = []
+    # Rebuild per-team from the original df (player x team rows)
+    tmp = df.copy()
+    tmp['last_known_team_id'] = tmp['last_known_team_abbr'].map(abbr_to_id)
     for team_id, meta in teams_map.items():
-        sub = df[df['last_known_team_id'] == team_id]
+        sub = tmp[tmp['last_known_team_id'] == team_id]
         if sub.empty:
             continue
-        ab = sub['ab'].sum(min_count=1)
-        h = sub['h'].sum(min_count=1)
-        bb = sub['bb'].sum(min_count=1)
-        hbp = sub['hbp'].sum(min_count=1)
+        ab = pd.to_numeric(sub['ab'], errors='coerce').sum(min_count=1)
+        h = pd.to_numeric(sub['h'], errors='coerce').sum(min_count=1)
+        bb = pd.to_numeric(sub['bb'], errors='coerce').sum(min_count=1)
+        hbp = pd.to_numeric(sub['hbp'], errors='coerce').sum(min_count=1)
         sf = 0
         team_avg = safe_div(h, ab)
         team_obp = safe_div((h or 0) + (bb or 0) + (hbp or 0), (ab or 0) + (bb or 0) + (hbp or 0) + sf)
-        tb = (h or 0) + (sub['double'].sum(min_count=1) or 0) + 2*(sub['triple'].sum(min_count=1) or 0) + 3*(sub['hr'].sum(min_count=1) or 0)
+        singles = (h or 0) - (pd.to_numeric(sub['double'], errors='coerce').sum(min_count=1) or 0) - (pd.to_numeric(sub['triple'], errors='coerce').sum(min_count=1) or 0) - (pd.to_numeric(sub['hr'], errors='coerce').sum(min_count=1) or 0)
+        tb = (singles or 0) + 2*(pd.to_numeric(sub['double'], errors='coerce').sum(min_count=1) or 0) + 3*(pd.to_numeric(sub['triple'], errors='coerce').sum(min_count=1) or 0) + 4*(pd.to_numeric(sub['hr'], errors='coerce').sum(min_count=1) or 0)
         team_slg = safe_div(tb, ab)
-        team_ops = team_obp + team_slg if not np.isnan(team_obp) and not np.isnan(team_slg) else np.nan
-        total_ip = sub['ip'].sum(min_count=1)
-        total_er = sub['er'].sum(min_count=1)
+        team_ops = team_obp + team_slg if (pd.notna(team_obp) and pd.notna(team_slg)) else np.nan
+        total_ip = pd.to_numeric(sub['ip'], errors='coerce').sum(min_count=1)
+        total_er = pd.to_numeric(sub['er'], errors='coerce').sum(min_count=1)
         team_era = safe_div(total_er*9.0, total_ip)
-        team_whip = safe_div((sub['bb_allowed'].sum(min_count=1) or 0) + (sub['h_allowed'].sum(min_count=1) or 0), total_ip)
+        team_whip = safe_div((pd.to_numeric(sub['bb_allowed'], errors='coerce').sum(min_count=1) or 0) + (pd.to_numeric(sub['h_allowed'], errors='coerce').sum(min_count=1) or 0), total_ip)
 
         rows.append(dict(
             season=season, team_id=team_id, team_abbr=meta['abbr'], team_name=meta['name'],
             league=meta['league'], division=meta['division'],
             games=(wl.get(team_id, {}).get('games')), wins=(wl.get(team_id, {}).get('wins')), losses=(wl.get(team_id, {}).get('losses')),
-            runs_scored=sub['r'].sum(min_count=1), runs_allowed=None, run_diff=None,
+            runs_scored=pd.to_numeric(sub['r'], errors='coerce').sum(min_count=1),
+            runs_allowed=None, run_diff=None,
             team_avg=team_avg, team_obp=team_obp, team_slg=team_slg, team_ops=team_ops,
             team_era=team_era, team_fip=None, team_whip=team_whip,
             team_woba=None, team_wrc_plus=None,
@@ -189,12 +256,14 @@ for season in SEASONS:
 # Write CSVs
 if players_rows:
     players = pd.concat(players_rows, ignore_index=True)
-    for c in ['pa','ab','r','h','double','triple','hr','rbi','bb','ibb','so','hbp','sb','cs','bf','h_allowed','er','bb_allowed','so_pitch','hr_allowed',
-              'chances','putouts','assists','errors']:
+
+    # downcast / types
+    for c in ['pa','ab','r','h','double','triple','hr','rbi','bb','ibb','so','hbp','sb','cs','bf','h_allowed','er','bb_allowed','so_pitch','hr_allowed','chances','putouts','assists','errors']:
         if c in players.columns:
             players[c] = pd.to_numeric(players[c], errors='coerce').astype('Int64')
     players['player_id'] = pd.to_numeric(players['player_id'], errors='coerce').astype('Int64')
     players['last_known_team_id'] = pd.to_numeric(players['last_known_team_id'], errors='coerce').astype('Int64')
+
     players.to_csv("mlb_players.csv", index=False)
     log.info(f"Wrote mlb_players.csv rows {len(players)}")
 
