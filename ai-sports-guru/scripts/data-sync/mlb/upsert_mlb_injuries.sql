@@ -17,17 +17,21 @@ UPDATE _stg_mlb_injuries SET
   source = NULLIF(trim(source),'')
 ;
 
+-- Insert with computed player_key (player_id preferred, else player_name)
 INSERT INTO public.mlb_injuries AS t(
   season, date_report, team_id, team_abbr,
   player_id, player_name, pos,
-  status, designation, il_days, retro_date, expected_return, description, source
+  status, designation, il_days, retro_date, expected_return, description, source,
+  player_key
 )
 SELECT
   season, date_report, team_id, team_abbr,
   player_id, player_name, pos,
-  status, designation, il_days, retro_date, expected_return, description, source
+  status, designation, il_days, retro_date, expected_return, description, source,
+  COALESCE(player_id::text, player_name) AS player_key
 FROM _stg_mlb_injuries
-ON CONFLICT (season, date_report, team_id, player_id, player_name) DO UPDATE SET
+WHERE COALESCE(player_id::text, player_name) IS NOT NULL
+ON CONFLICT (season, date_report, team_id, player_key) DO UPDATE SET
   team_abbr = EXCLUDED.team_abbr,
   pos = EXCLUDED.pos,
   status = EXCLUDED.status,
