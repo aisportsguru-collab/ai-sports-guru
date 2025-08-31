@@ -8,13 +8,11 @@ S.headers.update({"User-Agent": "Mozilla/5.0 AiSportsGuru/1.0"})
 def season_from_env():
     env = os.getenv("INJURY_SEASONS")
     if env:
-        # use the max season in list
         try:
             seasons = sorted(set(int(s.strip()) for s in env.split(",") if s.strip()))
             return max(seasons)
         except Exception:
             pass
-    # fallback: infer
     now = datetime.now(timezone.utc)
     return now.year if now.month >= 9 else now.year - 1
 
@@ -26,10 +24,31 @@ def j(url, params=None, tries=3, backoff=0.6):
         time.sleep(backoff * (i+1))
     r.raise_for_status()
 
+def as_text(x):
+    if x is None:
+        return None
+    if isinstance(x, str):
+        return x
+    if isinstance(x, dict):
+        # ESPN varies; try common fields
+        for k in ("description", "shortText", "text", "detail", "status"):
+            v = x.get(k)
+            if isinstance(v, str) and v.strip():
+                return v
+        # last resort: join values
+        try:
+            return " ".join(str(v) for v in x.values() if v)
+        except Exception:
+            return None
+    if isinstance(x, (list, tuple)):
+        try:
+            return " ".join(as_text(y) or "" for y in x).strip() or None
+        except Exception:
+            return None
+    return str(x)
+
 def main():
     season = season_from_env()
-
-    # ESPN site injuries feed (not week-tagged; we’ll store week=0)
     url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries"
     try:
         data = j(url)
@@ -39,28 +58,46 @@ def main():
 
     rows = []
     now_iso = datetime.now(timezone.utc).isoformat()
+
     for grp in data.get("injuries", []):
         team = grp.get("team", {}).get("abbreviation")
         for item in grp.get("injuries", []):
-            name = item.get("athlete", {}).get("displayName")
-            pos  = item.get("athlete", {}).get("position", {}).get("abbreviation")
-            status = item.get("status")  # e.g., Out, Questionable, IR
-            details = item.get("details")
-            body_part = item.get("type", {}).get("text") or None  # sometimes holds area
+            # athlete fields
+            ath = item.get("athlete", {}) or {}
+            name = ath.get("displayName")
+            pos  = (ath.get("position") or {}).get("abbreviation")
+
+            # status / details / type can be strings or dicts
+            status_raw  = item.get("status")
+            details_raw = item.get("details")
+            type_raw    = item.get("type")
+
+            status  = as_text(status_raw)
+            details = as_text(details_raw)
+            body_part = None
+            if isinstance(type_raw, dict):
+                body_part = type_raw.get("text") or type_raw.get("abbreviation")
+            else:
+                body_part = as_text(type_raw)
+
+            # derive designation hints
             designation = None
-            # heuristic: IR or PUP sometimes inside status/details
-            if status and "IR" in status.upper(): designation = "IR"
-            elif details and "PUP" in details.upper(): designation = "PUP"
+            st = (status or "").upper()
+            dt = (details or "").upper()
+            if "IR" in st or "INJURED RESERVE" in st or "IR" in dt:
+                designation = "IR"
+            elif "PUP" in st or "PHYSICALLY UNABLE" in st or "PUP" in dt:
+                designation = "PUP"
 
             rows.append({
                 "season": season,
-                "week": 0,                 # ESPN feed not by week; we use 0
+                "week": 0,                 # ESPN feed not by game week
                 "team": team,
-                "player_id": None,
+                "player_id": None,         # ESPN feed here lacks stable id
                 "player_name": name,
                 "position": pos,
-                "report_status": status,   # maps to our report_status
-                "practice_status": None,   # not present in this feed
+                "report_status": status,   # Out, Questionable, etc.
+                "practice_status": None,   # not provided here
                 "designation": designation,
                 "body_part": body_part,
                 "description": details,
@@ -73,6 +110,5 @@ def main():
     ])
     df.to_csv("nfl_injuries.csv", index=False)
     print(f"[espn_fallback] wrote nfl_injuries.csv with {len(df)} rows for season {season}")
-
 if __name__ == "__main__":
     main()
