@@ -1,13 +1,16 @@
 {
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.aisportsguru.com" }],
-      "destination": "https://aisportsguru.com/:path*",
-      "permanent": true
-    }
-  ],
   "crons": [
-    { "path": "/api/cron/warm-all", "schedule": "*/15 * * * *" }
+    {
+      "path": "/api/predict/run?league=nfl&days=14&store=1",
+      "schedule": "*/20 * * * *"
+    },
+    {
+      "path": "/api/predict/run?league=ncaaf&days=14&store=1",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/predict/run?league=mlb&days=7&store=1",
+      "schedule": "15 * * * *"
+    }
   ]
 }
