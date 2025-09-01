@@ -1,18 +1,22 @@
-// app/api/predict/run/route.ts
 import { NextResponse } from "next/server";
-import { runPredict } from "@/lib/predictRunner"; // adjust import if needed
+import { runPredict } from "../../../lib/predict";
 
-export const dynamic = "force-dynamic"; // ⬅️ ensures API route isn't pruned
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const league = searchParams.get("league") ?? "nfl";
-    const days = Number(searchParams.get("days") ?? 14);
-    const store = searchParams.get("store") === "1";
+  const { searchParams } = new URL(req.url);
+  const league = searchParams.get("league") ?? "nfl";
+  const days = parseInt(searchParams.get("days") ?? "14", 10);
+  const store = searchParams.get("store") === "1";
+  const debug = searchParams.get("debug") === "1";
 
-    // call your existing runner
-    const result = await runPredict({ league, days, store });
+  try {
+    const result = await runPredict({
+      league,
+      days,
+      store,
+      debug,
+    });
 
     return NextResponse.json({
       ok: true,
@@ -20,10 +24,9 @@ export async function GET(req: Request) {
       from: result.from,
       to: result.to,
       stored: result.stored,
-      note: "API route is working on Vercel ✅",
+      note: result.note,
     });
   } catch (err: any) {
-    console.error("predict/run error:", err);
     return NextResponse.json(
       { ok: false, error: err.message ?? "Unknown error" },
       { status: 500 }
