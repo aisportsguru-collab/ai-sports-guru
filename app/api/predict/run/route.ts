@@ -1,31 +1,302 @@
-// App Router API: /api/predict/run
-import { NextResponse } from "next/server";
-import { runPredict } from "../../../../lib/predict"; // <- correct relative path
+import { NextRequest, NextResponse } from "next/server";
+
+// IMPORTANT: use a relative import (no @/...) and the correct name: `predict`
+import { predict } from "../../../lib/predict"; // file lives at lib/predict.ts (relative to this route)
+
+// Optional: write to Supabase if service key is configured
+type SBRow = {
+  external_id: string;
+  sport: string;
+  home_team: string;
+  away_team: string;
+  commence_time: string; // ISO
+  game_date: string;     // YYYY-MM-DD
+  // snapshot odds
+  moneyline_home: number | null;
+  moneyline_away: number | null;
+  spread_line: number | null;
+  spread_price_home: number | null;
+  spread_price_away: number | null;
+  total_line: number | null;
+  total_over_price: number | null;
+  total_under_price: number | null;
+  // model
+  predicted_winner: string | null;
+  pick_moneyline: string | null;
+  pick_spread: string | null;
+  pick_total: string | null;
+  conf_moneyline: number | null;
+  conf_spread: number | null;
+  conf_total: number | null;
+  model_confidence: number | null;
+  source_tag: string | null;
+};
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+const ODDS_API_KEY = process.env.ODDS_API_KEY!;
+const ODDS_API_REGION = process.env.ODDS_API_REGION ?? "us";
+const ODDS_API_MARKETS = process.env.ODDS_API_MARKETS ?? "h2h,spreads,totals";
 
-  const league = searchParams.get("league") ?? "nfl";
-  const days   = parseInt(searchParams.get("days") ?? "14", 10);
-  const store  = searchParams.get("store") === "1";
-  const debug  = searchParams.get("debug") === "1";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
 
+// Map our league -> The Odds API sport key
+const SPORT_KEY: Record<string, string> = {
+  nfl: "americanfootball_nfl",
+  ncaaf: "americanfootball_ncaaf",
+  mlb: "baseball_mlb",
+  nba: "basketball_nba",
+  nhl: "icehockey_nhl",
+  ncaab: "basketball_ncaab",
+  wnba: "basketball_wnba",
+};
+
+// Minimal NormalGame shape used by lib/predict.ts
+type NormalGame = {
+  league: string;
+  homeTeam: string;
+  awayTeam: string;
+  kickoffISO: string;
+  markets?: {
+    ml?: { home?: number; away?: number };
+    spread?: number | null;              // home spread: negative = home favored
+    spreadPrices?: { home?: number; away?: number };
+    total?: number | null;
+    totalPrices?: { over?: number; under?: number };
+  };
+};
+
+// Fetch odds for a date window and normalize to NormalGame[]
+async function fetchOddsWindow(league: string, fromISO: string, toISO: string): Promise<NormalGame[]> {
+  if (!ODDS_API_KEY) throw new Error("Missing ODDS_API_KEY at runtime.");
+
+  const sport = SPORT_KEY[league];
+  if (!sport) throw new Error(`Unsupported league: ${league}`);
+
+  // The Odds API doesn’t support date-window filtering directly for all endpoints,
+  // so we pull current and upcoming and then filter by commence_time locally.
+  const url = new URL(`https://api.the-odds-api.com/v4/sports/${sport}/odds`);
+  url.searchParams.set("apiKey", ODDS_API_KEY);
+  url.searchParams.set("regions", ODDS_API_REGION);
+  url.searchParams.set("markets", ODDS_API_MARKETS);
+  url.searchParams.set("oddsFormat", "american");
+  url.searchParams.set("dateFormat", "iso");
+
+  const r = await fetch(url.toString(), { cache: "no-store" });
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    throw new Error(`odds api error: ${r.status} ${text}`.slice(0, 500));
+  }
+  const raw = (await r.json()) as any[];
+
+  const from = new Date(fromISO).getTime();
+  const to = new Date(toISO).getTime();
+
+  const games: NormalGame[] = [];
+
+  for (const g of raw) {
+    const t = new Date(g.commence_time).getTime();
+    if (Number.isFinite(t) && (t < from || t > to)) continue;
+
+    // derive consensus (first bookmaker or average if you want to extend)
+    const bk = Array.isArray(g.bookmakers) && g.bookmakers.length > 0 ? g.bookmakers[0] : null;
+
+    let mlHome: number | undefined;
+    let mlAway: number | undefined;
+    let spreadLine: number | null = null;
+    let spreadHomePrice: number | undefined;
+    let spreadAwayPrice: number | undefined;
+    let totalLine: number | null = null;
+    let overPrice: number | undefined;
+    let underPrice: number | undefined;
+
+    if (bk?.markets) {
+      for (const m of bk.markets) {
+        if (m.key === "h2h") {
+          for (const o of m.outcomes || []) {
+            if (o.name === g.home_team) mlHome = o.price;
+            if (o.name === g.away_team) mlAway = o.price;
+          }
+        }
+        if (m.key === "spreads") {
+          // choose outcome for home and away; The Odds API gives point values per team
+          const home = (m.outcomes || []).find((o: any) => o.name === g.home_team);
+          const away = (m.outcomes || []).find((o: any) => o.name === g.away_team);
+          if (home?.point != null) spreadLine = Number(home.point); // home line (negative => home favored)
+          spreadHomePrice = home?.price;
+          spreadAwayPrice = away?.price;
+        }
+        if (m.key === "totals") {
+          const over = (m.outcomes || []).find((o: any) => o.name?.toUpperCase?.() === "OVER");
+          const under = (m.outcomes || []).find((o: any) => o.name?.toUpperCase?.() === "UNDER");
+          if (over?.point != null) totalLine = Number(over.point);
+          overPrice = over?.price;
+          underPrice = under?.price;
+        }
+      }
+    }
+
+    games.push({
+      league,
+      homeTeam: g.home_team,
+      awayTeam: g.away_team,
+      kickoffISO: g.commence_time,
+      markets: {
+        ml: { home: mlHome, away: mlAway },
+        spread: spreadLine,
+        spreadPrices: { home: spreadHomePrice, away: spreadAwayPrice },
+        total: totalLine,
+        totalPrices: { over: overPrice, under: underPrice },
+      },
+    });
+  }
+
+  return games;
+}
+
+// Insert predictions into Supabase (idempotent on (external_id,sport))
+async function storeToSupabase(rows: SBRow[]): Promise<number> {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) return 0;
+
+  const { createClient } = await import("@supabase/supabase-js");
+  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, {
+    auth: { persistSession: false },
+  });
+
+  const { error, count } = await sb
+    .from("ai_research_predictions")
+    .insert(rows, { count: "exact", returning: "minimal" });
+
+  if (error) {
+    // If you created a unique index on (external_id,sport), "duplicate key" can happen on re-runs
+    // You can upsert instead if you prefer.
+    // console.error("supabase insert error", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+export async function GET(req: NextRequest) {
   try {
-    const result = await runPredict({ league, days, store, debug });
+    const { searchParams } = new URL(req.url);
+    const league = (searchParams.get("league") || "nfl").toLowerCase();
+    const days = Math.max(1, Math.min(14, Number(searchParams.get("days") || 14)));
+    const store = (searchParams.get("store") || "0") === "1";
+
+    const now = new Date();
+    const fromISO = now.toISOString();
+    const toISO = new Date(now.getTime() + days * 24 * 3600 * 1000).toISOString();
+
+    // 1) Odds -> NormalGame[]
+    const games = await fetchOddsWindow(league, fromISO, toISO);
+
+    // 2) Model picks
+    const picks = await predict(games);
+
+    // 3) Join odds + picks into rows for storage / response
+    const rows: SBRow[] = games.map((g) => {
+      const kickoffISO = g.kickoffISO;
+      const game_date = kickoffISO.slice(0, 10);
+      const external_id = [
+        league,
+        g.homeTeam.replace(/\s+/g, "_"),
+        g.awayTeam.replace(/\s+/g, "_"),
+        kickoffISO,
+      ].join("|");
+
+      // default snapshot
+      const mlh = g.markets?.ml?.home ?? null;
+      const mla = g.markets?.ml?.away ?? null;
+      const sLine = g.markets?.spread ?? null;
+      const spHome = g.markets?.spreadPrices?.home ?? null;
+      const spAway = g.markets?.spreadPrices?.away ?? null;
+      const tLine = g.markets?.total ?? null;
+      const oPrice = g.markets?.totalPrices?.over ?? null;
+      const uPrice = g.markets?.totalPrices?.under ?? null;
+
+      // attach model decisions for this game
+      const gamePicks = picks.filter(
+        (p) =>
+          p.league === league &&
+          p.homeTeam === g.homeTeam &&
+          p.awayTeam === g.awayTeam &&
+          p.kickoffISO === g.kickoffISO
+      );
+
+      let pick_moneyline: string | null = null;
+      let pick_spread: string | null = null;
+      let pick_total: string | null = null;
+      let conf_moneyline: number | null = null;
+      let conf_spread: number | null = null;
+      let conf_total: number | null = null;
+      let predicted_winner: string | null = null;
+
+      for (const p of gamePicks) {
+        if (p.market === "ML") {
+          pick_moneyline = p.pick;
+          conf_moneyline = p.edgePct ?? 55;
+          predicted_winner = p.pick === "HOME" ? g.homeTeam : g.awayTeam;
+        }
+        if (p.market === "SPREAD" && typeof p.line === "number") {
+          pick_spread = `${p.pick} ${p.line >= 0 ? "+" : ""}${p.line}`;
+          conf_spread = p.edgePct ?? 55;
+        }
+        if (p.market === "TOTAL" && typeof p.line === "number") {
+          pick_total = `${p.pick[0] + p.pick.slice(1).toLowerCase()} ${p.line}`; // Over 45.5
+          conf_total = p.edgePct ?? 55;
+        }
+      }
+
+      return {
+        external_id,
+        sport: league,
+        home_team: g.homeTeam,
+        away_team: g.awayTeam,
+        commence_time: kickoffISO,
+        game_date,
+        moneyline_home: mlh,
+        moneyline_away: mla,
+        spread_line: sLine,
+        spread_price_home: spHome,
+        spread_price_away: spAway,
+        total_line: tLine,
+        total_over_price: oPrice,
+        total_under_price: uPrice,
+        predicted_winner,
+        pick_moneyline,
+        pick_spread,
+        pick_total,
+        conf_moneyline,
+        conf_spread,
+        conf_total,
+        model_confidence: Math.max(
+          conf_moneyline ?? 0,
+          conf_spread ?? 0,
+          conf_total ?? 0
+        ) || null,
+        source_tag: "prod_api_v1",
+      };
+    });
+
+    // 4) Optional: store
+    let stored = 0;
+    if (store) {
+      stored = await storeToSupabase(rows);
+    }
 
     return NextResponse.json({
       ok: true,
       league,
-      from: result.from,
-      to: result.to,
-      stored: result.stored,
-      note: result.note,
+      from: fromISO,
+      to: toISO,
+      stored,
+      note: "Pulled odds from The Odds API and generated predictions.",
     });
   } catch (err: any) {
     return NextResponse.json(
-      { ok: false, error: err?.message ?? "Unknown error" },
+      { ok: false, error: String(err?.message || err || "unknown error") },
       { status: 500 }
     );
   }
