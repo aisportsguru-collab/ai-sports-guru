@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-// Force dynamic so it always executes on server
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
