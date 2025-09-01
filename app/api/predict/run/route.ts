@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// IMPORTANT: use a relative import (no @/...) and the correct name: `predict`
-import { predict } from "../../../lib/predict"; // file lives at lib/predict.ts (relative to this route)
+// FIX: route is 4 levels deep, so go up four to reach /lib/predict.ts
+import { predict } from "../../../../lib/predict"; // <- correct relative path
 
 // Optional: write to Supabase if service key is configured
 type SBRow = {
@@ -75,8 +75,6 @@ async function fetchOddsWindow(league: string, fromISO: string, toISO: string): 
   const sport = SPORT_KEY[league];
   if (!sport) throw new Error(`Unsupported league: ${league}`);
 
-  // The Odds API doesn’t support date-window filtering directly for all endpoints,
-  // so we pull current and upcoming and then filter by commence_time locally.
   const url = new URL(`https://api.the-odds-api.com/v4/sports/${sport}/odds`);
   url.searchParams.set("apiKey", ODDS_API_KEY);
   url.searchParams.set("regions", ODDS_API_REGION);
@@ -100,7 +98,6 @@ async function fetchOddsWindow(league: string, fromISO: string, toISO: string): 
     const t = new Date(g.commence_time).getTime();
     if (Number.isFinite(t) && (t < from || t > to)) continue;
 
-    // derive consensus (first bookmaker or average if you want to extend)
     const bk = Array.isArray(g.bookmakers) && g.bookmakers.length > 0 ? g.bookmakers[0] : null;
 
     let mlHome: number | undefined;
@@ -121,10 +118,9 @@ async function fetchOddsWindow(league: string, fromISO: string, toISO: string): 
           }
         }
         if (m.key === "spreads") {
-          // choose outcome for home and away; The Odds API gives point values per team
           const home = (m.outcomes || []).find((o: any) => o.name === g.home_team);
           const away = (m.outcomes || []).find((o: any) => o.name === g.away_team);
-          if (home?.point != null) spreadLine = Number(home.point); // home line (negative => home favored)
+          if (home?.point != null) spreadLine = Number(home.point);
           spreadHomePrice = home?.price;
           spreadAwayPrice = away?.price;
         }
@@ -170,9 +166,6 @@ async function storeToSupabase(rows: SBRow[]): Promise<number> {
     .insert(rows, { count: "exact", returning: "minimal" });
 
   if (error) {
-    // If you created a unique index on (external_id,sport), "duplicate key" can happen on re-runs
-    // You can upsert instead if you prefer.
-    // console.error("supabase insert error", error);
     return 0;
   }
   return count ?? 0;
@@ -189,13 +182,9 @@ export async function GET(req: NextRequest) {
     const fromISO = now.toISOString();
     const toISO = new Date(now.getTime() + days * 24 * 3600 * 1000).toISOString();
 
-    // 1) Odds -> NormalGame[]
     const games = await fetchOddsWindow(league, fromISO, toISO);
-
-    // 2) Model picks
     const picks = await predict(games);
 
-    // 3) Join odds + picks into rows for storage / response
     const rows: SBRow[] = games.map((g) => {
       const kickoffISO = g.kickoffISO;
       const game_date = kickoffISO.slice(0, 10);
@@ -206,7 +195,6 @@ export async function GET(req: NextRequest) {
         kickoffISO,
       ].join("|");
 
-      // default snapshot
       const mlh = g.markets?.ml?.home ?? null;
       const mla = g.markets?.ml?.away ?? null;
       const sLine = g.markets?.spread ?? null;
@@ -216,7 +204,6 @@ export async function GET(req: NextRequest) {
       const oPrice = g.markets?.totalPrices?.over ?? null;
       const uPrice = g.markets?.totalPrices?.under ?? null;
 
-      // attach model decisions for this game
       const gamePicks = picks.filter(
         (p) =>
           p.league === league &&
@@ -244,7 +231,7 @@ export async function GET(req: NextRequest) {
           conf_spread = p.edgePct ?? 55;
         }
         if (p.market === "TOTAL" && typeof p.line === "number") {
-          pick_total = `${p.pick[0] + p.pick.slice(1).toLowerCase()} ${p.line}`; // Over 45.5
+          pick_total = `${p.pick[0] + p.pick.slice(1).toLowerCase()} ${p.line}`;
           conf_total = p.edgePct ?? 55;
         }
       }
@@ -280,7 +267,6 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // 4) Optional: store
     let stored = 0;
     if (store) {
       stored = await storeToSupabase(rows);
