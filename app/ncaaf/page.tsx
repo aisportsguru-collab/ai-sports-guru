@@ -1,2 +1,2 @@
-import LeaguePage from "@/components/LeaguePage";
-export default function Page() { return <LeaguePage league="ncaaf" />; }
+export { default } from "../(sports)/[league]/page";
+export const dynamic = "force-dynamic";
