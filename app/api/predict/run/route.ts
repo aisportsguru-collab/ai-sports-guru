@@ -1,20 +1,16 @@
 /**
  * /api/predict/run
  * Pull lines from The Odds API, generate predictions (lib/predict),
- * and (optionally) store into Supabase with a conflict-safe upsert.
+ * and (optionally) upsert into Supabase with conflict-safe behavior.
  */
 import { NextResponse } from "next/server";
-
-// Ensure Node runtime (Edge can't see server-side envs reliably)
 export const runtime = "nodejs";
 
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
-
-// ---- Import your model runner (already in the repo) ----
 import { predict } from "../../../../lib/predict";
 
-// ---------- Types ----------
+// ===== Types =====
 type OddsAPIGame = {
   id: string;
   sport_key: string;
@@ -27,17 +23,16 @@ type OddsAPIGame = {
     markets: Array<{
       key: "h2h" | "spreads" | "totals";
       outcomes: Array<{
-        name: string; // team name, "Over", "Under"
+        name: string; // team name or "Over"/"Under"
         price?: number; // american odds
-        point?: number; // spread or total points
+        point?: number; // spread/total
       }>;
     }>;
   }>;
 };
 
-// The compact shape lib/predict expects (see lib/predict.ts)
 type NormalGame = {
-  league: "nfl" | "ncaaf" | "mlb" | string;
+  league: string;
   homeTeam: string;
   awayTeam: string;
   kickoffISO: string;
@@ -50,15 +45,27 @@ type NormalGame = {
   };
 };
 
-// ---------- Helpers ----------
-function md5(s: string) {
-  return crypto.createHash("md5").update(s).digest("hex");
+// ===== Helpers =====
+const md5 = (s: string) => crypto.createHash("md5").update(s).digest("hex");
+
+function toLeagueParam(v?: string | null) {
+  const k = (v || "").toLowerCase();
+  if (k === "nfl" || k === "ncaaf" || k === "mlb") return k;
+  return "nfl";
 }
 
-function toLeagueParam(input?: string | null) {
-  const v = (input || "").toLowerCase();
-  if (v === "nfl" || v === "ncaaf" || v === "mlb") return v;
-  return "nfl";
+// The Odds API v4 sport keys
+function oddsSportKey(league: string): string {
+  switch (league) {
+    case "nfl":
+      return "americanfootball_nfl";
+    case "ncaaf":
+      return "americanfootball_ncaaf";
+    case "mlb":
+      return "baseball_mlb";
+    default:
+      return "americanfootball_nfl";
+  }
 }
 
 function startRange(days: number) {
@@ -106,16 +113,18 @@ function normalizeGame(league: string, g: OddsAPIGame): NormalGame {
           if (o.name === g.away_team) {
             sAwayPrice = o.price;
             if (spread === undefined && typeof o.point === "number") {
+              // ensure spread is from the home perspective
               spread = -o.point;
             }
           }
         }
       } else if (m.key === "totals") {
         for (const o of m.outcomes) {
-          if (o.name.toLowerCase() === "over") {
+          const nm = o.name.toLowerCase();
+          if (nm === "over") {
             if (typeof o.point === "number") total = o.point;
             overPrice = o.price;
-          } else if (o.name.toLowerCase() === "under") {
+          } else if (nm === "under") {
             if (typeof o.point === "number" && total === undefined) total = o.point;
             underPrice = o.price;
           }
@@ -140,7 +149,7 @@ function normalizeGame(league: string, g: OddsAPIGame): NormalGame {
   };
 }
 
-function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnType<typeof predict>>) {
+function modelRow(league: string, ng: NormalGame, picks: Awaited<ReturnType<typeof predict>>) {
   const rel = picks.filter(
     p =>
       p.league === league &&
@@ -148,25 +157,15 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
       p.awayTeam === ng.awayTeam &&
       p.kickoffISO === ng.kickoffISO
   );
+  const byMarket = (m: "SPREAD" | "ML" | "TOTAL") => rel.find(x => x.market === m);
 
-  const lookup = (mkt: "SPREAD" | "ML" | "TOTAL") => rel.find(r => r.market === mkt);
-
-  const ml = lookup("ML");
-  const sp = lookup("SPREAD");
-  const tot = lookup("TOTAL");
+  const ml = byMarket("ML");
+  const sp = byMarket("SPREAD");
+  const tot = byMarket("TOTAL");
 
   const kick = new Date(ng.kickoffISO);
-  const gameDate = kick.toISOString().slice(0, 10);
+  const game_date = kick.toISOString().slice(0, 10);
   const season = kick.getUTCFullYear();
-
-  const moneyline_home = ng.markets?.ml?.home ?? null;
-  const moneyline_away = ng.markets?.ml?.away ?? null;
-  const spread_line = ng.markets?.spread ?? null;
-  const spread_price_home = ng.markets?.spreadPrices?.home ?? null;
-  const spread_price_away = ng.markets?.spreadPrices?.away ?? null;
-  const total_line = ng.markets?.total ?? null;
-  const total_over_price = ng.markets?.totalPrices?.over ?? null;
-  const total_under_price = ng.markets?.totalPrices?.under ?? null;
 
   const external_id = md5(`${league}|${ng.homeTeam}|${ng.awayTeam}|${ng.kickoffISO}`);
 
@@ -188,24 +187,23 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
     pick_moneyline === "HOME" ? ng.homeTeam : pick_moneyline === "AWAY" ? ng.awayTeam : null;
 
   const model_confidence = Math.max(conf_moneyline, conf_spread, conf_total);
-  const confidence = model_confidence;
 
   return {
     external_id,
     sport: league,
     commence_time: ng.kickoffISO,
-    game_date: gameDate,
+    game_date,
     season,
     home_team: ng.homeTeam,
     away_team: ng.awayTeam,
-    moneyline_home,
-    moneyline_away,
-    spread_line,
-    spread_price_home,
-    spread_price_away,
-    total_line,
-    total_over_price,
-    total_under_price,
+    moneyline_home: ng.markets?.ml?.home ?? null,
+    moneyline_away: ng.markets?.ml?.away ?? null,
+    spread_line: ng.markets?.spread ?? null,
+    spread_price_home: ng.markets?.spreadPrices?.home ?? null,
+    spread_price_away: ng.markets?.spreadPrices?.away ?? null,
+    total_line: ng.markets?.total ?? null,
+    total_over_price: ng.markets?.totalPrices?.over ?? null,
+    total_under_price: ng.markets?.totalPrices?.under ?? null,
     pick_moneyline,
     pick_spread,
     pick_total,
@@ -214,20 +212,22 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
     conf_total,
     model_confidence,
     predicted_winner,
-    confidence,
+    confidence: model_confidence,
     source_tag: "baseline_v1_fallbacks",
     analysis: null,
     created_at: new Date().toISOString(),
   };
 }
 
+// ===== External calls =====
 async function fetchOdds(league: string, fromISO: string, toISO: string) {
   const key = process.env.ODDS_API_KEY;
   if (!key) throw new Error("Missing ODDS_API_KEY at runtime.");
-
   const region = process.env.ODDS_API_REGION || "us";
   const markets = process.env.ODDS_API_MARKETS || "h2h,spreads,totals";
-  const url = new URL(`https://api.the-odds-api.com/v4/sports/${league}/odds/`);
+
+  const sportKey = oddsSportKey(league);
+  const url = new URL(`https://api.the-odds-api.com/v4/sports/${sportKey}/odds/`);
   url.searchParams.set("apiKey", key);
   url.searchParams.set("regions", region);
   url.searchParams.set("markets", markets);
@@ -236,15 +236,17 @@ async function fetchOdds(league: string, fromISO: string, toISO: string) {
 
   const resp = await fetch(url.toString(), { next: { revalidate: 15 } });
   if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error(`The Odds API error: ${resp.status} ${text}`);
+    const txt = await resp.text();
+    throw new Error(`The Odds API error: ${resp.status} ${txt}\n`);
   }
   const raw = (await resp.json()) as OddsAPIGame[];
-  const from = new Date(fromISO).getTime();
-  const to = new Date(toISO).getTime();
+
+  // Filter by our desired window (API returns upcoming)
+  const lo = new Date(fromISO).getTime();
+  const hi = new Date(toISO).getTime();
   return raw.filter(g => {
     const t = new Date(g.commence_time).getTime();
-    return t >= from && t <= to;
+    return t >= lo && t <= hi;
   });
 }
 
@@ -253,12 +255,13 @@ async function upsertRows(rows: any[]) {
   const service =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SERVICE_ROLE ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.toString();
+    null;
 
   if (!url || !service) {
     return { count: 0, error: "Supabase env not configured on server (SUPABASE_URL / SUPABASE_SERVICE_ROLE[_KEY])." };
   }
 
+  // dedupe by (external_id,sport)
   const uniq = new Map<string, any>();
   for (const r of rows) {
     const key = `${r.external_id}:${r.sport}`;
@@ -271,9 +274,7 @@ async function upsertRows(rows: any[]) {
   const finalRows = Array.from(uniq.values());
   if (finalRows.length === 0) return { count: 0, error: null };
 
-  const supa = createClient(url, service, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const supa = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
 
   const { error, count } = await supa
     .from("ai_research_predictions")
@@ -283,27 +284,27 @@ async function upsertRows(rows: any[]) {
   return { count: count ?? 0, error: error?.message || null };
 }
 
-// ---------- Route ----------
+// ===== Route =====
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const league = toLeagueParam(searchParams.get("league"));
     const days = Math.max(1, Math.min(14, parseInt(searchParams.get("days") || "14", 10)));
-    const store = parseInt(searchParams.get("store") || "0", 10) === 1 ? 1 : 0;
-    const debug = parseInt(searchParams.get("debug") || "0", 10) === 1 ? 1 : 0;
+    const store = Number(searchParams.get("store") || "0") === 1;
+    const debug = Number(searchParams.get("debug") || "0") === 1;
 
     const { from, to } = startRange(days);
     const fromISO = from.toISOString();
     const toISO = to.toISOString();
 
     const raw = await fetchOdds(league, fromISO, toISO);
-    const games: NormalGame[] = raw.map(g => normalizeGame(league, g));
+    const games = raw.map(g => normalizeGame(league, g));
     const picks = await predict(games);
-    const rows = games.map(g => modelPicksToRow(league, g, picks));
+    const rows = games.map(g => modelRow(league, g, picks));
 
     let stored = 0;
     let insert_error: string | null = null;
-    if (store === 1 && rows.length > 0) {
+    if (store && rows.length) {
       const res = await upsertRows(rows);
       stored = res.count || 0;
       insert_error = res.error;
@@ -332,9 +333,6 @@ export async function GET(req: Request) {
 
     return NextResponse.json(body);
   } catch (err: any) {
-    return NextResponse.json(
-      { ok: false, error: err?.message || String(err) },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: err?.message || String(err) }, { status: 500 });
   }
 }
