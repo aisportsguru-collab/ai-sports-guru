@@ -1,7 +1,7 @@
 /**
  * /api/predict/run
- * Pull lines from The Odds API, generate predictions (lib/predict),
- * and (optionally) upsert into Supabase with conflict-safe behavior.
+ * Pull The Odds API lines, generate predictions (lib/predict),
+ * and upsert into Supabase (conflict-safe, auto-fallback).
  */
 import { NextResponse } from "next/server";
 export const runtime = "nodejs";
@@ -23,9 +23,9 @@ type OddsAPIGame = {
     markets: Array<{
       key: "h2h" | "spreads" | "totals";
       outcomes: Array<{
-        name: string; // team name or "Over"/"Under"
+        name: string; // team or Over/Under
         price?: number; // american odds
-        point?: number; // spread/total
+        point?: number; // spread/total number
       }>;
     }>;
   }>;
@@ -109,11 +109,10 @@ function normalizeGame(league: string, g: OddsAPIGame): NormalGame {
           if (o.name === g.home_team) {
             spread = o.point;
             sHomePrice = o.price;
-          }
-          if (o.name === g.away_team) {
+          } else if (o.name === g.away_team) {
             sAwayPrice = o.price;
+            // if spread not set from home yet, derive home spread sign
             if (spread === undefined && typeof o.point === "number") {
-              // ensure spread is from the home perspective
               spread = -o.point;
             }
           }
@@ -241,7 +240,7 @@ async function fetchOdds(league: string, fromISO: string, toISO: string) {
   }
   const raw = (await resp.json()) as OddsAPIGame[];
 
-  // Filter by our desired window (API returns upcoming)
+  // API returns upcoming; filter to our window
   const lo = new Date(fromISO).getTime();
   const hi = new Date(toISO).getTime();
   return raw.filter(g => {
@@ -250,6 +249,7 @@ async function fetchOdds(league: string, fromISO: string, toISO: string) {
   });
 }
 
+// robust upsert that matches either unique definition: (external_id,sport) OR (external_id)
 async function upsertRows(rows: any[]) {
   const url = process.env.SUPABASE_URL;
   const service =
@@ -261,27 +261,42 @@ async function upsertRows(rows: any[]) {
     return { count: 0, error: "Supabase env not configured on server (SUPABASE_URL / SUPABASE_SERVICE_ROLE[_KEY])." };
   }
 
-  // dedupe by (external_id,sport)
+  // de-dupe our payload so ON CONFLICT never hits the same row twice
   const uniq = new Map<string, any>();
   for (const r of rows) {
-    const key = `${r.external_id}:${r.sport}`;
     if (r.season == null && r.commence_time) {
       const y = new Date(r.commence_time).getUTCFullYear();
       r.season = Number.isFinite(y) ? y : null;
     }
+    const key = `${r.external_id}:${r.sport}`;
     uniq.set(key, r);
   }
   const finalRows = Array.from(uniq.values());
-  if (finalRows.length === 0) return { count: 0, error: null };
+  if (!finalRows.length) return { count: 0, error: null };
 
   const supa = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
 
-  const { error, count } = await supa
-    .from("ai_research_predictions")
-    .upsert(finalRows, { onConflict: "external_id,sport", ignoreDuplicates: false })
-    .select("external_id", { count: "exact", head: true });
+  // try (external_id,sport) first, then fall back to (external_id)
+  const tryUpsert = async (onConflict: string) => {
+    return supa
+      .from("ai_research_predictions")
+      .upsert(finalRows, { onConflict, ignoreDuplicates: false })
+      .select("external_id", { count: "exact", head: true });
+  };
 
-  return { count: count ?? 0, error: error?.message || null };
+  let { error, count } = await tryUpsert("external_id,sport");
+  if (error) {
+    const msg = String(error.message || error);
+    if (/duplicate key value violates unique constraint/i.test(msg) ||
+        /ON CONFLICT DO UPDATE command cannot affect row a second time/i.test(msg) ||
+        /there is no unique or exclusion constraint matching/i.test(msg)) {
+      const second = await tryUpsert("external_id");
+      error = second.error as any;
+      count = second.count ?? count;
+    }
+  }
+
+  return { count: count ?? 0, error: (error as any)?.message || null };
 }
 
 // ===== Route =====
