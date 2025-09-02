@@ -1,0 +1,17 @@
+name: NCAAF Health Check
+on:
+  schedule:
+    - cron: '0 9 * * *'   # 09:00 UTC daily
+  workflow_dispatch: {}
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Counts
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          psql "$SUPABASE_DB_URL" -c "select season, count(*) as team_rows from public.ncaaf_teams group by season order by season;"
+          psql "$SUPABASE_DB_URL" -c "select season, count(*) as player_rows from public.ncaaf_players group by season order by season;"
+          psql "$SUPABASE_DB_URL" -c "select season, week, count(*) as rows from public.ncaaf_injuries group by season, week order by season desc, week desc limit 10;"

@@ -1,7 +1,7 @@
-pandas==2.2.2
-numpy==1.26.4
-pyarrow==16.1.0
-requests==2.32.3
-pybaseball==2.2.7
-beautifulsoup4==4.12.3
-lxml==5.2.2
+numpy
+pandas
+scikit-learn
+xgboost
+requests
+supabase
+python-dotenv

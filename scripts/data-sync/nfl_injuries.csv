@@ -1,0 +1,801 @@
+season,week,team,player_id,player_name,position,report_status,practice_status,designation,body_part,description,date_updated
+2025,0,,,Justin Jones,DT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Jones,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Hayden Conner,G,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Will Hernandez,G,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,J.J. Russell,LB,Injured Reserve,,IR,IR,Concussion,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bilal Nichols,DT,Out,,,O,Stinger,2025-08-31T17:10:58.649691+00:00
+2025,0,,,BJ Ojulari,LB,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Walter Nolen III,DT,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bam Knight,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chad Ryland,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Emari Demercado,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kyler Murray,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Michael Wilson,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trey Benson,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Marvin Harrison Jr.,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jacoby Brissett,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dalvin Tomlinson,DT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trishton Jackson,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joey Blount,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Blake Gillikin,P,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,James Conner,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trey McBride,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zay Jones,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Valentin Senn,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Elijah Jones,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyrone Wheatley Jr.,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Billy Bowman Jr.,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bralen Trice,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Fuller,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Darnell Mooney,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Storm Norton,OT,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Malik Verdon,S,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ta'Quon Graham,DT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Feleipe Franks,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Teagan Quitoriano,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Casey Washington,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,David Sills V,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nathan Carter,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Xavier Watts,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Troy Andersen,LB,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kaleb McGary,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Michael Jerrell,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Emory Jones,QB,Injured Reserve,,IR,IR,Concussion,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jamal Agnew,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Clark Phillips III,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalon Walker,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kirk Cousins,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Michael Penix Jr.,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ray-Ray McCloud III,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,KhaDarel Hodge,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ar'Darius Washington,S,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Emery Jones Jr.,OT,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Adisa Isaac,LB,Injured Reserve,,IR,IR,Dislocated,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mark Andrews,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Isaiah Likely,TE,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kyle Hamilton,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dayton Wade,WR,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaire Alexander,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lamar Jackson,QB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Derrick Henry,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,LaJohntay Wester,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rasheen Ali,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Patrick Ricard,FB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cooper Rush,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,DeAndre Hopkins,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Thomas Graham Jr.,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Keaton Mitchell,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Devontez Walker,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Loop,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,T.J. Tampa,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Robert Longerbeam,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bilhal Kone,CB,Injured Reserve,,IR,IR,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Malik Hamm,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brent Urban,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zay Flowers,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brandon Codrington,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tre'Davious White,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Wande Owens,S,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tylan Grable,OT,Injured Reserve,,IR,IR,Concussion,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Curtis Samuel,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Khalil Shakir,WR,Questionable,,,Q,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyrell Shavers,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Sedrick Van Pran-Granger,C,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Sam Franklin Jr.,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Maxwell Hairston,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Phillips,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brad Robbins,P,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Bass,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jackson Hawes,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Elijah Moore,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Josh Allen,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joshua Palmer,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ray Davis,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Connor McGovern,G,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Hancock,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cam Lewis,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Keon Coleman,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cole Bishop,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Taylor Rapp,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,James Cook,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen Coker,WR,Injured Reserve,,IR,IR,"{'description': 'IR', 'abbreviation': 'IR'} Quadriceps Leg 2025-10-05",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Hunter Renfrow,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Damien Lewis,G,Questionable,,,Q,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ikem Ekwonu,OT,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ja'Tyre Carter,G,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nic Scourton,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dalevon Campbell,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,LaBryan Ray,DE,Injured Reserve,,IR,IR,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tetairoa McMillan,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ryan Fitzgerald,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chandler Zavala,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Claudin Cherelus,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Taylor Moton,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trevor Etienne,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jimmy Horn Jr.,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Princely Umanmielen,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Xavier Legette,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andy Dalton,QB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tommy Tremble,TE,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Derrick Brown,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rico Dowdle,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chuba Hubbard,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bryce Young,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaycee Horn,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Austin Corbett,C,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Austin Booker,DE,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Devin Duvernay,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bill Murray,G,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Amen Ogbongbemiga,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ian Wheeler,RB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Doug Kramer Jr.,C,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tysheem Johnson,S,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zah Frazier,CB,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Travis Homer,RB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylon Johnson,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Case Keenum,QB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dominique Robinson,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Terell Smith,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tremaine Edmunds,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rome Odunze,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,D'Andre Swift,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,DJ Moore,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Caleb Williams,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kyler Gordon,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Deion Hankins,RB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyson Bagent,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ricky Stromberg,C,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andrew Billings,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kiran Amegadjie,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Olamide Zaccheaus,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cordell Volson,G,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Caleb Etienne,OT,Injured Reserve,,IR,IR,"{'description': 'IR', 'abbreviation': 'IR'} Undisclosed Other 2026-02-09",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cedric Johnson,DE,Injured Reserve,,IR,IR,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Daijahn Anthony,S,Injured Reserve,,IR,IR,"{'description': 'IR-R', 'abbreviation': 'IR-R'} Hamstring Leg 2025-10-05",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tanner McLachlan,TE,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Erick All Jr.,TE,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trey Hendrickson,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Evan McPherson,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jermaine Burton,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,DJ Turner II,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lucas Patrick,G,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mike Gesicki,TE,Questionable,,,Q,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Drew Sample,TE,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tee Higgins,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joe Burrow,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Marco Wilson,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mitchell Tinsley,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Noah Fant,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tahj Brooks,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ja'Marr Chase,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cody Ford,G,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chase Brown,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Shemar Stewart,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dax Hill,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Geno Stone,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Shedeur Sanders,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Winston Reid,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mike Hall Jr.,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cade McDonald,WR,Injured Reserve,,IR,IR,"{'description': 'IR', 'abbreviation': 'IR'} Undisclosed Other 2026-02-09",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Pierre Strong Jr.,RB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Raheim Sanders,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Denzel Ward,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dillon Gabriel,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,David Bell,WR,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cedric Tillman,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Deshaun Watson,QB,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andre Szmyt,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Gage Larvadain,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,DeAndre Carter,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jamari Thrash,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,LaMareon James,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Blake Whiteheart,TE,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Harold Fannin Jr.,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jerome Ford,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dylan Sampson,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joe Flacco,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ethan Pocic,C,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nathaniel Watson,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Isaiah Bond,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cornelius Lucas,OT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kenny Clark,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Matthew,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,C.J. Goodwin,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Caelen Carson,CB,Injured Reserve,,IR,IR,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Phil Mafah,RB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brevyn Spann-Ford,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Payton Turner,DE,Injured Reserve,,IR,IR,Fracture,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Shavon Revel Jr.,CB,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,DeMarvion Overshown,LB,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jonathan Mingo,WR,Injured Reserve,,IR,IR,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trevon Diggs,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaydon Blue,RB,Questionable,,,Q,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Robert Rochell,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alijah Clark,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Guyton,OT,Questionable,,,Q,Fracture,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Shemar James,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brandon Aubrey,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joe Milton III,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Miles Sanders,RB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,CeeDee Lamb,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jake Ferguson,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen Tolbert,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Luke Schoonmaker,TE,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mazi Smith,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dak Prescott,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Marvin Mims Jr.,WR,Questionable,,,Q,"{'description': 'QUESTIONABLE', 'abbreviation': 'QUESTIONABLE'} Groin Groin Not Specified 2025-09-07",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kristian Williams,DT,Injured Reserve,,IR,IR,"{'description': 'IR', 'abbreviation': 'IR'} Undisclosed Other 2026-02-09",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Drew Sanders,LB,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Michael Burton,FB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Wil Lutz,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Garret Wallow,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jonathon Cooper,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Adam Trautman,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Troy Franklin,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Pat Bryant,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Evan Engram,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,RJ Harvey,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Courtland Sutton,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Badie,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bo Nix,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nate Adkins,TE,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nik Bonitto,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nick Gargiulo,G,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaleel McLaughlin,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dre Greenlaw,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Matt Henningsen,DE,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Pat Surtain II,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Frank Crum,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,J.K. Dobbins,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alex Singleton,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Miles Frazier,G,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ezekiel Turner,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Isaac TeSlaa,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Josh Paschal,DE,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Malcolm Rodriguez,LB,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alim McNeill,DT,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kyle Allen,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Graham Glasgow,G,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mekhi Wingo,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Sam LaPorta,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Khalil Dorsey,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dan Skipper,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Pat O'Connor,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jamarco Jones,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Craig Reynolds,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dominic Lovett,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Sione Vaki,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Taylor Decker,OT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jake Bates,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Colby Sorsdal,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Justin Herron,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kenny Yeboah,TE,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jared Goff,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ennis Rakestraw Jr.,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kye Robichaux,RB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rasheed Walker,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Xavier McKinney,S,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Micah Parsons,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jayden Reed,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,John Williams,G,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jacob Monk,C,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Omar Brown,S,Injured Reserve,,IR,IR,Bruise,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dontayvion Wicks,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Love,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Collin Oliver,DE,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,MarShawn Lloyd,RB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Watson,WR,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Keisean Nixon,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Edgerrin Cooper,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rashan Gary,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Quay Walker,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Darian Kinnard,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chris Brooks,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Emanuel Wilson,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Malik Willis,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Romeo Doubs,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Matthew Golden,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Josh Jacobs,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lukas Van Ness,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Savion Williams,WR,Questionable,,,Q,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,C.J. Gardner-Johnson,S,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Denico Autry,DE,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joe Mixon,RB,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alijah Huzzie,CB,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylen Reed,S,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Juwann Winfree,WR,Injured Reserve,,IR,IR,"{'description': 'IR', 'abbreviation': 'IR'} Undisclosed Other 2026-02-09",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Irv Smith Jr.,TE,Injured Reserve,,IR,IR,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tank Dell,WR,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jimmie Ward,S,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nick Chubb,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Xavier Hutchinson,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dare Ogunbowale,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,British Brooks,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Harris,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jayden Higgins,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Woody Marks,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Graham Mertz,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dameon Pierce,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,C.J. Stroud,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cam Robinson,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Blake Fisher,OT,Questionable,,,Q,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Kirk,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nico Collins,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brevin Jordan,TE,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Folorunso Fatukasi,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chad Muma,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Maddux Trujillo,PK,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joe Bachie,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylon Carlies,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mekhi Blackmon,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ashton Dulin,WR,Questionable,,,Q,"{'description': 'QUESTIONABLE', 'abbreviation': 'QUESTIONABLE'} Concussion Head 2025-09-07",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Goodson,RB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Josh Downs,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Johnathan Edwards,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Anthony Gould,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,DJ Giddens,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Adonai Mitchell,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Riley Leonard,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,DeForest Buckner,DT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Anthony Richardson Sr.,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nick Cross,S,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylon Jones,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bernhard Raimann,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kenny Moore II,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alec Pierce,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Daniel Jones,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Hunter Wohler,S,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jacob Phillips,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Blake Freeland,OT,Injured Reserve,,IR,IR,Fracture,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Will Mallory,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cole Van Lanen,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen McLeod,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Caleb Ransaw,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Travis Hunter,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tim Patrick,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cam Little,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joshua Cephus,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trevor Lawrence,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dyami Brown,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Johnny Mundt,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Khalen Saunders,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tank Bigsby,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Travis Etienne Jr.,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brian Thomas Jr.,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Arik Armstead,DT,Questionable,,,Q,Soreness,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyson Campbell,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Maason Smith,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brenton Strange,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bhayshul Tuten,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Hunter Long,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Parker Washington,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Austin Johnson,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Patrick Mekari,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dennis Gardeck,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Montaric Brown,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen Royals,WR,Questionable,,,Q,Tendinitis,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Robert Tonyan,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nazeeh Johnson,S,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brandon George,LB,Injured Reserve,,IR,IR,"{'description': 'IR', 'abbreviation': 'IR'} Undisclosed Other 2026-02-09",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ethan Driskell,OT,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mike Edwards,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rashee Rice,WR,Suspension,,,SUSP,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jake Briningstool,TE,Injured Reserve,,IR,IR,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kristian Fulton,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nohl Williams,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylen Watson,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Derrick Nnadi,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Xavier Worthy,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kareem Hunt,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Travis Kelce,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Isiah Pacheco,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Patrick Mahomes,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Omarr Norman-Lott,DT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Felix Anudike-Uzomah,DE,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Hollywood Brown,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brashard Smith,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Gardner Minshew,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jack Cochrane,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyquan Thornton,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Deon Bush,S,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lonnie Johnson Jr.,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Aidan O'Connell,QB,Injured Reserve,,IR,IR,Fracture,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kenny Pickett,QB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Amari Cooper,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jakobi Meyers,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Leki Fotu,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alex Cappa,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jackson Powers-Johnson,C,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kyu Blu Kelly,CB,Questionable,,,Q,Soreness,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zamir White,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dont'e Thornton Jr.,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Geno Smith,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ashton Jeanty,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Adam Butler,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Raheem Mostert,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brock Bowers,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Terrell Edmunds,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jack Bech,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tre Tucker,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Michael Mayer,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Thomas Booker IV,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kolton Miller,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Germaine Pratt,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jamal Adams,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,JT Woods,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Austin Deculus,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylen Jones,S,Injured Reserve,,IR,IR,"{'description': 'IR', 'abbreviation': 'IR'} Undisclosed Other 2026-02-09",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Eric Rogers,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Deane Leonard,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Josh Harris,LS,Injured Reserve,,IR,IR,"{'description': 'IR-R', 'abbreviation': 'IR-R'} Undisclosed Other 2025-10-05",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Junior Colson,LB,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Najee Harris,RB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tre' Harris,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cameron Dicker,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Oronde Gadsden II,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trey Lance,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,KeAndre Lambert-Smith,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Quentin Johnston,WR,Questionable,,,Q,Concussion,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cam Hart,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mekhi Becton,G,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Del'Shawn Phillips,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Omarion Hampton,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Justin Herbert,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ladd McConkey,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Oladokun,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Otito Ogbonnia,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Conklin,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Hassan Haskins,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rashawn Slater,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trey Pipkins III,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Shaun Jolly,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alaric Jackson,OT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Josaiah Stewart,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Matthew Stafford,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Terrance Ferguson,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jarquez Hunter,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Keir Thomas,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Xavier Smith,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Stetson Bennett IV,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Konata Mumpfield,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Blake Corum,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Emmanuel Forbes Jr.,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jimmy Garoppolo,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kam Curl,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kobie Turner,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nick Hampton,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joshua Karty,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Davis Allen,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jared Verse,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kyren Williams,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nate Landman,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Troy Reeder,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Omar Speights,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ahkello Witherspoon,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tutu Atwell,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ashtyn Davis,S,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyreek Hill,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ollie Gordon II,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylen Wright,RB,Doubtful,,,D,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bayron Matos,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Austin Jackson,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cam Smith,CB,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Liam Eichenberg,OT,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andrew Meyer,C,Injured Reserve,,IR,IR,"{'description': 'IR-R', 'abbreviation': 'IR-R'} Undisclosed Other 2025-10-05",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Darren Waller,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,De'Von Achane,RB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jason Sanders,PK,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rasul Douglas,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kenneth Grant,DT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Elijah Campbell,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Aaron Brewer,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zach Sieler,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaelan Phillips,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Quinn Ewers,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zach Wilson,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Malik Washington,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordyn Brooks,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylen Waddle,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tua Tagovailoa,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Yodny Cajuste,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Adam Thielen,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Harrison Smith,S,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Batty,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen Nailor,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Myles Price,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ty Chandler,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Gavin Bartholomew,TE,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,C.J. Ham,FB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Elijah Williams,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Carson Wentz,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Max Brosmer,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tai Felton,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zavier Scott,RB,Questionable,,,Q,"{'description': 'QUESTIONABLE', 'abbreviation': 'QUESTIONABLE'} Ankle Leg 2025-09-08",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Darrisaw,OT,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Addison,WR,Suspension,,,SUSP,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joshua Metellus,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andrew Van Ginkel,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Justin Jefferson,WR,Questionable,,,Q,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,J.J. McCarthy,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Levi Drake Rodriguez,DT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zeke Correll,C,Injured Reserve,,IR,IR,Fracture,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rondale Moore,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Matt Nelson,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,T.J. Hockenson,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Mason,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Gonzalez,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mack Hollins,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Layden Robinson,G,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jahlani Tavai,LB,Injured Reserve,,IR,IR,"{'description': 'IR-R', 'abbreviation': 'IR-R'} Undisclosed Other 2025-10-05",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tommy DeVito,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ja'Lynn Polk,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Efton Chism III,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andy Borregales,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kyle Williams,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Hunter Henry,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Stefon Diggs,WR,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rhamondre Stevenson,RB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Drake Maye,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Isaiah Iton,DT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,DeMario Douglas,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,TreVeyon Henderson,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Deneric Prince,RB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Elijah Ponder,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lan Larison,RB,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Carlton Davis III,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Antonio Gibson,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kayshon Boutte,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Marcellas Dial Jr.,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaquelin Roy,DT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Vederian Lowe,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trevor Penning,OT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Barry Wesley,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Landon Young,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trey Palmer,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Foster Moreau,TE,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Taysom Hill,TE,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Shough,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,John Ridgeway III,DT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Spencer Rattler,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Pete Werner,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mason Tipton,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brandin Cooks,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Devin Neal,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kendre Miller,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rashid Shaheed,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chris Olave,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Khristian Boyd,DT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alvin Kamara,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Devaughn Vele,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Taliese Fuaga,OT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zach Wood,LS,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Luke Fortner,C,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alontae Taylor,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mason Pline,TE,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Bub Means,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Anthony Johnson Jr.,S,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rico Payton,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tre Hawkins III,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joshua Ezeudu,G,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jermaine Terry II,TE,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Da'Quan Felton,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Malik Nabers,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Beaux Collins,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Victor Dimukeje,LB,Out,,,O,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Eric Gray,RB,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,TJ Moore,CB,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Thomas Fidone II,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalin Hyatt,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jameis Winston,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cam Skattebo,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaxson Dart,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andrew Thomas,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chris Manhertz,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Daniel Bellinger,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cor'Dale Flott,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brian Burns,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Wan'Dale Robinson,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Darius Slayton,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Devin Singletary,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyrone Tracy Jr.,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ja'Markis Weston,DE,Injured Reserve,,IR,IR,"{'description': 'IR-R', 'abbreviation': 'IR-R'} Undisclosed Other 2025-10-05",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Byron Cowart,DT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jelani Woods,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Irvin Charles,WR,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Allen Lazard,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Isaiah Davis,RB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Sauce Gardner,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Xavier Gipson,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyrod Taylor,QB,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nick Folk,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Arian Smith,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jowon Briggs,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Harrison Phillips,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jermaine Johnson,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Justin Fields,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kris Boyd,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mason Taylor,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,John Simpson,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Malachi Moore,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kene Nwangwu,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Braelon Allen,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Garrett Wilson,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Breece Hall,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Will McDonald IV,DE,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Quinnen Williams,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Willie Lampkin,C,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andrew Mukuba,S,Questionable,,,Q,"{'description': 'QUESTIONABLE', 'abbreviation': 'QUESTIONABLE'} Hamstring Leg Not Specified 2025-09-04",2025-08-31T17:10:58.649691+00:00
+2025,0,,,DeVonta Smith,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,A.J. Brown,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lewis Cine,S,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Myles Hinton,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nakobe Dean,LB,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Fred Johnson,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brandon Johnson,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tanner McKee,QB,Questionable,,,Q,Fracture,2025-08-31T17:10:58.649691+00:00
+2025,0,,,John Metchie III,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen Hurts,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Saquon Barkley,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,AJ Dillon,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Johnny Wilson,WR,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Mailata,OT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dallas Goedert,TE,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lane Johnson,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zack Baun,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Byron Young,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Charley Hughlett,LS,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Gabe Hall,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nolan Smith Jr.,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen Carter,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Landon Dickerson,G,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Donte Kent,CB,Injured Reserve,,IR,IR,"{'description': 'IR', 'abbreviation': 'IR'} Foot Leg Right 2025-10-12",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Will Howard,QB,Injured Reserve,,IR,IR,Fracture,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Domenique Davis,DT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cory Trice Jr.,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Nick Herbig,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Keeanu Benton,DT,Questionable,,,Q,"{'description': 'QUESTIONABLE', 'abbreviation': 'QUESTIONABLE'} Upper Body Torso 2025-09-07",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jonnu Smith,TE,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Derrick Harmon,DT,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Darius Slay,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ben Skowronek,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joey Porter Jr.,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Scotty Miller,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mason Rudolph,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Pat Freiermuth,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kaleb Johnson,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylen Warren,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Calvin Austin III,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Gareth Warren,OT,Injured Reserve,,IR,IR,Concussion,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Alex Highsmith,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Aaron Rodgers,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kenneth Gainwell,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Roman Wilson,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Kuntz,LS,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cameron McCutcheon,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cameron Heyward,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Russell Gage Jr.,WR,Questionable,,,Q,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Watkins,WR,Questionable,,,Q,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jakob Robinson,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tanner Mordecai,QB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Carter Bradley,QB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Upton Stout,CB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jacob Cowing,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jauan Jennings,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan James,RB,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kevin Givens,DT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Yetur Gross-Matos,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Malik Mustapha,S,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kurtis Rourke,QB,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brandon Aiyuk,WR,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Isaiah Prince,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Skyy Moore,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Demarcus Robinson,WR,Suspension,,,SUSP,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Isaac Guerendo,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,George Kittle,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian McCaffrey,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brian Robinson Jr.,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tre Brown,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Robert Beal Jr.,DE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Patrick Taylor Jr.,RB,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Elliott,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chazz Surratt,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Haynes,G,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,John Rhys Plumlee,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Wesley Steiner,FB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Derion Kendrick,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Rylie Mills,DT,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Johnathan Hankins,DT,Out,,,O,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,George Holani,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tory Horton,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Mike Morris,DE,Questionable,,,Q,"{'description': 'QUESTIONABLE', 'abbreviation': 'QUESTIONABLE'} Concussion Head 2025-09-07",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen Milroe,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cody White,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jake Bobo,WR,Questionable,,,Q,Concussion,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Sam Darnold,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Charles Cross,OT,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Uchenna Nwosu,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyrice Knight,LB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Olu Oluwatimi,C,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Dareke Young,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Elijah Arroyo,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,AJ Barner,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cooper Kupp,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zach Charbonnet,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaxon Smith-Njigba,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kenneth Walker III,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Devin Culp,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Payne Durham,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jake Majors,C,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Raiqwon O'Neal,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,JayVian Farr,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Roman Parodie,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Antonio Grier Jr.,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyrek Funderburk,CB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaden Smith,WR,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cade Otton,TE,Questionable,,,Q,"{'description': 'QUESTIONABLE', 'abbreviation': 'QUESTIONABLE'} Leg Leg 2025-09-07",2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tristan Wirfs,OT,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jalen McMillan,WR,Injured Reserve,,IR,IR,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chris Godwin Jr.,WR,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kaevon Merriweather,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Teddy Bridgewater,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ryan Miller,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Josh Williams,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kameron Johnson,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tez Johnson,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Sean Tucker,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Baker Mayfield,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Christian Izien,S,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Antoine Winfield Jr.,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Emeka Egbuka,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,JJ Roberts,S,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,L'Jarius Sneed,CB,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Kalel Mullings,RB,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tony Pollard,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyjae Spears,RB,Injured Reserve,,IR,IR,Sprain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Calvin Ridley,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Joey Slye,PK,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brandon Allen,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chimere Dike,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Gunnar Helm,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Julius Chestnut,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Van Jefferson,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Lockett,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Elic Ayomanor,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Cam Ward,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Anfernee Orji,LB,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lloyd Cushenberry III,C,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Andrew Rupcich,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Blake Hance,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chig Okonkwo,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,T'Vondre Sweat,DT,Questionable,,,Q,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Quandre Diggs,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Darrell Baker Jr.,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Treylon Burks,WR,Injured Reserve,,IR,IR,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jihad Ward,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jeffery Simmons,DT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Terry McLaurin,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Trey Amos,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Luke McCaffrey,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jeremy McNichols,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Chris Rodriguez Jr.,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Zach Ertz,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Austin Ekeler,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jaylin Lane,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,John Bates,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jacory Croskey-Merritt,RB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Deebo Samuel,WR,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jayden Daniels,QB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Marcus Mariota,QB,Questionable,,,Q,Strain,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Brandon Coleman,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Noah Brown,WR,Questionable,,,Q,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,George Fant,OT,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Ben Sinnott,TE,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Antonio Hamilton Sr.,CB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Lucas Niang,OT,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Sam Cosmi,G,Out,,,O,Surgery,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyree Jackson,TE,Injured Reserve,,IR,IR,Not Specified,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Timothy McKay,G,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Jordan Magee,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Tyler Owens,S,Active,,,A,,2025-08-31T17:10:58.649691+00:00
+2025,0,,,Von Miller,LB,Active,,,A,,2025-08-31T17:10:58.649691+00:00

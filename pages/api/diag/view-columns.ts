@@ -10,11 +10,10 @@ const supabase = createClient(
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   try {
     const { data, error } = await supabase
-      .from("information_schema.columns")
-      .select("column_name, data_type, ordinal_position")
-      .eq("table_schema", "public")
+      .from("v_table_columns")
+      .select("column_name")
       .eq("table_name", "v_predictions_api")
-      .order("ordinal_position", { ascending: true });
+      .order("column_name", { ascending: true });
 
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ columns: data });

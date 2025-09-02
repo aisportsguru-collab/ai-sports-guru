@@ -1,0 +1,38 @@
+{
+  "folds": [
+    {
+      "fold": 1,
+      "accuracy": 0.9924812030075187,
+      "roc_auc": 0.5,
+      "log_loss": NaN,
+      "brier": 0.0074622679279521
+    },
+    {
+      "fold": 2,
+      "accuracy": 0.9924242424242424,
+      "roc_auc": 0.5,
+      "log_loss": NaN,
+      "brier": 0.007518366295284637
+    },
+    {
+      "fold": 3,
+      "accuracy": 0.9924242424242424,
+      "roc_auc": 0.5,
+      "log_loss": NaN,
+      "brier": 0.007518366295284637
+    }
+  ],
+  "summary": {
+    "accuracy_mean": 0.9924432292853345,
+    "roc_auc_mean": 0.5,
+    "log_loss_mean": NaN,
+    "brier_mean": 0.007499666839507126,
+    "n": 397,
+    "splits": 3,
+    "seasons": [
+      2023,
+      2024,
+      2025
+    ]
+  }
+}

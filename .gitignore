@@ -18,3 +18,11 @@ dist
 .env.dev
 .env.preview
 .env.prod
+# Local secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+# Vercel local env files
+.vercel/*
+!vercel.json
