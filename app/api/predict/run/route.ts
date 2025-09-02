@@ -12,7 +12,7 @@ import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 // ---- Import your model runner (already in the repo) ----
-import { predict } from "../../../lib/predict";
+import { predict } from "../../../../lib/predict";
 
 // ---------- Types ----------
 type OddsAPIGame = {
@@ -27,7 +27,7 @@ type OddsAPIGame = {
     markets: Array<{
       key: "h2h" | "spreads" | "totals";
       outcomes: Array<{
-        name: string; // "Home Team", "Away Team" for h2h; "Over"/"Under"; or team names for spreads
+        name: string; // team name, "Over", "Under"
         price?: number; // american odds
         point?: number; // spread or total points
       }>;
@@ -42,11 +42,11 @@ type NormalGame = {
   awayTeam: string;
   kickoffISO: string;
   markets?: {
-    spread?: number;                 // Home spread line (negative if home favored)
-    total?: number;                  // Total points
-    ml?: { home?: number; away?: number }; // American prices for home/away
-    spreadPrices?: { home?: number; away?: number }; // vig for the spread side
-    totalPrices?: { over?: number; under?: number }; // vig for totals
+    spread?: number;
+    total?: number;
+    ml?: { home?: number; away?: number };
+    spreadPrices?: { home?: number; away?: number };
+    totalPrices?: { over?: number; under?: number };
   };
 };
 
@@ -64,14 +64,12 @@ function toLeagueParam(input?: string | null) {
 function startRange(days: number) {
   const from = new Date();
   const to = new Date(from.getTime() + days * 86400 * 1000);
-  // Truncate seconds for stability
   from.setUTCSeconds(0, 0);
   to.setUTCSeconds(0, 0);
   return { from, to };
 }
 
 function pickBestBook(game: OddsAPIGame) {
-  // 1) Prefer Pinnacle, then Circa, then the first
   const order = ["pinnacle", "circa", "draftkings", "fanduel"];
   const byKey = new Map(game.bookmakers.map(b => [b.key.toLowerCase(), b]));
   for (const k of order) {
@@ -95,22 +93,18 @@ function normalizeGame(league: string, g: OddsAPIGame): NormalGame {
   if (book) {
     for (const m of book.markets || []) {
       if (m.key === "h2h") {
-        // outcomes named as team names
         for (const o of m.outcomes) {
           if (o.name === g.home_team) mlHome = o.price;
           if (o.name === g.away_team) mlAway = o.price;
         }
       } else if (m.key === "spreads") {
-        // Outcomes for spread typically team-named with point=team spread
         for (const o of m.outcomes) {
           if (o.name === g.home_team) {
-            spread = o.point; // home spread (negative means home fav)
+            spread = o.point;
             sHomePrice = o.price;
           }
           if (o.name === g.away_team) {
-            // keep away price too (line already captured from home side)
             sAwayPrice = o.price;
-            // if we didn't see a home point, derive from away
             if (spread === undefined && typeof o.point === "number") {
               spread = -o.point;
             }
@@ -147,8 +141,6 @@ function normalizeGame(league: string, g: OddsAPIGame): NormalGame {
 }
 
 function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnType<typeof predict>>) {
-  // pull the three relevant picks for this game
-  // pick set is a flat array; filter by (home, away, time)
   const rel = picks.filter(
     p =>
       p.league === league &&
@@ -167,7 +159,6 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
   const gameDate = kick.toISOString().slice(0, 10);
   const season = kick.getUTCFullYear();
 
-  // Snapshot odds into DB field names
   const moneyline_home = ng.markets?.ml?.home ?? null;
   const moneyline_away = ng.markets?.ml?.away ?? null;
   const spread_line = ng.markets?.spread ?? null;
@@ -177,10 +168,8 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
   const total_over_price = ng.markets?.totalPrices?.over ?? null;
   const total_under_price = ng.markets?.totalPrices?.under ?? null;
 
-  // Build deterministic external_id
   const external_id = md5(`${league}|${ng.homeTeam}|${ng.awayTeam}|${ng.kickoffISO}`);
 
-  // Format picks like your earlier rows
   const pick_moneyline = ml?.pick === "HOME" ? "HOME" : ml?.pick === "AWAY" ? "AWAY" : null;
   const pick_spread =
     typeof sp?.line === "number" && sp?.pick
@@ -191,7 +180,6 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
       ? `${tot.pick === "OVER" ? "Over" : "Under"} ${tot.line}`
       : null;
 
-  // Confidence fields (coerce to ints, provide defaults)
   const conf_moneyline = ml?.edgePct != null ? Math.round(ml.edgePct) : 55;
   const conf_spread = sp?.edgePct != null ? Math.round(sp.edgePct) : 55;
   const conf_total = tot?.edgePct != null ? Math.round(tot.edgePct) : 55;
@@ -203,17 +191,13 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
   const confidence = model_confidence;
 
   return {
-    // conflict key
     external_id,
     sport: league,
-    // times
     commence_time: ng.kickoffISO,
     game_date: gameDate,
     season,
-    // teams
     home_team: ng.homeTeam,
     away_team: ng.awayTeam,
-    // odds snapshot
     moneyline_home,
     moneyline_away,
     spread_line,
@@ -222,7 +206,6 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
     total_line,
     total_over_price,
     total_under_price,
-    // model picks
     pick_moneyline,
     pick_spread,
     pick_total,
@@ -232,7 +215,6 @@ function modelPicksToRow(league: string, ng: NormalGame, picks: Awaited<ReturnTy
     model_confidence,
     predicted_winner,
     confidence,
-    // bookkeeping
     source_tag: "baseline_v1_fallbacks",
     analysis: null,
     created_at: new Date().toISOString(),
@@ -251,7 +233,7 @@ async function fetchOdds(league: string, fromISO: string, toISO: string) {
   url.searchParams.set("markets", markets);
   url.searchParams.set("oddsFormat", "american");
   url.searchParams.set("dateFormat", "iso");
-  // The v4 odds endpoint returns upcoming; we’ll filter locally to [from,to]
+
   const resp = await fetch(url.toString(), { next: { revalidate: 15 } });
   if (!resp.ok) {
     const text = await resp.text();
@@ -260,14 +242,12 @@ async function fetchOdds(league: string, fromISO: string, toISO: string) {
   const raw = (await resp.json()) as OddsAPIGame[];
   const from = new Date(fromISO).getTime();
   const to = new Date(toISO).getTime();
-  const filtered = raw.filter(g => {
+  return raw.filter(g => {
     const t = new Date(g.commence_time).getTime();
     return t >= from && t <= to;
   });
-  return filtered;
 }
 
-// Safe upsert with de-duplication by (external_id,sport)
 async function upsertRows(rows: any[]) {
   const url = process.env.SUPABASE_URL;
   const service =
@@ -279,11 +259,9 @@ async function upsertRows(rows: any[]) {
     return { count: 0, error: "Supabase env not configured on server (SUPABASE_URL / SUPABASE_SERVICE_ROLE[_KEY])." };
   }
 
-  // de-dup by exact conflict key
   const uniq = new Map<string, any>();
   for (const r of rows) {
     const key = `${r.external_id}:${r.sport}`;
-    // soft-fill season in case it wasn't set
     if (r.season == null && r.commence_time) {
       const y = new Date(r.commence_time).getUTCFullYear();
       r.season = Number.isFinite(y) ? y : null;
@@ -318,19 +296,11 @@ export async function GET(req: Request) {
     const fromISO = from.toISOString();
     const toISO = to.toISOString();
 
-    // 1) Pull odds
     const raw = await fetchOdds(league, fromISO, toISO);
-
-    // 2) Normalize for the model
     const games: NormalGame[] = raw.map(g => normalizeGame(league, g));
-
-    // 3) Call your model
     const picks = await predict(games);
-
-    // 4) Build DB rows
     const rows = games.map(g => modelPicksToRow(league, g, picks));
 
-    // 5) Optional store
     let stored = 0;
     let insert_error: string | null = null;
     if (store === 1 && rows.length > 0) {
@@ -363,10 +333,7 @@ export async function GET(req: Request) {
     return NextResponse.json(body);
   } catch (err: any) {
     return NextResponse.json(
-      {
-        ok: false,
-        error: err?.message || String(err),
-      },
+      { ok: false, error: err?.message || String(err) },
       { status: 500 }
     );
   }
