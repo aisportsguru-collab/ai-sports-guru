@@ -1,7 +1,3 @@
-import dynamic from "next/dynamic";
-export const dynamicParams = false;
-const LeaguePage = dynamic(() => import("@/components/LeaguePage"), { ssr: true });
-
-export default function MLBPage() {
-  return <LeaguePage league="mlb" />;
-}
+import LeaguePage from "../(sports)/LeaguePage";
+export default function Page() { return <LeaguePage league="mlb" title="MLB" />; }
+export const dynamic = "force-dynamic";
