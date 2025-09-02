@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-
-export const runtime = "nodejs"; // ensure Node runtime so process.env behaves consistently
+export const runtime = "nodejs";
 
 function peek(name: string) {
   const v = process.env[name];
@@ -10,7 +9,6 @@ function peek(name: string) {
 export async function GET() {
   const s1 = process.env.SUPABASE_SERVICE_ROLE;
   const s2 = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const chosen = s1 ?? s2;
 
   return NextResponse.json({
     ok: true,
@@ -20,7 +18,7 @@ export async function GET() {
       SUPABASE_SERVICE_ROLE: peek("SUPABASE_SERVICE_ROLE"),
       SUPABASE_SERVICE_ROLE_KEY: peek("SUPABASE_SERVICE_ROLE_KEY"),
       USING_SERVICE_ROLE_NAME: s1 ? "SUPABASE_SERVICE_ROLE" : (s2 ? "SUPABASE_SERVICE_ROLE_KEY" : null),
-      USING_SERVICE_ROLE_PRESENT: !!chosen,
+      USING_SERVICE_ROLE_PRESENT: !!(s1 ?? s2),
       SUPABASE_ANON_KEY: peek("SUPABASE_ANON_KEY"),
       ODDS_API_KEY: peek("ODDS_API_KEY"),
       ODDS_API_REGION: peek("ODDS_API_REGION"),
