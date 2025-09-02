@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-// IMPORTANT: correct relative path (4 levels up)
 import { predict as modelPredict } from "../../../../lib/predict";
 
-export const runtime = "nodejs"; // must be Node to access process.env
+export const runtime = "nodejs"; // ensure process.env works
 
 type League = "nfl" | "ncaaf" | "mlb";
 
 function env(name: string, alt?: string) {
   return process.env[name] ?? (alt ? process.env[alt] : undefined);
 }
-
 function requireEnv(name: string) {
   const v = env(name);
   if (!v) throw new Error(`Missing required env: ${name}`);
@@ -20,9 +17,7 @@ function requireEnv(name: string) {
 
 function supabaseAdmin() {
   const url = env("SUPABASE_URL");
-  // 👇 read either name (you have SUPABASE_SERVICE_ROLE_KEY in Vercel)
-  const serviceRole = env("SUPABASE_SERVICE_ROLE", "SUPABASE_SERVICE_ROLE_KEY");
-
+  const serviceRole = env("SUPABASE_SERVICE_ROLE", "SUPABASE_SERVICE_ROLE_KEY"); // fallback to *_KEY
   if (!url || !serviceRole) {
     return {
       client: null as any,
@@ -40,13 +35,14 @@ function supabaseAdmin() {
 }
 
 function toISO(d: Date) {
-  // trim seconds/ms for cleaner logging
-  return new Date(d.getTime() - (d.getSeconds() * 1000 + d.getMilliseconds())).toISOString();
+  const t = new Date(d);
+  t.setSeconds(0, 0);
+  return t.toISOString();
 }
 
 function americanToInt(s: string | number | null | undefined): number | null {
   if (s === null || s === undefined) return null;
-  const n = typeof s === "number" ? s : parseInt(s, 10);
+  const n = typeof s === "number" ? s : parseInt(String(s), 10);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -81,14 +77,15 @@ async function fetchOdds(league: League, fromISO: string, toISO: string) {
     })
     .map(g => {
       const homeTeam: string = g.home_team;
+      // derive away name robustly
       const allNames = new Set<string>();
       (g.bookmakers || []).forEach((bk: any) =>
         (bk.markets || []).forEach((m: any) =>
-          (m.outcomes || []).forEach((o: any) => allNames.add(o?.name))
+          (m.outcomes || []).forEach((o: any) => o?.name && allNames.add(o.name))
         )
       );
-      // try to infer away team from outcomes; fall back to g.away_team
-      const awayTeam = Array.from(allNames).find(n => n && n !== homeTeam) || g.away_team || "Away";
+      const computedAway = Array.from(allNames).find(n => n !== homeTeam);
+      const awayTeam: string = computedAway || g.away_team || "Away";
       const kickoffISO: string = g.commence_time;
 
       let mlHome: number | null = null, mlAway: number | null = null;
@@ -168,32 +165,36 @@ export async function GET(req: Request) {
     const from = toISO(now);
     const to = toISO(new Date(now.getTime() + days * 24 * 3600 * 1000));
 
-    // 1) Odds
+    // 1) pull odds
     const games = await fetchOdds(league, from, to);
 
-    // 2) Model
+    // 2) predictions
     const picks = await modelPredict(
       games.map(g => ({ league: g.league, homeTeam: g.homeTeam, awayTeam: g.awayTeam, kickoffISO: g.kickoffISO, markets: g.markets }))
     );
 
-    const key = (h: string, a: string, t: string, m: string) => `${h}__${a}__${t}__${m}`;
+    const k = (h: string, a: string, t: string, m: string) => `${h}__${a}__${t}__${m}`;
     const byKey = new Map<string, any>();
-    picks.forEach(p => byKey.set(key(p.homeTeam, p.awayTeam, p.kickoffISO, p.market), p));
+    picks.forEach(p => byKey.set(k(p.homeTeam, p.awayTeam, p.kickoffISO, p.market), p));
 
+    // 3) shape rows for DB (ADD season)
     const rows = games.map(g => {
-      const ml = byKey.get(key(g.homeTeam, g.awayTeam, g.kickoffISO, "ML"));
-      const sp = byKey.get(key(g.homeTeam, g.awayTeam, g.kickoffISO, "SPREAD"));
-      const tt = byKey.get(key(g.homeTeam, g.awayTeam, g.kickoffISO, "TOTAL"));
+      const ml = byKey.get(k(g.homeTeam, g.awayTeam, g.kickoffISO, "ML"));
+      const sp = byKey.get(k(g.homeTeam, g.awayTeam, g.kickoffISO, "SPREAD"));
+      const tt = byKey.get(k(g.homeTeam, g.awayTeam, g.kickoffISO, "TOTAL"));
 
       const external_id = Buffer.from(`${g.league}|${g.kickoffISO}|${g.homeTeam}|${g.awayTeam}`).toString("hex").slice(0,32);
+      const season = new Date(g.kickoffISO).getUTCFullYear(); // <— required NOT NULL
 
       return {
         external_id,
         sport: g.league,
+        season,
         commence_time: g.kickoffISO,
         game_date: g.kickoffISO.slice(0,10),
         home_team: g.homeTeam,
         away_team: g.awayTeam,
+
         moneyline_home: g.odds.ml_home ?? null,
         moneyline_away: g.odds.ml_away ?? null,
         spread_line: g.odds.spread_line ?? null,
@@ -202,20 +203,25 @@ export async function GET(req: Request) {
         total_line: g.odds.total_points ?? null,
         total_over_price: g.odds.over_price ?? null,
         total_under_price: g.odds.under_price ?? null,
+
         pick_moneyline: ml?.pick === "HOME" ? "HOME" : ml?.pick === "AWAY" ? "AWAY" : null,
         conf_moneyline: ml?.edgePct ?? null,
+
         pick_spread: sp?.line !== undefined && sp?.pick ? `${sp.pick === "HOME" ? "HOME" : "AWAY"} ${sp.line}` : null,
         conf_spread: sp?.edgePct ?? null,
+
         pick_total: tt?.line !== undefined && tt?.pick ? `${tt.pick === "OVER" ? "Over" : "Under"} ${tt.line}` : null,
         conf_total: tt?.edgePct ?? null,
+
         model_confidence: Math.max(ml?.edgePct ?? 0, sp?.edgePct ?? 0, tt?.edgePct ?? 0) || null,
         predicted_winner: ml?.pick === "HOME" ? g.homeTeam : (ml?.pick === "AWAY" ? g.awayTeam : null),
         confidence: ml?.edgePct ?? null,
+
         source_tag: "baseline_v1",
       };
     });
 
-    // 3) Optional store
+    // 4) optional store to Supabase
     let stored = 0;
     let insert_error: string | undefined;
     let whichRole: string | undefined;
@@ -230,7 +236,6 @@ export async function GET(req: Request) {
           .from("ai_research_predictions")
           .upsert(rows, { onConflict: "external_id,sport" })
           .select("external_id");
-
         const { error, data } = await up;
         if (error) insert_error = error.message;
         else stored = data?.length ?? 0;
