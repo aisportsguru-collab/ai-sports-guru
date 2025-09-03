@@ -1,7 +1,7 @@
 name: NHL Daily Stats
 on:
   schedule:
-    - cron: '30 08 * * *'   # ~3:30am ET; adjust if you like
+    - cron: '30 08 * * *'   # ~3:30am ET
   workflow_dispatch:
 jobs:
   nhl-daily:
