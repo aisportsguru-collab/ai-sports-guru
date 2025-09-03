@@ -1,0 +1,32 @@
+name: NBA Daily Stats
+
+on:
+  schedule:
+    # 03:30 AM America/Los_Angeles ≈ 10:30 UTC (handles most of the year; DST may shift by 1h)
+    - cron: '30 10 * * *'
+  workflow_dispatch:
+
+jobs:
+  nba-daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r scripts/nba/requirements.txt
+
+      - name: Run NBA daily updater
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}           # set these in repo Settings > Secrets and variables > Actions
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          . .venv/bin/activate
+          python scripts/nba/nba_daily_update.py
