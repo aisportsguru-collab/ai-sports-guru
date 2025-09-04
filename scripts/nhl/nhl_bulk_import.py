@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
 NHL bulk backfill for last two seasons (or seasons via NHL_SEASONS).
-- Tries StatsAPI first; if DNS/conn fails, falls back to api-web.nhle.com.
-- Month-by-month windows (Oct..Jul) to keep payloads small.
-- Robust HTTP: Session + UA + exponential retries.
-- Upserts: games, team_game_stats, player_game_stats.
-- Progress logs + safety check (error if 0 new games added).
+Order of data sources (with automatic fallbacks):
+  1) statsapi.web.nhl.com  (monthly schedule windows)
+  2) api-web.nhle.com      (daily scoreboard)
+  3) api-web.nhle.com      (club-schedule-season across all 32 teams)
+Robust HTTP (Session, UA, exponential retry), progress logs, and a safety check
+that errors if 0 games are added.
 """
 
 import os, time, requests
@@ -18,7 +19,7 @@ SPORT = "NHL"
 SEASONS = [s.strip() for s in os.getenv("NHL_SEASONS", "20222023,20232024").split(",") if s.strip()]
 sb = get_client()
 
-# ---------------- HTTP helpers ----------------
+# --------------- HTTP helpers ---------------
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "Mozilla/5.0 (compatible; AiSportsGuru/1.0)"})
 
@@ -30,11 +31,12 @@ def http_json(url: str):
 
 def safe_get(d, *keys, default=None):
     for k in keys:
-        if not isinstance(d, dict) or k not in d: return default
+        if not isinstance(d, dict) or k not in d:
+            return default
         d = d[k]
     return d
 
-# ---------------- type helpers ----------------
+# --------------- type helpers ---------------
 def _to_int(x):
     if x is None: return None
     try: return int(float(str(x)))
@@ -45,7 +47,7 @@ def _to_float(x):
     try: return float(x)
     except: return None
 
-# ---------------- DB helpers ----------------
+# --------------- DB helpers ---------------
 def upsert_team(name, abbr, ext_id):
     res = sb.table("teams").upsert(
         {"sport": SPORT, "name": name, "abbr": abbr, "team_id_external": str(ext_id)},
@@ -70,7 +72,7 @@ def upsert_game(game_pk, season_int, date_iso, home_name, away_name, home_score,
     ).execute()
     return res.data[0]["id"]
 
-# ---------------- schedule windows ----------------
+# --------------- schedule windows ---------------
 def season_month_ranges(season_str: str):
     y1 = int(season_str[:4]); y2 = int(season_str[4:])
     months = []
@@ -80,14 +82,18 @@ def season_month_ranges(season_str: str):
         months.append((date(y2,m,1), date(y2,m,monthrange(y2,m)[1])))
     return months
 
-# ---------------- providers ----------------
+# --------------- providers ---------------
 def fetch_schedule_statsapi(start_d: date, end_d: date, gtype: str):
     url = f"https://statsapi.web.nhl.com/api/v1/schedule?startDate={start_d.isoformat()}&endDate={end_d.isoformat()}&gameType={gtype}"
     return http_json(url)
 
 def fetch_schedule_apiweb_day(day: date):
-    # scoreboard is per day
     url = f"https://api-web.nhle.com/v1/scoreboard/{day.isoformat()}"
+    return http_json(url)
+
+def fetch_club_schedule_apiweb(team: str, season: str):
+    # team is triCode, e.g., 'BOS', 'NYR', 'SEA'
+    url = f"https://api-web.nhle.com/v1/club-schedule-season/{team}/{season}"
     return http_json(url)
 
 def fetch_boxscore_statsapi(game_pk: str):
@@ -98,8 +104,8 @@ def fetch_boxscore_apiweb(game_id: str):
     url = f"https://api-web.nhle.com/v1/gamecenter/{game_id}/boxscore"
     return http_json(url)
 
-# ---------------- mapping api-web -> common ----------------
-def parse_apiweb_games(day_json):
+# --------------- parse helpers ---------------
+def parse_apiweb_games_from_scoreboard(day_json):
     games = []
     for g in day_json.get("games", []):
         gid = g.get("id")
@@ -108,7 +114,7 @@ def parse_apiweb_games(day_json):
         away = g.get("awayTeam") or {}
         games.append({
             "gamePk": str(gid),
-            "gameDate": g.get("gameDate"),
+            "date": g.get("gameDate") or g.get("gameDateUTC"),
             "status": g.get("gameState") or g.get("gameType") or "scheduled",
             "home": {"id": home.get("id"), "name": home.get("name"), "triCode": home.get("abbrev"), "score": home.get("score")},
             "away": {"id": away.get("id"), "name": away.get("name"), "triCode": away.get("abbrev"), "score": away.get("score")},
@@ -135,31 +141,26 @@ def parse_apiweb_boxscore(box):
             }},
             "players": {}
         }
-        # players
         for sk in (t.get("skaters") or []):
-            pid = sk.get("playerId")
+            pid = sk.get("playerId");  name = sk.get("name")
             if not pid: continue
             key = f"ID{pid}"
             out["teams"][side]["players"][key] = {
-                "person": {"id": pid, "fullName": sk.get("name")},
+                "person": {"id": pid, "fullName": name},
                 "position": {"code": sk.get("positionCode","")},
                 "stats": {"skaterStats": {
-                    "goals": sk.get("goals"),
-                    "assists": sk.get("assists"),
-                    "shots": sk.get("shots"),
-                    "hits": sk.get("hits"),
-                    "blocked": sk.get("blocked"),
-                    "penaltyMinutes": sk.get("pim"),
-                    "plusMinus": sk.get("plusMinus"),
-                    "timeOnIce": sk.get("toi"),
+                    "goals": sk.get("goals"), "assists": sk.get("assists"),
+                    "shots": sk.get("shots"), "hits": sk.get("hits"),
+                    "blocked": sk.get("blocked"), "penaltyMinutes": sk.get("pim"),
+                    "plusMinus": sk.get("plusMinus"), "timeOnIce": sk.get("toi"),
                 }}
             }
         for gk in (t.get("goalies") or []):
-            pid = gk.get("playerId")
+            pid = gk.get("playerId"); name = gk.get("name")
             if not pid: continue
             key = f"ID{pid}"
             out["teams"][side]["players"][key] = {
-                "person": {"id": pid, "fullName": gk.get("name")},
+                "person": {"id": pid, "fullName": name},
                 "position": {"code": "G"},
                 "stats": {"goalieStats": {
                     "timeOnIce": gk.get("toi"),
@@ -171,146 +172,300 @@ def parse_apiweb_boxscore(box):
             }
     return out
 
-# ---------------- main runner ----------------
+# list of 32 NHL team tricodes for club-schedule-season
+NHL_TEAMS = [
+    "ANA","ARI","BOS","BUF","CGY","CAR","CHI","COL","CBJ","DAL","DET","EDM","FLA","LAK","MIN","MTL",
+    "NSH","NJD","NYI","NYR","OTT","PHI","PIT","SEA","SJS","STL","TBL","TOR","VAN","VGK","WPG","WSH"
+]
+
+# --------------- main runner ---------------
 def run_season(season_str: str):
     season_int = int(season_str[:4])
     added_games = 0
+    seen_game_ids = set()
+
+    # -------- attempt 1: StatsAPI monthly windows --------
     for gtype in ("R","P"):
         label = "Regular" if gtype=="R" else "Playoffs"
-        print(f"[nhl]  -> {season_str} [{label}]")
+        print(f"[nhl]  -> {season_str} [{label}] via StatsAPI windows")
         for (start_d, end_d) in season_month_ranges(season_str):
             print(f"[nhl]     window {start_d}..{end_d}")
-            # Try StatsAPI first
-            use_apiweb = False
             try:
                 sched = fetch_schedule_statsapi(start_d, end_d, gtype)
                 dates = sched.get("dates", [])
-                day_blocks = [{"date": d["date"], "games": d.get("games", [])} for d in dates]
-            except Exception as e:
-                print(f"[nhl]     StatsAPI schedule failed ({e}); falling back to api-web per day")
-                use_apiweb = True
-                # build per-day blocks
-                day_blocks = []
-                cur = start_d
-                while cur <= end_d:
-                    try:
-                        j = fetch_schedule_apiweb_day(cur)
-                        games = parse_apiweb_games(j)
-                        day_blocks.append({"date": cur.isoformat(), "games": games})
-                    except Exception as _:
-                        pass
-                    cur += timedelta(days=1)
-
-            for d in day_blocks:
-                date_iso = d["date"]
-                for game in d.get("games", []):
-                    if not use_apiweb:
-                        game_pk = game["gamePk"]
-                        status = safe_get(game,"status","detailedState", default="scheduled")
-                        home_name = safe_get(game,"teams","home","team","name")
-                        away_name = safe_get(game,"teams","away","team","name")
+                for d in dates:
+                    date_iso = d["date"]
+                    for g in d.get("games", []):
+                        game_pk = g["gamePk"]
+                        if game_pk in seen_game_ids: 
+                            continue
                         try:
                             box = fetch_boxscore_statsapi(game_pk)
                         except Exception as e:
-                            print(f"[nhl]     WARN boxscore (statsapi) {game_pk}: {e}")
+                            print(f"[nhl]     WARN statsapi boxscore {game_pk}: {e}")
                             continue
-                        box_parsed = box
-                        htri = safe_get(box_parsed,"teams","home","team","triCode") or (home_name[:3].upper() if home_name else None)
-                        atri = safe_get(box_parsed,"teams","away","team","triCode") or (away_name[:3].upper() if away_name else None)
-                        home_id_ext = safe_get(box_parsed,"teams","home","team","id")
-                        away_id_ext = safe_get(box_parsed,"teams","away","team","id")
-                        home_score = safe_get(game,"linescore","teams","home","goals") or safe_get(game,"teams","home","score")
-                        away_score = safe_get(game,"linescore","teams","away","goals") or safe_get(game,"teams","away","score")
-                    else:
-                        game_pk = game["gamePk"]
-                        status = game["status"]
-                        home_name = game["home"]["name"]
-                        away_name = game["away"]["name"]
-                        try:
-                            box = fetch_boxscore_apiweb(game_pk)
-                            box_parsed = parse_apiweb_boxscore(box)
-                        except Exception as e:
-                            print(f"[nhl]     WARN boxscore (api-web) {game_pk}: {e}")
-                            continue
-                        htri = game["home"].get("triCode") or (home_name[:3].upper() if home_name else None)
-                        atri = game["away"].get("triCode") or (away_name[:3].upper() if away_name else None)
-                        home_id_ext = game["home"].get("id")
-                        away_id_ext = game["away"].get("id")
-                        home_score = game["home"].get("score")
-                        away_score = game["away"].get("score")
 
-                    # upserts
-                    home_tid = upsert_team(home_name, htri, home_id_ext)
-                    away_tid = upsert_team(away_name, atri, away_id_ext)
-                    game_id = upsert_game(game_pk, season_int, date_iso, home_name, away_name, home_score, away_score, status)
-                    added_games += 1
+                        home_name = safe_get(g,"teams","home","team","name")
+                        away_name = safe_get(g,"teams","away","team","name")
+                        htri = safe_get(box,"teams","home","team","triCode") or (home_name[:3].upper() if home_name else None)
+                        atri = safe_get(box,"teams","away","team","triCode") or (away_name[:3].upper() if away_name else None)
+                        home_id_ext = safe_get(box,"teams","home","team","id")
+                        away_id_ext = safe_get(box,"teams","away","team","id")
+                        status = safe_get(g,"status","detailedState","scheduled")
+                        home_score = safe_get(g,"linescore","teams","home","goals") or safe_get(g,"teams","home","score")
+                        away_score = safe_get(g,"linescore","teams","away","goals") or safe_get(g,"teams","away","score")
 
-                    # team stats
-                    for side, tid, opp_score in [("home", home_tid, away_score), ("away", away_tid, home_score)]:
-                        ts = safe_get(box_parsed, "teams", side, "teamStats", "teamSkaterStats", default={})
+                        home_tid = upsert_team(home_name, htri, home_id_ext)
+                        away_tid = upsert_team(away_name, atri, away_id_ext)
+                        game_db_id = upsert_game(game_pk, season_int, date_iso, home_name, away_name, home_score, away_score, status)
+                        seen_game_ids.add(game_pk); added_games += 1
+
+                        for side, tid, opp_score in [("home", home_tid, away_score), ("away", away_tid, home_score)]:
+                            ts = safe_get(box,"teams",side,"teamStats","teamSkaterStats", default={})
+                            sb.table("team_game_stats").upsert({
+                                "sport": SPORT, "game_id": game_db_id, "team_id": tid,
+                                "goals_for": _to_int(ts.get("goals")), "goals_against": _to_int(opp_score),
+                                "shots_for": _to_int(ts.get("shots")), "shots_against": None,
+                                "pim": _to_int(ts.get("pim")), "hits_for": _to_int(ts.get("hits")),
+                                "blocks": _to_int(ts.get("blocked")), "giveaways": _to_int(ts.get("giveaways")),
+                                "takeaways": _to_int(ts.get("takeaways")),
+                                "faceoff_win_pct": _to_float(ts.get("faceOffWinPercentage")),
+                                "pp_goals": _to_int(ts.get("powerPlayGoals")), "pp_opportunities": _to_int(ts.get("powerPlayOpportunities")),
+                                "sh_goals": None, "corsi_for": None, "corsi_against": None, "fenwick_for": None, "fenwick_against": None,
+                                "xg_for": None, "xg_against": None
+                            }, on_conflict="sport,game_id,team_id").execute()
+
+                        for side, tid in [("home", home_tid), ("away", away_tid)]:
+                            players = safe_get(box,"teams",side,"players", default={})
+                            for _, p in players.items():
+                                per = p.get("person",{}) or {}
+                                full = per.get("fullName") or ""
+                                first = (full.split(" ") or [""])[0]
+                                last  = " ".join(full.split(" ")[1:]) if full else ""
+                                pid_ext = per.get("id")
+                                if pid_ext is None: continue
+                                pid_db = upsert_player(pid_ext, full, first, last, tid)
+                                if (p.get("position",{}) or {}).get("code") == "G":
+                                    gstats = safe_get(p,"stats","goalieStats", default={})
+                                    payload = {
+                                        "sport": SPORT, "game_id": game_db_id, "team_id": tid, "player_id": pid_db,
+                                        "goals": 0, "assists": 0, "points": 0, "shots": 0, "hits": 0, "blocks": 0,
+                                        "pim": 0, "plus_minus": None, "toi": gstats.get("timeOnIce"),
+                                        "goalie_sa": _to_int(gstats.get("shots")), "goalie_sv": _to_int(gstats.get("saves")),
+                                        "goalie_ga": _to_int(gstats.get("goalsAgainst")), "goalie_decision": gstats.get("decision"),
+                                        "xg": None
+                                    }
+                                else:
+                                    sk = safe_get(p,"stats","skaterStats", default={})
+                                    if not sk: continue
+                                    payload = {
+                                        "sport": SPORT, "game_id": game_db_id, "team_id": tid, "player_id": pid_db,
+                                        "goals": _to_int(sk.get("goals")), "assists": _to_int(sk.get("assists")),
+                                        "points": _to_int((_to_int(sk.get("goals")) or 0)+(_to_int(sk.get("assists")) or 0)),
+                                        "shots": _to_int(sk.get("shots")), "hits": _to_int(sk.get("hits")),
+                                        "blocks": _to_int(sk.get("blocked")), "pim": _to_int(sk.get("penaltyMinutes")),
+                                        "plus_minus": _to_int(sk.get("plusMinus")), "toi": sk.get("timeOnIce"),
+                                        "goalie_sa": None, "goalie_sv": None, "goalie_ga": None, "goalie_decision": None, "xg": None
+                                    }
+                                sb.table("player_game_stats").upsert(payload, on_conflict="sport,game_id,player_id").execute()
+                        time.sleep(0.08)
+                time.sleep(0.06)
+            except Exception as e:
+                print(f"[nhl]     StatsAPI schedule failed ({e}); falling back later")
+
+    # If we already inserted games, return.
+    if added_games > 0:
+        return added_games
+
+    # -------- attempt 2: api-web day scoreboard --------
+    print(f"[nhl]  -> {season_str} day scoreboard fallback (api-web)")
+    for (start_d, end_d) in season_month_ranges(season_str):
+        cur = start_d
+        while cur <= end_d:
+            try:
+                day_json = fetch_schedule_apiweb_day(cur)
+            except Exception as e:
+                cur += timedelta(days=1); continue
+            games = parse_apiweb_games_from_scoreboard(day_json)
+            for g in games:
+                game_pk = g["gamePk"]
+                if game_pk in seen_game_ids: 
+                    continue
+                try:
+                    box = fetch_boxscore_apiweb(game_pk)
+                    box_parsed = parse_apiweb_boxscore(box)
+                except Exception:
+                    continue
+
+                home_name = g["home"]["name"]; away_name = g["away"]["name"]
+                htri = g["home"]["triCode"] or (home_name[:3].upper() if home_name else None)
+                atri = g["away"]["triCode"] or (away_name[:3].upper() if away_name else None)
+                home_id_ext = g["home"]["id"]; away_id_ext = g["away"]["id"]
+                status = g["status"]; date_iso = (g["date"] or cur.isoformat())[:10]
+                home_score = g["home"].get("score"); away_score = g["away"].get("score")
+
+                home_tid = upsert_team(home_name, htri, home_id_ext)
+                away_tid = upsert_team(away_name, atri, away_id_ext)
+                game_db_id = upsert_game(game_pk, int(season_str[:4]), date_iso, home_name, away_name, home_score, away_score, status)
+                seen_game_ids.add(game_pk); added_games += 1
+
+                for side, tid, opp_score in [("home", home_tid, away_score), ("away", away_tid, home_score)]:
+                    ts = safe_get(box_parsed,"teams",side,"teamStats","teamSkaterStats", default={})
+                    sb.table("team_game_stats").upsert({
+                        "sport": SPORT, "game_id": game_db_id, "team_id": tid,
+                        "goals_for": _to_int(ts.get("goals")), "goals_against": _to_int(opp_score),
+                        "shots_for": _to_int(ts.get("shots")), "shots_against": None,
+                        "pim": _to_int(ts.get("pim")), "hits_for": _to_int(ts.get("hits")),
+                        "blocks": _to_int(ts.get("blocked")), "giveaways": _to_int(ts.get("giveaways")),
+                        "takeaways": _to_int(ts.get("takeaways")),
+                        "faceoff_win_pct": _to_float(ts.get("faceOffWinPercentage") or ts.get("foPct")),
+                        "pp_goals": _to_int(ts.get("powerPlayGoals") or ts.get("ppGoals")),
+                        "pp_opportunities": _to_int(ts.get("powerPlayOpportunities") or ts.get("ppOpps")),
+                        "sh_goals": None, "corsi_for": None, "corsi_against": None, "fenwick_for": None, "fenwick_against": None,
+                        "xg_for": None, "xg_against": None
+                    }, on_conflict="sport,game_id,team_id").execute()
+
+                for side, tid in [("home", home_tid), ("away", away_tid)]:
+                    players = safe_get(box_parsed,"teams",side,"players", default={})
+                    for _, p in players.items():
+                        per = p.get("person",{}) or {}
+                        full = per.get("fullName") or ""
+                        first = (full.split(" ") or [""])[0]
+                        last  = " ".join(full.split(" ")[1:]) if full else ""
+                        pid_ext = per.get("id")
+                        if pid_ext is None: continue
+                        pid_db = upsert_player(pid_ext, full, first, last, tid)
+                        if (p.get("position",{}) or {}).get("code") == "G":
+                            gstats = safe_get(p,"stats","goalieStats", default={})
+                            payload = {
+                                "sport": SPORT, "game_id": game_db_id, "team_id": tid, "player_id": pid_db,
+                                "goals": 0, "assists": 0, "points": 0, "shots": 0, "hits": 0, "blocks": 0,
+                                "pim": 0, "plus_minus": None, "toi": gstats.get("timeOnIce") or gstats.get("toi"),
+                                "goalie_sa": _to_int(gstats.get("shots") or gstats.get("shotsAgainst")),
+                                "goalie_sv": _to_int(gstats.get("saves")),
+                                "goalie_ga": _to_int(gstats.get("goalsAgainst")),
+                                "goalie_decision": gstats.get("decision"),
+                                "xg": None
+                            }
+                        else:
+                            sk = safe_get(p,"stats","skaterStats", default={})
+                            if not sk: continue
+                            payload = {
+                                "sport": SPORT, "game_id": game_db_id, "team_id": tid, "player_id": pid_db,
+                                "goals": _to_int(sk.get("goals")), "assists": _to_int(sk.get("assists")),
+                                "points": _to_int((_to_int(sk.get("goals")) or 0)+(_to_int(sk.get("assists")) or 0)),
+                                "shots": _to_int(sk.get("shots")), "hits": _to_int(sk.get("hits")),
+                                "blocks": _to_int(sk.get("blocked")),
+                                "pim": _to_int(sk.get("penaltyMinutes") or sk.get("pim")),
+                                "plus_minus": _to_int(sk.get("plusMinus")),
+                                "toi": sk.get("timeOnIce") or sk.get("toi"),
+                                "goalie_sa": None, "goalie_sv": None, "goalie_ga": None, "goalie_decision": None,
+                                "xg": None
+                            }
+                        sb.table("player_game_stats").upsert(payload, on_conflict="sport,game_id,player_id").execute()
+                time.sleep(0.06)
+            cur += timedelta(days=1)
+
+    if added_games > 0:
+        return added_games
+
+    # -------- attempt 3: per-team season schedules (api-web) --------
+    print(f"[nhl]  -> {season_str} team-schedule fallback (api-web)")
+    for team in NHL_TEAMS:
+        try:
+            sch = fetch_club_schedule_apiweb(team, season_str)
+        except Exception as e:
+            print(f"[nhl]     WARN club schedule {team}: {e}")
+            continue
+        for g in sch.get("games", []):
+            game_pk = str(g.get("id"))
+            if not game_pk or game_pk in seen_game_ids:
+                continue
+            # date + who is home/away are in schedule; names/ids come from boxscore
+            date_iso = (g.get("gameDate") or g.get("gameDateUTC") or "")[:10]
+            try:
+                box = fetch_boxscore_apiweb(game_pk)
+                box_parsed = parse_apiweb_boxscore(box)
+            except Exception as e:
+                print(f"[nhl]     WARN gamecenter boxscore {game_pk}: {e}")
+                continue
+
+            # derive team names/ids from boxscore
+            home_name = safe_get(box,"home","team","commonName","default") or safe_get(box,"home","team","name") or "Home"
+            away_name = safe_get(box,"away","team","commonName","default") or safe_get(box,"away","team","name") or "Away"
+            htri = safe_get(box,"home","team","abbrev") or home_name[:3].upper()
+            atri = safe_get(box,"away","team","abbrev") or away_name[:3].upper()
+            home_id_ext = safe_get(box,"home","team","id")
+            away_id_ext = safe_get(box,"away","team","id")
+            # scores if present
+            home_score = safe_get(box,"home","score"); away_score = safe_get(box,"away","score")
+            status = safe_get(box,"gameState","state") or "final"
+
+            home_tid = upsert_team(home_name, htri, home_id_ext)
+            away_tid = upsert_team(away_name, atri, away_id_ext)
+            game_db_id = upsert_game(game_pk, season_int, date_iso or sch.get("seasonStart") or f"{season_int}-10-01",
+                                     home_name, away_name, home_score, away_score, status)
+            seen_game_ids.add(game_pk); added_games += 1
+
+            for side, tid, opp_score in [("home", home_tid, away_score), ("away", away_tid, home_score)]:
+                ts = safe_get(parse_apiweb_boxscore(box),"teams",side,"teamStats","teamSkaterStats", default={})
+                sb.table("team_game_stats").upsert({
+                    "sport": SPORT, "game_id": game_db_id, "team_id": tid,
+                    "goals_for": _to_int(ts.get("goals")), "goals_against": _to_int(opp_score),
+                    "shots_for": _to_int(ts.get("shots")), "shots_against": None,
+                    "pim": _to_int(ts.get("pim")), "hits_for": _to_int(ts.get("hits")),
+                    "blocks": _to_int(ts.get("blocks") or ts.get("blocked")),
+                    "giveaways": _to_int(ts.get("giveaways")), "takeaways": _to_int(ts.get("takeaways")),
+                    "faceoff_win_pct": _to_float(ts.get("foPct") or ts.get("faceOffWinPercentage")),
+                    "pp_goals": _to_int(ts.get("ppGoals") or ts.get("powerPlayGoals")),
+                    "pp_opportunities": _to_int(ts.get("ppOpps") or ts.get("powerPlayOpportunities")),
+                    "sh_goals": None, "corsi_for": None, "corsi_against": None, "fenwick_for": None, "fenwick_against": None,
+                    "xg_for": None, "xg_against": None
+                }, on_conflict="sport,game_id,team_id").execute()
+
+            # players from parsed boxscore
+            parsed = parse_apiweb_boxscore(box)
+            for side, tid in [("home", home_tid), ("away", away_tid)]:
+                players = safe_get(parsed,"teams",side,"players", default={})
+                for _, p in players.items():
+                    per = p.get("person",{}) or {}
+                    full = per.get("fullName") or ""
+                    first = (full.split(" ") or [""])[0]
+                    last  = " ".join(full.split(" ")[1:]) if full else ""
+                    pid_ext = per.get("id")
+                    if pid_ext is None: continue
+                    pid_db = upsert_player(pid_ext, full, first, last, tid)
+                    if (p.get("position",{}) or {}).get("code") == "G":
+                        gstats = safe_get(p,"stats","goalieStats", default={})
                         payload = {
-                            "sport": SPORT, "game_id": game_id, "team_id": tid,
-                            "goals_for": _to_int(ts.get("goals")), "goals_against": _to_int(opp_score),
-                            "shots_for": _to_int(ts.get("shots")), "shots_against": None,
-                            "pim": _to_int(ts.get("pim")), "hits_for": _to_int(ts.get("hits")),
-                            "blocks": _to_int(ts.get("blocked")), "giveaways": _to_int(ts.get("giveaways")),
-                            "takeaways": _to_int(ts.get("takeaways")),
-                            "faceoff_win_pct": _to_float(ts.get("faceOffWinPercentage") or ts.get("foPct")),
-                            "pp_goals": _to_int(ts.get("powerPlayGoals") or ts.get("ppGoals")),
-                            "pp_opportunities": _to_int(ts.get("powerPlayOpportunities") or ts.get("ppOpps")),
-                            "sh_goals": None,
-                            "corsi_for": None, "corsi_against": None, "fenwick_for": None, "fenwick_against": None,
-                            "xg_for": None, "xg_against": None
+                            "sport": SPORT, "game_id": game_db_id, "team_id": tid, "player_id": pid_db,
+                            "goals": 0, "assists": 0, "points": 0, "shots": 0, "hits": 0, "blocks": 0,
+                            "pim": 0, "plus_minus": None, "toi": gstats.get("timeOnIce") or gstats.get("toi"),
+                            "goalie_sa": _to_int(gstats.get("shots") or gstats.get("shotsAgainst")),
+                            "goalie_sv": _to_int(gstats.get("saves")),
+                            "goalie_ga": _to_int(gstats.get("goalsAgainst")),
+                            "goalie_decision": gstats.get("decision"),
+                            "xg": None
                         }
-                        sb.table("team_game_stats").upsert(payload, on_conflict="sport,game_id,team_id").execute()
+                    else:
+                        sk = safe_get(p,"stats","skaterStats", default={})
+                        if not sk: continue
+                        payload = {
+                            "sport": SPORT, "game_id": game_db_id, "team_id": tid, "player_id": pid_db,
+                            "goals": _to_int(sk.get("goals")), "assists": _to_int(sk.get("assists")),
+                            "points": _to_int((_to_int(sk.get("goals")) or 0)+(_to_int(sk.get("assists")) or 0)),
+                            "shots": _to_int(sk.get("shots")), "hits": _to_int(sk.get("hits")),
+                            "blocks": _to_int(sk.get("blocked") or sk.get("blocks")),
+                            "pim": _to_int(sk.get("penaltyMinutes") or sk.get("pim")),
+                            "plus_minus": _to_int(sk.get("plusMinus")), "toi": sk.get("timeOnIce") or sk.get("toi"),
+                            "goalie_sa": None, "goalie_sv": None, "goalie_ga": None, "goalie_decision": None, "xg": None
+                        }
+                    sb.table("player_game_stats").upsert(payload, on_conflict="sport,game_id,player_id").execute()
+            time.sleep(0.06)
 
-                    # players
-                    for side, tid in [("home", home_tid), ("away", away_tid)]:
-                        players = safe_get(box_parsed,"teams",side,"players", default={})
-                        for key, p in players.items():
-                            per = p.get("person", {}) or {}
-                            full = per.get("fullName") or ""
-                            first = (full.split(" ") or [""])[0]
-                            last  = " ".join(full.split(" ")[1:]) if full else ""
-                            pid_ext = per.get("id")
-                            if pid_ext is None: 
-                                continue
-                            pid_db = upsert_player(pid_ext, full, first, last, tid)
-                            if (p.get("position",{}) or {}).get("code") == "G":
-                                gstats = safe_get(p,"stats","goalieStats", default={})
-                                payload = {
-                                    "sport": SPORT, "game_id": game_id, "team_id": tid, "player_id": pid_db,
-                                    "goals": 0, "assists": 0, "points": 0, "shots": 0, "hits": 0, "blocks": 0,
-                                    "pim": 0, "plus_minus": None, "toi": gstats.get("timeOnIce") or gstats.get("toi"),
-                                    "goalie_sa": _to_int(gstats.get("shots") or gstats.get("shotsAgainst")),
-                                    "goalie_sv": _to_int(gstats.get("saves")),
-                                    "goalie_ga": _to_int(gstats.get("goalsAgainst")),
-                                    "goalie_decision": gstats.get("decision"),
-                                    "xg": None
-                                }
-                            else:
-                                sk = safe_get(p,"stats","skaterStats", default={})
-                                if not sk: 
-                                    continue
-                                payload = {
-                                    "sport": SPORT, "game_id": game_id, "team_id": tid, "player_id": pid_db,
-                                    "goals": _to_int(sk.get("goals")),
-                                    "assists": _to_int(sk.get("assists")),
-                                    "points": _to_int((_to_int(sk.get("goals")) or 0) + (_to_int(sk.get("assists")) or 0)),
-                                    "shots": _to_int(sk.get("shots")),
-                                    "hits": _to_int(sk.get("hits")),
-                                    "blocks": _to_int(sk.get("blocked")),
-                                    "pim": _to_int(sk.get("penaltyMinutes") or sk.get("pim")),
-                                    "plus_minus": _to_int(sk.get("plusMinus")),
-                                    "toi": sk.get("timeOnIce") or sk.get("toi"),
-                                    "goalie_sa": None, "goalie_sv": None, "goalie_ga": None, "goalie_decision": None,
-                                    "xg": None
-                                }
-                            sb.table("player_game_stats").upsert(payload, on_conflict="sport,game_id,player_id").execute()
-                    time.sleep(0.1)
-            time.sleep(0.1)
     return added_games
 
+# --------------- entrypoint ---------------
 if __name__ == "__main__":
     try:
         before = sb.table("games").select("id", count="exact").eq("sport", SPORT).execute().count or 0
@@ -327,4 +482,4 @@ if __name__ == "__main__":
         after = before + total_added
     print(f"[nhl] backfill complete. new games added: {after - before}, total: {after}")
     if (after - before) <= 0:
-        raise SystemExit("[nhl] ERROR: 0 games added. Check network or provider responses.")
+        raise SystemExit("[nhl] ERROR: 0 games added. Check network/provider responses.")
