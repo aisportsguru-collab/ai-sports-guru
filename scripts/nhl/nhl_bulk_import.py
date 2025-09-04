@@ -1,36 +1,57 @@
 #!/usr/bin/env python3
-import os, time, math, requests
-from datetime import date, datetime, timedelta
+"""
+NHL bulk backfill for last two seasons (or seasons provided via NHL_SEASONS).
+- Robust HTTP: requests.Session + real User-Agent + exponential retry
+- Pulls schedule month-by-month (Oct..Jul) for Regular + Playoffs
+- Upserts into: games, team_game_stats, player_game_stats
+- Prints progress and fails the run if 0 games were added
+"""
+
+import os
+import time
+import requests
+from datetime import date
 from calendar import monthrange
-from dateutil import parser as dtp
 from tenacity import retry, wait_exponential, stop_after_attempt
 from supabase_client import get_client
 
 SPORT = "NHL"
-SEASONS = os.getenv("NHL_SEASONS","20222023,20232024").split(",")  # NHL format, e.g. 20222023
+# Default seasons in NHL format "YYYYYYYY" (e.g., 20222023). Comma-separated.
+SEASONS = [s.strip() for s in os.getenv("NHL_SEASONS", "20222023,20232024").split(",") if s.strip()]
 
 sb = get_client()
 
-# ---------- helpers ----------
+# ------------------------------ HTTP helpers ------------------------------
+
+SESSION = requests.Session()
+SESSION.headers.update({
+    # Some CDNs reject default UA strings from runners
+    "User-Agent": "Mozilla/5.0 (compatible; AiSportsGuru/1.0; +https://example.com)"
+})
+
+@retry(wait=wait_exponential(multiplier=1, min=1, max=10), stop=stop_after_attempt(6))
+def nhl_json(url: str):
+    r = SESSION.get(url, timeout=30)
+    r.raise_for_status()
+    return r.json()
+
+# ------------------------------ type helpers ------------------------------
+
 def _to_int(x):
     if x is None: return None
-    try: return int(float(str(x)))
-    except: return None
+    try:
+        return int(float(str(x)))
+    except Exception:
+        return None
 
 def _to_float(x):
     if x is None: return None
-    try: return float(x)
-    except: return None
+    try:
+        return float(x)
+    except Exception:
+        return None
 
-# session with UA (NHL endpoints can reject default UA)
-_SESSION = requests.Session()
-_SESSION.headers.update({"User-Agent": "Mozilla/5.0 (compatible; AiSportsGuru/1.0; +https://example.com)"})
-
-@retry(wait=wait_exponential(multiplier=1, min=1, max=10), stop=stop_after_attempt(6))
-def nhl_json(url):
-    r = _SESSION.get(url, timeout=30)
-    r.raise_for_status()
-    return r.json()
+# ------------------------------ DB helpers ------------------------------
 
 def upsert_team(name, abbr, ext_id):
     res = sb.table("teams").upsert(
@@ -41,8 +62,15 @@ def upsert_team(name, abbr, ext_id):
 
 def upsert_player(pid_ext, full, first, last, team_id):
     res = sb.table("players").upsert(
-        {"sport": SPORT, "player_id_external": str(pid_ext), "full_name": full, "first_name": first, "last_name": last, "primary_team_id": team_id},
-        on_conflict="sport,player_id_external"
+        {
+            "sport": SPORT,
+            "player_id_external": str(pid_ext),
+            "full_name": full,
+            "first_name": first,
+            "last_name": last,
+            "primary_team_id": team_id,
+        },
+        on_conflict="sport,player_id_external",
     ).execute()
     return res.data[0]["id"]
 
@@ -60,41 +88,45 @@ def upsert_game(game_pk, season_int, date_iso, home_name, away_name, home_score,
             "home_score": _to_int(home_score),
             "away_score": _to_int(away_score),
         },
-        on_conflict="sport,provider_game_id"
+        on_conflict="sport,provider_game_id",
     ).execute()
     return res.data[0]["id"]
 
-# ---------- schedule by month (smaller, more reliable) ----------
-def season_month_ranges(season_str):
-    # season_str like 20222023; season runs roughly from Oct (Y1) to Jun (Y2)
-    y1 = int(season_str[:4]); y2 = int(season_str[4:])
+# ------------------------------ schedule windowing ------------------------------
+
+def season_month_ranges(season_str: str):
+    """
+    NHL season like '20222023':
+      - Oct..Dec of Y1, Jan..Jul of Y2 (Jul buffer for Cup finals end)
+    """
+    y1 = int(season_str[:4])
+    y2 = int(season_str[4:])
     months = []
-    # Oct-Dec of y1
-    for m in [10,11,12]:
-        start = date(y1, m, 1)
-        end = date(y1, m, monthrange(y1, m)[1])
-        months.append((start, end))
-    # Jan-Jun of y2 (+Jul buffer for playoffs end)
-    for m in [1,2,3,4,5,6,7]:
-        start = date(y2, m, 1)
-        end = date(y2, m, monthrange(y2, m)[1])
-        months.append((start, end))
+    for m in [10, 11, 12]:
+        months.append((date(y1, m, 1), date(y1, m, monthrange(y1, m)[1])))
+    for m in [1, 2, 3, 4, 5, 6, 7]:
+        months.append((date(y2, m, 1), date(y2, m, monthrange(y2, m)[1])))
     return months
 
 def fetch_month_schedule(start_d: date, end_d: date, gtype: str):
-    # gtype "R" or "P"
     url = f"https://statsapi.web.nhl.com/api/v1/schedule?startDate={start_d.isoformat()}&endDate={end_d.isoformat()}&gameType={gtype}"
     return nhl_json(url)
 
-# ---------- main season runner ----------
-def run_season(season_str):
+# ------------------------------ main season runner ------------------------------
+
+def run_season(season_str: str):
     season_int = int(season_str[:4])
-    for gtype in ("R","P"):  # Regular + Playoffs
+    added_games = 0
+
+    for gtype in ("R", "P"):  # Regular + Playoffs
+        label = "Regular" if gtype == "R" else "Playoffs"
+        print(f"[nhl]  -> {season_str} [{label}]")
         for (start_d, end_d) in season_month_ranges(season_str):
+            print(f"[nhl]     fetching schedule {start_d}..{end_d} ({label})")
             try:
                 sched = fetch_month_schedule(start_d, end_d, gtype)
             except Exception as e:
-                print(f"[nhl] schedule fetch failed {start_d}..{end_d} gtype={gtype}: {e}")
+                print(f"[nhl]     WARN schedule fetch failed {start_d}..{end_d} gtype={gtype}: {e}")
                 continue
 
             dates = sched.get("dates", [])
@@ -102,11 +134,12 @@ def run_season(season_str):
                 date_iso = d["date"]
                 for game in d.get("games", []):
                     game_pk = game["gamePk"]
-                    status = game.get("status", {}).get("detailedState","scheduled")
-                    teams = game.get("teams",{})
-                    home = teams.get("home",{}).get("team",{})
-                    away = teams.get("away",{}).get("team",{})
-                    home_name = home.get("name"); away_name = away.get("name")
+                    status = game.get("status", {}).get("detailedState", "scheduled")
+                    teams = game.get("teams", {})
+                    home = teams.get("home", {}).get("team", {})
+                    away = teams.get("away", {}).get("team", {})
+                    home_name = home.get("name")
+                    away_name = away.get("name")
                     if not home_name or not away_name:
                         continue
 
@@ -114,24 +147,30 @@ def run_season(season_str):
                     try:
                         box = nhl_json(f"https://statsapi.web.nhl.com/api/v1/game/{game_pk}/boxscore")
                     except Exception as e:
-                        print(f"[nhl] boxscore failed game {game_pk}: {e}")
+                        print(f"[nhl]     WARN boxscore failed game {game_pk}: {e}")
                         time.sleep(0.3)
                         continue
 
-                    # team setup
                     home_abbr = box["teams"]["home"]["team"].get("triCode") or home_name[:3].upper()
                     away_abbr = box["teams"]["away"]["team"].get("triCode") or away_name[:3].upper()
                     home_tid = upsert_team(home_name, home_abbr, box["teams"]["home"]["team"]["id"])
                     away_tid = upsert_team(away_name, away_abbr, box["teams"]["away"]["team"]["id"])
 
-                    # scores
+                    # final/linescore scores if present, else team score field from schedule
                     linescore = game.get("linescore", {})
-                    home_score = linescore.get("teams", {}).get("home", {}).get("goals") or teams.get("home",{}).get("score")
-                    away_score = linescore.get("teams", {}).get("away", {}).get("goals") or teams.get("away",{}).get("score")
+                    home_score = (
+                        linescore.get("teams", {}).get("home", {}).get("goals")
+                        or teams.get("home", {}).get("score")
+                    )
+                    away_score = (
+                        linescore.get("teams", {}).get("away", {}).get("goals")
+                        or teams.get("away", {}).get("score")
+                    )
 
                     game_id = upsert_game(
                         game_pk, season_int, date_iso, home_name, away_name, home_score, away_score, status
                     )
+                    added_games += 1
 
                     # TEAM STATS
                     for side, tid, opp_score in [("home", home_tid, away_score), ("away", away_tid, home_score)]:
@@ -143,7 +182,7 @@ def run_season(season_str):
                             "goals_for": _to_int(ts.get("goals")),
                             "goals_against": _to_int(opp_score),
                             "shots_for": _to_int(ts.get("shots")),
-                            "shots_against": None,
+                            "shots_against": None,  # NHL endpoint doesn't give this directly here
                             "pim": _to_int(ts.get("pim")),
                             "hits_for": _to_int(ts.get("hits")),
                             "blocks": _to_int(ts.get("blocked")),
@@ -164,17 +203,19 @@ def run_season(season_str):
                         players = box["teams"][side]["players"]
                         for pid_key in players:
                             p = players[pid_key]
-                            pdata = p.get("person", {})
-                            full = pdata.get("fullName","")
-                            first = full.split(" ")[0] if full else ""
-                            last = " ".join(full.split(" ")[1:]) if full else ""
-                            pid_ext = pdata.get("id")
-                            if pid_ext is None: 
+                            per = p.get("person", {})
+                            full = per.get("fullName", "") or ""
+                            parts = full.split(" ")
+                            first = parts[0] if parts else ""
+                            last = " ".join(parts[1:]) if len(parts) > 1 else ""
+                            pid_ext = per.get("id")
+                            if pid_ext is None:
                                 continue
+
                             player_id_db = upsert_player(pid_ext, full, first, last, tid)
 
-                            if p.get("position",{}).get("code") == "G":
-                                gstats = p.get("stats", {}).get("goalieStats", {})
+                            if p.get("position", {}).get("code") == "G":
+                                gstats = p.get("stats", {}).get("goalieStats", {}) or {}
                                 payload = {
                                     "sport": SPORT, "game_id": game_id, "team_id": tid, "player_id": player_id_db,
                                     "goals": 0, "assists": 0, "points": 0, "shots": 0, "hits": 0, "blocks": 0,
@@ -186,7 +227,7 @@ def run_season(season_str):
                                     "xg": None
                                 }
                             else:
-                                sk = p.get("stats", {}).get("skaterStats")
+                                sk = p.get("stats", {}).get("skaterStats") or {}
                                 if not sk:
                                     continue
                                 payload = {
@@ -205,10 +246,35 @@ def run_season(season_str):
                                 }
                             sb.table("player_game_stats").upsert(payload, on_conflict="sport,game_id,player_id").execute()
 
-                    time.sleep(0.15)  # gentle pacing
-            time.sleep(0.15)
+                    # Pacing to be friendly to the API
+                    time.sleep(0.12)
+            time.sleep(0.12)
+    return added_games
+
+# ------------------------------ entrypoint ------------------------------
 
 if __name__ == "__main__":
+    # Count before
+    try:
+        before_games = sb.table("games").select("id", count="exact").eq("sport", SPORT).execute().count or 0
+    except Exception:
+        before_games = 0
+    print(f"[nhl] starting backfill. existing games: {before_games}")
+
+    total_added = 0
     for s in SEASONS:
-        run_season(s)
-    print("NHL bulk import complete.")
+        print(f"[nhl] running season {s} ...")
+        added = run_season(s)
+        total_added += (added or 0)
+        print(f"[nhl] season {s} added games: {added}")
+
+    # Count after
+    try:
+        after_games = sb.table("games").select("id", count="exact").eq("sport", SPORT).execute().count or 0
+    except Exception:
+        after_games = before_games + total_added
+
+    print(f"[nhl] backfill complete. new games added: {after_games - before_games}, total: {after_games}")
+
+    if (after_games - before_games) <= 0:
+        raise SystemExit("[nhl] ERROR: 0 games added. Check network/API reachability or season codes.")
