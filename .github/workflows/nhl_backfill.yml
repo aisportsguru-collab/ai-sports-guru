@@ -11,6 +11,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Network probe (NHL API)
+        run: |
+          set -e
+          echo "Probing statsapi.web.nhl.com..."
+          curl -sSfL "https://statsapi.web.nhl.com/api/v1/schedule?startDate=2023-01-01&endDate=2023-01-02" > /dev/null
+          echo "NHL API reachable ✅"
+
       - name: Install deps
         run: |
           python -m venv .venv
@@ -20,6 +28,7 @@ jobs:
           else
             pip install requests==2.32.3 pandas==2.2.2 python-dateutil==2.9.0 supabase==2.6.0 tenacity==9.0.0
           fi
+
       - name: Run bulk backfill
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -29,3 +38,7 @@ jobs:
         run: |
           . .venv/bin/activate
           python scripts/nhl/nhl_bulk_import.py
+          echo "Rows after backfill:"
+          psql "${{ secrets.SUPABASE_DB_URL }}" -c "select count(*) as games from games where sport='NHL';"
+          psql "${{ secrets.SUPABASE_DB_URL }}" -c "select count(*) as team_rows from team_game_stats where sport='NHL';"
+          psql "${{ secrets.SUPABASE_DB_URL }}" -c "select count(*) as player_rows from player_game_stats where sport='NHL';"
