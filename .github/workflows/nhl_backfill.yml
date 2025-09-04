@@ -12,12 +12,14 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Network probe (NHL API)
+      - name: Network probe (NHL APIs - soft)
+        continue-on-error: true
         run: |
-          set -e
-          echo "Probing statsapi.web.nhl.com..."
-          curl -sSfL "https://statsapi.web.nhl.com/api/v1/schedule?startDate=2023-01-01&endDate=2023-01-02" > /dev/null
-          echo "NHL API reachable ✅"
+          set -x
+          echo "Probing StatsAPI..."
+          curl -sSfL "https://statsapi.web.nhl.com/api/v1/schedule?startDate=2023-01-01&endDate=2023-01-02" >/dev/null && echo "StatsAPI OK" || echo "StatsAPI unreachable (will fallback)"
+          echo "Probing api-web..."
+          curl -sSfL "https://api-web.nhle.com/v1/scoreboard/2023-01-01" >/dev/null && echo "api-web OK" || echo "api-web unreachable (scripts still resilient)"
 
       - name: Install deps
         run: |
@@ -34,11 +36,16 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           NHL_SEASONS: 20222023,20232024
         run: |
           . .venv/bin/activate
           python scripts/nhl/nhl_bulk_import.py
           echo "Rows after backfill:"
-          psql "${{ secrets.SUPABASE_DB_URL }}" -c "select count(*) as games from games where sport='NHL';"
-          psql "${{ secrets.SUPABASE_DB_URL }}" -c "select count(*) as team_rows from team_game_stats where sport='NHL';"
-          psql "${{ secrets.SUPABASE_DB_URL }}" -c "select count(*) as player_rows from player_game_stats where sport='NHL';"
+          if [ -n "${SUPABASE_DB_URL}" ]; then
+            psql "${SUPABASE_DB_URL}" -c "select count(*) as games from games where sport='NHL';"
+            psql "${SUPABASE_DB_URL}" -c "select count(*) as team_rows from team_game_stats where sport='NHL';"
+            psql "${SUPABASE_DB_URL}" -c "select count(*) as player_rows from player_game_stats where sport='NHL';"
+          else
+            echo "SUPABASE_DB_URL not provided as secret; skipping psql counts."
+          fi
