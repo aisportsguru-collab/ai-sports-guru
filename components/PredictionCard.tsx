@@ -1,171 +1,102 @@
 "use client";
 
-import { useMemo } from "react";
+import { american, sideToTeam, formatSpreadPick, formatTotalPick } from "@/lib/formatOdds";
 
-type Row = {
-  external_id?: string | null;
-  game_id?: string | null;
-  sport: string;
-  season?: number | null;
-  game_date?: string | null;
-  commence_time?: string | null;
-  home_team: string;
+type Game = {
+  game_id: string;
+  game_time: string;
+  league: string;
   away_team: string;
+  home_team: string;
+  moneyline_away: number | null;
+  moneyline_home: number | null;
+  spread_line: number | null;  // home line (negative means home favored)
+  total_points: number | null;
+  over_odds: number | null;
+  under_odds: number | null;
 
-  // snapshot odds (canonical)
-  moneyline_home?: number | null;
-  moneyline_away?: number | null;
-  spread_line?: number | null;
-  spread_price_home?: number | null;
-  spread_price_away?: number | null;
-  total_line?: number | null;
-  total_over_price?: number | null;
-  total_under_price?: number | null;
-
-  // picks
-  predicted_winner?: string | null;  // legacy string team name
-  pick_moneyline?: "HOME" | "AWAY" | string | null;
-  pick_spread?: string | null;       // e.g. "HOME -3.5"
-  pick_total?: string | null;        // e.g. "UNDER 214.5"
-  conf_moneyline?: number | null;
-  conf_spread?: number | null;
-  conf_total?: number | null;
+  ai_ml_pick: string | null;       // "HOME" | "AWAY"
+  ai_ml_conf: number | null;       // 0-100
+  ai_spread_pick: string | null;   // "HOME -3" | "AWAY +2.5" | "PICK"
+  ai_spread_conf: number | null;
+  ai_total_pick: string | null;    // "OVER 47.5" | "UNDER 44"
+  ai_total_conf: number | null;
+  ai_total_number: number | null;  // modeled total if you computed one
 };
 
-function fmtTime(iso?: string | null) {
-  if (!iso) return "";
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
-}
+export default function PredictionCard({ g }: { g: Game }) {
+  const t = new Date(g.game_time);
 
-function badge(text: string) {
-  return (
-    <span className="rounded-xl border border-[#232632] bg-[#121317] px-2 py-1 text-xs text-[#A6A6A6]">
-      {text}
-    </span>
-  );
-}
+  const mlHome = american(g.moneyline_home);
+  const mlAway = american(g.moneyline_away);
 
-export default function PredictionCard({ row }: { row: Row }) {
-  const id = row.external_id ?? row.game_id ?? `${row.home_team}-${row.away_team}-${row.commence_time ?? ""}`;
+  const spreadHome =
+    typeof g.spread_line === "number"
+      ? `${g.home_team} ${g.spread_line > 0 ? `+${g.spread_line}` : g.spread_line}`
+      : "—";
 
-  const startLabel = useMemo(() => fmtTime(row.commence_time), [row.commence_time]);
+  const total =
+    typeof g.total_points === "number"
+      ? `Over ${g.total_points} ${american(g.over_odds)}  /  Under ${g.total_points} ${american(g.under_odds)}`
+      : "—  /  —";
 
-  // readable picks
-  const mlPick = row.pick_moneyline
-    ? (row.pick_moneyline.toUpperCase().startsWith("HOME") ? row.home_team
-      : row.pick_moneyline.toUpperCase().startsWith("AWAY") ? row.away_team
-      : row.pick_moneyline)
-    : (row.predicted_winner || "");
-
-  const spreadPick = row.pick_spread ?? "";
-  const totalPick = row.pick_total ?? "";
+  const mlPickTeam = sideToTeam(g.ai_ml_pick, g.home_team, g.away_team);
+  const spreadPick = formatSpreadPick(g.ai_spread_pick, g.home_team, g.away_team);
+  const totalPick = formatTotalPick(g.ai_total_pick);
 
   return (
-    <article
-      key={id}
-      className="rounded-2xl border border-[#232632] bg-[#121317] p-5 shadow-sm transition hover:shadow-md"
-    >
-      {/* Header */}
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[#A6A6A6] text-xs">{startLabel}</div>
-          <h3 className="text-white text-lg font-semibold mt-1">
-            {row.away_team} <span className="text-[#A6A6A6]">@</span> {row.home_team}
-          </h3>
+    <div className="card space-y-3">
+      <div className="row">
+        <div className="text-sm text-neutral-400">
+          {t.toLocaleString()}
         </div>
-        <div className="text-[#F5C847] text-sm font-semibold">{row.sport.toUpperCase()}</div>
+        <div className="text-right text-sm text-neutral-400">{g.league.toUpperCase()}</div>
       </div>
 
-      {/* Odds strip */}
-      <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="rounded-xl bg-[#0B0B0B] border border-[#232632] p-3">
-          <div className="text-[#A6A6A6] text-xs mb-1">Moneyline</div>
-          <div className="text-white text-sm flex items-center gap-3">
-            <span className="min-w-0 truncate">{row.home_team}</span>
-            <span className="ml-auto">{row.moneyline_home ?? "—"}</span>
-          </div>
-          <div className="text-white text-sm flex items-center gap-3">
-            <span className="min-w-0 truncate">{row.away_team}</span>
-            <span className="ml-auto">{row.moneyline_away ?? "—"}</span>
-          </div>
-        </div>
+      <div className="row text-lg font-semibold">
+        <div>{g.away_team}</div>
+        <div className="text-neutral-400">at</div>
+        <div>{g.home_team}</div>
+      </div>
 
-        <div className="rounded-xl bg-[#0B0B0B] border border-[#232632] p-3">
-          <div className="text-[#A6A6A6] text-xs mb-1">Spread</div>
-          <div className="text-white text-sm flex items-center gap-3">
-            <span className="min-w-0 truncate">{row.home_team}</span>
-            <span className="ml-auto">
-              {row.spread_line != null ? (row.spread_line >= 0 ? `+${row.spread_line}` : row.spread_line) : "—"}
-              {row.spread_price_home != null ? ` (${row.spread_price_home})` : ""}
-            </span>
-          </div>
-          <div className="text-white text-sm flex items-center gap-3">
-            <span className="min-w-0 truncate">{row.away_team}</span>
-            <span className="ml-auto">
-              {row.spread_line != null ? (row.spread_line <= 0 ? `+${Math.abs(row.spread_line)}` : `-${row.spread_line}`) : "—"}
-              {row.spread_price_away != null ? ` (${row.spread_price_away})` : ""}
-            </span>
-          </div>
+      {/* Odds */}
+      <div className="space-y-1">
+        <div className="label">Odds</div>
+        <div className="subtle">
+          Moneyline: <span className="value">{g.home_team} {mlHome}</span>
+          <span className="mx-2"> / </span>
+          <span className="value">{g.away_team} {mlAway}</span>
         </div>
-
-        <div className="rounded-xl bg-[#0B0B0B] border border-[#232632] p-3">
-          <div className="text-[#A6A6A6] text-xs mb-1">Total</div>
-          <div className="text-white text-sm flex items-center justify-between">
-            <span>Line</span>
-            <span className="ml-auto">{row.total_line ?? "—"}</span>
-          </div>
-          <div className="text-white text-sm flex items-center justify-between">
-            <span>O / U</span>
-            <span className="ml-auto">
-              {(row.total_over_price ?? "—")} / {(row.total_under_price ?? "—")}
-            </span>
-          </div>
+        <div className="subtle">
+          Spread: <span className="value">{spreadHome}</span>
+        </div>
+        <div className="subtle">
+          Total: <span className="value">{total}</span>
         </div>
       </div>
 
-      {/* Picks */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="rounded-xl border border-[#232632] p-3 bg-[#0B0B0B]">
-          <div className="text-[#A6A6A6] text-xs mb-1">Moneyline Pick</div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-white">{mlPick || "—"}</div>
-            <div className="text-[#F5C847] text-xs font-semibold">
-              {row.conf_moneyline != null ? badge(`${row.conf_moneyline}%`) : badge("—")}
-            </div>
-          </div>
+      {/* AI Predictions */}
+      <div className="space-y-1">
+        <div className="label">AI Predictions</div>
+        <div className="subtle">
+          Moneyline:{" "}
+          <span className="value">
+            {mlPickTeam ? `${mlPickTeam}${g.ai_ml_conf ? ` (${g.ai_ml_conf}%)` : ""}` : "—"}
+          </span>
         </div>
-
-        <div className="rounded-xl border border-[#232632] p-3 bg-[#0B0B0B]">
-          <div className="text-[#A6A6A6] text-xs mb-1">Spread Pick</div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-white">{spreadPick || "—"}</div>
-            <div className="text-[#F5C847] text-xs font-semibold">
-              {row.conf_spread != null ? badge(`${row.conf_spread}%`) : badge("—")}
-            </div>
-          </div>
+        <div className="subtle">
+          Spread:{" "}
+          <span className="value">
+            {spreadPick ? `${spreadPick}${g.ai_spread_conf ? ` (${g.ai_spread_conf}%)` : ""}` : "—"}
+          </span>
         </div>
-
-        <div className="rounded-xl border border-[#232632] p-3 bg-[#0B0B0B]">
-          <div className="text-[#A6A6A6] text-xs mb-1">Total Pick</div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-white">{totalPick || "—"}</div>
-            <div className="text-[#F5C847] text-xs font-semibold">
-              {row.conf_total != null ? badge(`${row.conf_total}%`) : badge("—")}
-            </div>
-          </div>
+        <div className="subtle">
+          Total:{" "}
+          <span className="value">
+            {totalPick ? `${totalPick}${g.ai_total_conf ? ` (${g.ai_total_conf}%)` : ""}` : "—"}
+          </span>
         </div>
       </div>
-    </article>
+    </div>
   );
 }

@@ -1,102 +1,126 @@
 import { NextResponse } from "next/server";
-import { getOddsRange } from "@/lib/odds";
-import { inferPreds } from "@/lib/model/infer";
-import { supabaseService } from "@/lib/supabaseServerAdmin";
+import { createClient } from "@supabase/supabase-js";
 
-function parseParams(url: URL) {
-  const league = (url.searchParams.get("league") || "nfl").toLowerCase();
-  const days = Math.max(1, Math.min(31, Number(url.searchParams.get("days") || "14")));
-  const store = url.searchParams.get("store") === "1";
-  const debug = url.searchParams.get("debug") === "1";
-  const now = new Date();
-  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes()));
-  const to = new Date(from.getTime() + days * 24 * 3600 * 1000);
-  return { league, from, to, store, debug };
+// Uses your existing type + picker
+import { pickFromOdds } from "@/backend/model/predict";
+
+// You already have an odds range helper; if not, this one queries your own REST
+async function getOddsRange(opts: { league: string; days: number }) {
+  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "http://localhost:3000";
+  const url = new URL("/api/games", base);
+  url.searchParams.set("league", opts.league);
+  url.searchParams.set("range", String(opts.days));
+  // We want odds included; /api/games already merges odds via v_latest_odds_any
+  const res = await fetch(url.toString(), { cache: "no-store" });
+  if (!res.ok) return [];
+  const json = await res.json();
+  // json.games is the merged payload your GameCard uses; keep only where any odds exist
+  return (json.games || []).filter((g: any) =>
+    g.moneyline_home != null ||
+    g.moneyline_away != null ||
+    g.spread_line   != null ||
+    g.total_points  != null
+  );
 }
+
+function supaService() {
+  const url =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const { league, from, to, store, debug } = parseParams(url);
+  const { searchParams } = new URL(req.url);
+  const league = (searchParams.get("league") || "nfl").toLowerCase();
+  const days = Number(searchParams.get("days") || "14");
+  const store = searchParams.get("store") === "1";
+
+  const safe = (extra?: any) =>
+    NextResponse.json({ league, ...extra }, { status: 200 });
 
   try {
-    // 1) pull odds → NormalGame[]
-    const games = await getOddsRange(league, from, to);
+    // 1) get games with any odds present (so we can compute picks)
+    const games = await getOddsRange({ league, days });
+    if (!games?.length) return safe({ count: 0, note: "no games with odds in window" });
 
-    // 2) infer predictions
-    const picks = await inferPreds(games, league);
+    // 2) compute picks from current odds (deterministic)
+    const rows = games.map((g: any) => {
+      const pick = pickFromOdds({
+        ml_home: g.moneyline_home,
+        ml_away: g.moneyline_away,
+        spread_line: g.spread_line,          // home line
+        spread_home_price: null,             // not exposed by /api/games; safe to omit
+        spread_away_price: null,             // not exposed by /api/games; safe to omit
+        total_points: g.total_points,
+        over_price: g.over_odds,
+        under_price: g.under_odds,
+      });
 
-    // 3) upsert into Supabase (if store=1)
-    let stored = 0;
-    let insert_error: string | null = null;
+      return {
+        game_id: g.game_uuid || g.game_id, // UUID from /api/games debug (game_uuid preferred)
+        pick_ml: pick.pick_ml,
+        conf_ml: pick.conf_ml,
+        pick_spread: pick.pick_spread,
+        conf_spread: pick.conf_spread,
+        pick_total: pick.pick_total,
+        conf_total: pick.conf_total,
+        model_version: "v1",
+        // optional: features snapshot if you want to store the lines you used
+        features: {
+          moneyline_home: g.moneyline_home,
+          moneyline_away: g.moneyline_away,
+          spread_line: g.spread_line,
+          total_points: g.total_points,
+          over_odds: g.over_odds,
+          under_odds: g.under_odds,
+        },
+      };
+    })
+    // drop entries where all picks are null (no useful signal)
+    .filter(r =>
+      r.pick_ml || r.pick_spread || r.pick_total
+    );
 
-    if (store) {
-      try {
-        const sb = supabaseService();
-        // Map to DB rows
-        const rows = picks.map((p) => ({
-          sport: league,
-          game_date: p.kickoffISO.slice(0, 10),
-          commence_time: p.kickoffISO,
-          home_team: p.home,
-          away_team: p.away,
-
-          moneyline_home: p.ml_home,
-          moneyline_away: p.ml_away,
-          spread_line: p.spread_line,
-          spread_price_home: p.spread_home_price,
-          spread_price_away: p.spread_away_price,
-          total_line: p.total_points,
-          over_price: p.over_price,
-          under_price: p.under_price,
-
-          pick_moneyline: p.pick_moneyline,
-          pick_spread: p.pick_spread,
-          pick_total: p.pick_total,
-          conf_moneyline: p.conf_moneyline,
-          conf_spread: p.conf_spread,
-          conf_total: p.conf_total,
-
-          // optional: store probabilities & edges
-          model_p_home_win: p.p_home_win,
-          model_p_home_cover: p.p_home_cover,
-          model_p_over: p.p_over,
-          edge_moneyline: p.edge_moneyline,
-          edge_spread: p.edge_spread,
-          edge_total: p.edge_total,
-
-          source_tag: "model_v1",
-          // a stable unique key (you may have external_id in getOddsRange; if so, use that)
-          external_id: `${league}|${p.kickoffISO}|${p.home}|${p.away}`
-        }));
-
-        // Upsert on unique external_id (or your composite index)
-        const { error, count } = await sb
-          .from("ai_research_predictions")
-          .upsert(rows, { onConflict: "external_id", ignoreDuplicates: false, count: "exact" });
-
-        if (error) throw error;
-        stored = count ?? 0;
-      } catch (e: any) {
-        insert_error = String(e?.message || e);
-      }
+    if (!store || !rows.length) {
+      return safe({ count: rows.length, stored: 0 });
     }
 
-    return NextResponse.json({
-      ok: true,
-      league,
-      from: from.toISOString(),
-      to: to.toISOString(),
-      stored,
-      insert_error,
-      note: bundleNote(),
-    });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: String(e?.message || e) });
-  }
-}
+    // 3) upsert into public.predictions keyed by (game_id, model_version)
+    const supa = supaService();
+    if (!supa) {
+      return safe({ count: rows.length, error: "server env missing SUPABASE_URL / SERVICE_ROLE" });
+    }
 
-function bundleNote() {
-  // Tiny message letting us know whether we’re using real models or fallback.
-  // We can improve this later by exporting a flag from infer.
-  return "Model pipeline executed (models used if available; otherwise market-aware fallback).";
+    // De-dup by (game_id, model_version)
+    const uniq = new Map<string, any>();
+    for (const r of rows) {
+      const key = `${r.game_id}:v1`;
+      uniq.set(key, r);
+    }
+    const finalRows = Array.from(uniq.values());
+
+    const { error } = await supa
+      .from("predictions")
+      .upsert(finalRows, {
+        onConflict: "game_id,model_version",
+        ignoreDuplicates: false,
+      });
+
+    if (error) {
+      return safe({ count: 0, error: `supabase upsert: ${error.message}` });
+    }
+
+    return safe({ count: finalRows.length });
+  } catch (e: any) {
+    return safe({ count: 0, error: String(e?.message || e) });
+  }
 }

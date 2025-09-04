@@ -8,7 +8,15 @@
     "start": "next start",
     "lint": "next lint",
     "update:all": "node backend/updateGames.mjs",
-    "update:sport": "node backend/updateGamesForSport.mjs"
+    "update:sport": "node backend/updateGamesForSport.mjs",
+    "ingest:odds": "node scripts/fetch-odds.mjs nfl,mlb,ncaaf",
+    "model:run": "node scripts/run-model.mjs",
+    "seed:public": "node scripts/seed-public.mjs",
+    "seed:implied": "node scripts/seed-public-from-odds.mjs",
+    "nba:venv": "python3 -m venv .venv && . .venv/bin/activate && pip install -r scripts/nba/requirements.txt",
+    "nba:schema": "psql \"$SUPABASE_DB_URL\" -f supabase/sql/nba_migration.sql",
+    "nba:bulk": ". .venv/bin/activate && python scripts/nba/nba_bulk_import.py",
+    "nba:daily": ". .venv/bin/activate && python scripts/nba/nba_daily_update.py"
   },
   "dependencies": {
     "@stripe/stripe-js": "^3.5.0",
@@ -17,12 +25,13 @@
     "@supabase/auth-ui-react": "^0.3.4",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.56.1",
+    "@supabase/supabase-js": "^2.57.0",
     "autoprefixer": "^10.4.14",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",
     "lucide-react": "^0.536.0",
     "next": "15.0.0",
+    "node-fetch": "^3.3.2",
     "openai": "^5.12.2",
     "postcss": "^8.4.24",
     "react": "18.2.0",
@@ -35,8 +44,10 @@
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.6",
     "@types/stripe": "^8.0.416",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^8.47.0",
     "eslint-config-next": "^15.0.0",
     "typescript": "^5.1.6"
-  }
+  },
+  "type": "module"
 }

@@ -1,47 +1,50 @@
 import { NextResponse } from "next/server";
-import { Predictor } from "@/lib/model/infer";
-import { fetchGames } from "@/lib/odds";
+import { supabaseAnon } from "@/lib/db/server";
 
-const predictor = new Predictor();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const league = (searchParams.get("league") || "nfl").toLowerCase();
+  const days = Number(searchParams.get("days") || 14);
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const league = searchParams.get("league") || "nfl";
-  const date = searchParams.get("date")!;
-  const days = parseInt(searchParams.get("days") || "7", 10);
+  const since = new Date();
+  since.setDate(since.getDate() - 1);
+  const until = new Date();
+  until.setDate(until.getDate() + days);
 
-  const games = await fetchGames(league, date, days);
+  const sb = supabaseAnon();
+  const { data, error } = await sb
+    .from("games")
+    .select(`
+      game_id, league, game_time, away_team, home_team,
+      odds:odds(*),
+      predictions:predictions(*)
+    `)
+    .eq("league", league)
+    .gte("game_time", since.toISOString())
+    .lte("game_time", until.toISOString())
+    .order("game_time");
 
-  const enriched = games.map((g: any) => {
-    // Convert odds + stats into feature vector
-    const features = [
-      g.ml_home, g.ml_away,
-      g.spread_line, g.total_points,
-      g.home_stats?.off_rating ?? 0,
-      g.away_stats?.off_rating ?? 0,
-      g.home_stats?.def_rating ?? 0,
-      g.away_stats?.def_rating ?? 0,
-      g.inj_home ?? 0,
-      g.inj_away ?? 0,
-    ];
+  if (error) return NextResponse.json({ items: [], error: error.message });
 
-    const { moneyline, spread, total } = predictor.predict(features);
-
+  const items = (data || []).map((g: any) => {
+    const o = Array.isArray(g.odds) ? g.odds[0] : null;
+    const p = Array.isArray(g.predictions) ? g.predictions : [];
+    const pick = p.find((x: any) => x.pick_type === "moneyline");
     return {
-      ...g,
-      pick_moneyline: moneyline > 0.5 ? g.home : g.away,
-      conf_moneyline: Math.round(moneyline * 100),
-      pick_spread: spread > 0.5 ? `${g.home} ${g.spread_line}` : `${g.away} ${-g.spread_line}`,
-      conf_spread: Math.round(spread * 100),
-      pick_total: total > 0.5 ? `Over ${g.total_points}` : `Under ${g.total_points}`,
-      conf_total: Math.round(total * 100),
+      game_id: g.game_id,
+      league: g.league,
+      game_time: g.game_time,
+      away_team: g.away_team,
+      home_team: g.home_team,
+      moneyline_away: o?.moneyline_away ?? null,
+      moneyline_home: o?.moneyline_home ?? null,
+      line_away: o?.spread_away ?? null,
+      line_home: o?.spread_home ?? null,
+      total_points: o?.total_points ?? null,
+      asg_pick: pick?.pick_side ?? null,
+      asg_prob: pick?.confidence ?? null
     };
   });
 
-  return NextResponse.json({
-    ok: true,
-    league,
-    count: enriched.length,
-    games: enriched,
-  });
+  return NextResponse.json({ items });
 }

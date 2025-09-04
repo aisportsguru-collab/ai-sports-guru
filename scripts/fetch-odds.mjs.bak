@@ -1,0 +1,158 @@
+import { config } from "dotenv";
+config({ path: ".env.local", override: true });
+config();
+
+import fetch from "node-fetch";
+import { supabaseAdmin } from "../lib/db/node-client.mjs";
+
+const SPORT_KEY = {
+  nfl:   "americanfootball_nfl",
+  ncaaf: "americanfootball_ncaaf",
+  nba:   "basketball_nba",
+  ncaab: "basketball_ncaab",
+  wnba:  "basketball_wnba",
+  mlb:   "baseball_mlb",
+  nhl:   "icehockey_nhl",
+};
+
+// We will aggregate across *all* books returned by TheOddsAPI for robustness.
+// We will store sportsbook=null to indicate "aggregated snapshot".
+const ODDS_API_KEY =
+  process.env.ODDS_API_KEY || process.env.NEXT_PUBLIC_THE_ODDS_API_KEY;
+
+const REGION = process.env.ODDS_API_REGION || "us";
+const MARKETS = process.env.ODDS_API_MARKETS || "h2h,spreads,totals";
+
+function toArr(s) {
+  return (s || "").split(",").map((x) => x.trim()).filter(Boolean);
+}
+function isNum(x){ return typeof x === "number" && Number.isFinite(x); }
+function avg(a, b) { return a == null ? b : (a + b) / 2; }
+
+async function main() {
+  if (!ODDS_API_KEY) throw new Error("ODDS_API_KEY missing");
+
+  const leagues = toArr(process.argv[2] || "nfl,mlb,ncaaf");
+  const sb = supabaseAdmin();
+
+  for (const lg of leagues) {
+    const sportKey = SPORT_KEY[lg.toLowerCase()];
+    if (!sportKey) {
+      console.warn(`[${lg}] not supported mapping; skipping.`);
+      continue;
+    }
+
+    const url =
+      `https://api.the-odds-api.com/v4/sports/${sportKey}/odds` +
+      `?regions=${encodeURIComponent(REGION)}` +
+      `&markets=${encodeURIComponent(MARKETS)}` +
+      `&oddsFormat=american&dateFormat=iso` +
+      `&apiKey=${ODDS_API_KEY}`;
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error(`[${lg}] Odds API ${res.status}`, await res.text());
+      continue;
+    }
+    const rows = await res.json();
+
+    let wrote = 0;
+    let wroteAny = 0;
+
+    for (const r of rows) {
+      const game_id = r.id;
+      const game_time = r.commence_time ? new Date(r.commence_time).toISOString() : null;
+      const away_team = r.away_team;
+      const home_team = r.home_team;
+
+      // Ensure a game row exists/upsert by provider external id (we use r.id as our game_id)
+      const gUp = await sb
+        .from("games")
+        .upsert(
+          {
+            sport: lg.toLowerCase(),
+            game_id,
+            commence_time: game_time,
+            away_team,
+            home_team,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "game_id" }
+        );
+
+      if (gUp.error) {
+        console.error(`[${lg}] game upsert error`, gUp.error);
+        continue;
+      }
+
+      // Aggregate across all bookmakers
+      let moneyline_home = null, moneyline_away = null;
+      let spread_line = null, spread_home = null, spread_away = null;
+      let total_points = null, over_odds = null, under_odds = null;
+
+      for (const bm of (r.bookmakers || [])) {
+        for (const mkt of (bm.markets || [])) {
+          if (mkt.key === "h2h") {
+            const mh = mkt.outcomes?.find(o => o.name === home_team);
+            const ma = mkt.outcomes?.find(o => o.name === away_team);
+            if (isNum(mh?.price)) moneyline_home = avg(moneyline_home, mh.price);
+            if (isNum(ma?.price)) moneyline_away = avg(moneyline_away, ma.price);
+          }
+          if (mkt.key === "spreads") {
+            const sh = mkt.outcomes?.find(o => o.name === home_team);
+            const sa = mkt.outcomes?.find(o => o.name === away_team);
+            if (isNum(sh?.point)) spread_line = avg(spread_line, sh.point);
+            if (isNum(sh?.price)) spread_home = avg(spread_home, sh.price);
+            if (isNum(sa?.price)) spread_away = avg(spread_away, sa.price);
+          }
+          if (mkt.key === "totals") {
+            const over = mkt.outcomes?.find(o => String(o.name||"").toLowerCase().startsWith("over"));
+            const under = mkt.outcomes?.find(o => String(o.name||"").toLowerCase().startsWith("under"));
+            if (isNum(over?.point)) total_points = avg(total_points, over.point);
+            if (isNum(over?.price)) over_odds = avg(over_odds, over.price);
+            if (isNum(under?.price)) under_odds = avg(under_odds, under.price);
+          }
+        }
+      }
+
+      // If we didn't find any market at all, skip odds upsert (but we still upserted a game row)
+      const anyMarket = [moneyline_home, moneyline_away, spread_line, total_points, over_odds, under_odds].some(v => v != null);
+      if (anyMarket) {
+        const oUp = await sb
+          .from("odds")
+          .upsert(
+            {
+              game_id,
+              source: "theoddsapi",
+              // aggregated snapshot => sportsbook null
+              sportsbook: null,
+              moneyline_home,
+              moneyline_away,
+              spread_line,
+              spread_home,
+              spread_away,
+              total_points,
+              over_odds,
+              under_odds,
+              fetched_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "game_id,sportsbook" }
+          );
+        if (oUp.error) {
+          console.error(`[${lg}] odds upsert error`, oUp.error);
+        } else {
+          wrote++;
+        }
+      }
+      wroteAny++;
+    }
+
+    console.log(`Ingested ${rows.length} ${lg} rows (aggregated multi-book). Wrote odds=${wrote} (hadAny=${wroteAny})`);
+  }
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

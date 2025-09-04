@@ -1,159 +1,55 @@
 "use client";
 
-import * as React from "react";
+import React, { useEffect, useState } from "react";
+import GameCard from "./GameCard";
 
 type Game = {
   game_id: string;
+  game_time: string | null;
   league: string;
-  start: string;
-  home: string;
-  away: string;
-  ml_home: number | null;
-  ml_away: number | null;
-  spread_line: number | null;
-  spread_home_price: number | null;
-  spread_away_price: number | null;
+  away_team: string;
+  home_team: string;
+  moneyline_away: number | null;
+  moneyline_home: number | null;
+  line_away: number | null;
+  line_home: number | null;
   total_points: number | null;
-  over_price: number | null;
-  under_price: number | null;
-  pick_moneyline: string | null;
-  pick_spread: string | null;
-  pick_total: string | null;
-  conf_moneyline: number | null;
-  conf_spread: number | null;
-  conf_total: number | null;
+  asg_pick: string | null;
+  asg_prob: number | null;
 };
 
-function fmtPrice(v: number | null) {
-  if (v === null || v === undefined) return "—";
-  return v > 0 ? `+${v}` : `${v}`;
-}
+export default function LeaguePage({ league }: { league: string }) {
+  const [loading, setLoading] = useState(true);
+  const [games, setGames] = useState<Game[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-function fmtNum(v: number | null) {
-  if (v === null || v === undefined) return "—";
-  return String(v);
-}
-
-function toUTCDateStr(d: Date) {
-  const yyyy = d.getUTCFullYear();
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-export default function LeaguePage({ league }: { league: "nfl" | "ncaaf" | "mlb" }) {
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [games, setGames] = React.useState<Game[]>([]);
-
-  React.useEffect(() => {
-    const run = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const today = toUTCDateStr(new Date());
-        const url = `/api/predict/latest?league=${league}&date=${today}&days=${league === "mlb" ? 7 : 14}`;
-        const res = await fetch(url, { cache: "no-store" });
-
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`HTTP ${res.status}: ${text}`);
-        }
-
-        const data = await res.json();
-        if (!data?.ok) {
-          throw new Error(data?.error || "Unknown error");
-        }
-
-        setGames(Array.isArray(data.games) ? data.games : []);
-      } catch (e: any) {
-        setError(e?.message || String(e));
-      } finally {
-        setLoading(false);
-      }
-    };
-    run();
+  useEffect(() => {
+    let go = true;
+    setLoading(true);
+    fetch(`/api/games?league=${encodeURIComponent(league)}&range=14`, { cache: "no-store" })
+      .then(r => r.json())
+      .then(j => { if (!go) return; if (j.error) setError(j.error); else setGames(j.games || []); })
+      .catch(e => { if (!go) return; setError(String(e)); })
+      .finally(() => { if (!go) return; setLoading(false); });
+    return () => { go = false; };
   }, [league]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-semibold mb-4 uppercase">{league} Games & Picks</h1>
+    <main className="mx-auto max-w-6xl px-4 pb-16">
+      <h1 className="mt-10 text-2xl md:text-3xl font-semibold uppercase">{league} Games</h1>
+      <p className="text-sm text-zinc-400 mt-1">Moneyline, spread, totals, and ASG predictions.</p>
 
-      {loading && <div>Loading…</div>}
-      {error && (
-        <div className="rounded-md bg-red-50 border border-red-200 text-red-700 p-3 text-sm">
-          {error}
+      {loading ? (
+        <div className="mt-8 text-zinc-400">Loading…</div>
+      ) : error ? (
+        <div className="mt-8 text-red-400">Error: {error}</div>
+      ) : games.length === 0 ? (
+        <div className="mt-8 text-zinc-400">No games found for the selected window.</div>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {games.map(g => <GameCard key={g.game_id} g={g} />)}
         </div>
       )}
-      {!loading && !error && games.length === 0 && <div>No games found.</div>}
-
-      {!loading && !error && games.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-neutral-800">
-          <table className="min-w-full text-sm">
-            <thead className="bg-neutral-900 text-neutral-200">
-              <tr>
-                <th className="text-left px-3 py-2">Start (UTC)</th>
-                <th className="text-left px-3 py-2">Matchup</th>
-                <th className="text-left px-3 py-2">Moneyline</th>
-                <th className="text-left px-3 py-2">Spread</th>
-                <th className="text-left px-3 py-2">Total</th>
-                <th className="text-left px-3 py-2">Model Picks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {games.map((g) => (
-                <tr key={g.game_id} className="border-t border-neutral-800">
-                  <td className="px-3 py-2 whitespace-nowrap">{new Date(g.start).toISOString().replace("T", " ").slice(0, 16)}</td>
-                  <td className="px-3 py-2">
-                    <div className="font-medium">{g.away} @ {g.home}</div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div>Home: {fmtPrice(g.ml_home)}</div>
-                    <div>Away: {fmtPrice(g.ml_away)}</div>
-                  </td>
-                  <td className="px-3 py-2">
-                    {g.spread_line !== null ? (
-                      <div>
-                        Line: {g.spread_line} &nbsp;
-                        <span className="text-xs text-neutral-400">
-                          (H {fmtPrice(g.spread_home_price)} / A {fmtPrice(g.spread_away_price)})
-                        </span>
-                      </div>
-                    ) : "—"}
-                  </td>
-                  <td className="px-3 py-2">
-                    {g.total_points !== null ? (
-                      <>
-                        {fmtNum(g.total_points)} • O {fmtPrice(g.over_price)} / U {fmtPrice(g.under_price)}
-                      </>
-                    ) : "—"}
-                  </td>
-                  <td className="px-3 py-2">
-                    <div>
-                      <div>
-                        <span className="font-medium">ML:</span>{" "}
-                        {g.pick_moneyline ?? "—"}{" "}
-                        {g.conf_moneyline ? `(${g.conf_moneyline}%)` : ""}
-                      </div>
-                      <div>
-                        <span className="font-medium">Spread:</span>{" "}
-                        {g.pick_spread ?? "—"}{" "}
-                        {g.conf_spread ? `(${g.conf_spread}%)` : ""}
-                      </div>
-                      <div>
-                        <span className="font-medium">Total:</span>{" "}
-                        {g.pick_total ?? "—"}{" "}
-                        {g.conf_total ? `(${g.conf_total}%)` : ""}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+    </main>
   );
 }

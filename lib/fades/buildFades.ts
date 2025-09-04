@@ -1,123 +1,107 @@
-import type { PostgrestSingleResponse } from "@supabase/supabase-js";
-import { supabaseServer } from "../db/supabaseServer";
+import { getOddsRange, NormalizedGame } from "@/lib/odds";
+import { createPredictor, inferPreds } from "@/lib/model/infer";
 
-export type FadeRow = {
+function impliedFromMoneyline(ml?: number | null): number | null {
+  if (ml == null || Number.isNaN(ml)) return null;
+  if (ml > 0) return 100 / (ml + 100);
+  return (-ml) / ((-ml) + 100);
+}
+
+type FadeItem = {
   game_id: string;
   league: string;
-  start_time: string;
-  home_team_id: string;
-  away_team_id: string;
-  public_home: number; // 0..1
-  public_away: number; // 0..1
-  model_home_prob: number; // 0..1
-  model_away_prob: number; // 0..1
-  fade_side: "HOME" | "AWAY";
-  edge: number; // model minus public on the chosen fade side
+  home_team: string;
+  away_team: string;
+  game_time: string | null;
+  asg_prob?: number | null;
+  asg_pick?: string | null;
+  public_side: "home" | "away";
+  public_pct: number; // 0..1
 };
 
-/** Try to read a value using any of the provided keys, else undefined */
-function pick<T extends Record<string, any>>(row: T, keys: string[]) {
-  for (const k of keys) if (k in row && row[k] != null) return row[k];
-  return undefined;
-}
+function publicFromLines(g: NormalizedGame): { side: "home" | "away"; pct: number } | null {
+  const ph = impliedFromMoneyline(g.moneyline_home);
+  const pa = impliedFromMoneyline(g.moneyline_away);
+  if (ph == null && pa == null) return null;
 
-function asPct(v: any): number | undefined {
-  if (v == null) return;
-  const n = Number(v);
-  if (Number.isNaN(n)) return;
-  // Accept 0..1 or 0..100
-  return n > 1 ? n / 100 : n;
-}
+  let side: "home" | "away" = "home";
+  let pct = 0.5;
 
-export async function getFades(league: string, days = 7): Promise<FadeRow[]> {
-  const sb = supabaseServer();
-
-  // ---- 1) Odds with public % (flexible column discovery)
-  const since = new Date(Date.now() - days * 86400_000).toISOString();
-  const oddsSel = "*";
-  const { data: odds, error: oddsErr } = await sb
-    .from("odds")
-    .select(oddsSel)
-    .eq("league", league)
-    .gte("start_time", since);
-
-  if (oddsErr) throw oddsErr;
-  if (!odds || odds.length === 0) return [];
-
-  // ---- 2) Latest model predictions (use your existing endpoint storage)
-  // Prefer reading from DB table `model_predictions` if present; fallback to /api/predict/latest
-  let preds: any[] = [];
-  const mp = await sb.from("model_predictions").select("*").eq("league", league).order("as_of", { ascending: false }).limit(2000);
-  if (!mp.error && mp.data?.length) {
-    preds = mp.data;
-  } else {
-    // Fallback to internal API (works on Vercel + local dev)
-    try {
-      const base =
-        process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-      const url = `${base}/api/predict/latest?league=${encodeURIComponent(league)}&days=${days}`;
-      const r = await fetch(url);
-      if (r.ok) preds = await r.json();
-    } catch {}
+  if (ph != null && pa != null) {
+    side = ph >= pa ? "home" : "away";
+    pct = Math.max(ph, pa);
+  } else if (ph != null) {
+    side = ph >= 0.5 ? "home" : "away";
+    pct = Math.max(ph, 1 - ph);
+  } else if (pa != null) {
+    side = pa >= 0.5 ? "away" : "home";
+    pct = Math.max(pa, 1 - pa);
   }
 
-  // Index predictions by game_id
-  const byGame: Record<string, any> = {};
-  for (const p of preds) {
-    const gid = pick(p, ["game_id", "id", "event_id"]);
-    if (!gid) continue;
-    if (!byGame[gid]) byGame[gid] = p;
-  }
+  // Clamp into [0.5, 0.99] so it looks like a public lean
+  pct = Math.min(Math.max(pct, 0.5), 0.99);
+  return { side, pct };
+}
 
-  const rows: FadeRow[] = [];
-  for (const o of odds) {
-    const game_id = pick(o, ["game_id", "id", "event_id"]);
-    const start_time = pick(o, ["start_time", "commence_time", "game_time"]) || new Date().toISOString();
-    const home_team_id = pick(o, ["home_team_id", "home_id", "home_abbr", "home"]);
-    const away_team_id = pick(o, ["away_team_id", "away_id", "away_abbr", "away"]);
-    const ph = asPct(pick(o, ["public_home", "public_bets_home", "public_pct_home", "handle_home"]));
-    const pa = asPct(pick(o, ["public_away", "public_bets_away", "public_pct_away", "handle_away"]));
+export async function buildFades(params: {
+  league: string;          // "all" or a league
+  days: number;            // horizon days
+  publicThreshold: number; // e.g., 60
+  minConfidence: number;   // e.g., 55
+}) {
+  const leagues = params.league === "all"
+    ? ["nfl", "mlb", "ncaaf"]
+    : [params.league.toLowerCase()];
 
-    if (!game_id || !home_team_id || !away_team_id || ph == null || pa == null) continue;
+  const out: FadeItem[] = [];
 
-    // Predictions
-    const p = byGame[game_id] || {};
-    const mh = Number(pick(p, ["home_win_prob", "prob_home", "home_prob", "home_ml_prob"]));
-    const ma = Number(pick(p, ["away_win_prob", "prob_away", "away_prob", "away_ml_prob"]));
-    if (!Number.isFinite(mh) || !Number.isFinite(ma)) continue;
+  for (const lg of leagues) {
+    const odds = await getOddsRange({ league: lg, days: params.days });
+    if (!odds.length) continue;
 
-    // Fade condition: public >= 0.65 on a side, model likes the other side by >= 0.55
-    let fade_side: "HOME" | "AWAY" | null = null;
-    let edge = 0;
+    const predictor = await createPredictor(lg);
+    const items = await inferPreds(lg, predictor, odds);
 
-    if (ph >= 0.65 && ma >= 0.55) {
-      fade_side = "AWAY";
-      edge = ma - ph; // model for AWAY minus public on HOME
-    } else if (pa >= 0.65 && mh >= 0.55) {
-      fade_side = "HOME";
-      edge = mh - pa; // model for HOME minus public on AWAY
-    }
+    for (const it of items) {
+      const pub = publicFromLines(it);
+      if (!pub) continue;
 
-    if (fade_side) {
-      rows.push({
-        game_id: String(game_id),
-        league,
-        start_time: new Date(start_time).toISOString(),
-        home_team_id: String(home_team_id),
-        away_team_id: String(away_team_id),
-        public_home: ph,
-        public_away: pa,
-        model_home_prob: mh,
-        model_away_prob: ma,
-        fade_side,
-        edge,
-      });
+      const modelSide = it.asg_pick === it.home_team ? "home"
+        : it.asg_pick === it.away_team ? "away"
+        : null;
+      if (!modelSide) continue;
+
+      // Thresholds
+      const pubPct = pub.pct * 100;
+      const confPct = it.asg_prob != null ? Math.abs(it.asg_prob - 0.5) * 200 : 0;
+
+      if (pubPct < params.publicThreshold) continue;
+      if (confPct < params.minConfidence) continue;
+
+      // Contrarian: model disagrees with the public-lean side
+      if (modelSide !== pub.side) {
+        out.push({
+          game_id: it.game_id,
+          league: lg,
+          home_team: it.home_team,
+          away_team: it.away_team,
+          game_time: it.game_time ?? null,
+          asg_prob: it.asg_prob ?? null,
+          asg_pick: it.asg_pick ?? null,
+          public_side: pub.side,
+          public_pct: pub.pct,
+        });
+      }
     }
   }
 
-  // Sort by biggest contrarian edge first, then soonest
-  return rows
-    .sort((a, b) => (Math.abs(b.edge) - Math.abs(a.edge)) || (Date.parse(a.start_time) - Date.parse(b.start_time)));
+  // Sort by public % then confidence desc (most “faded” first)
+  out.sort((a, b) => {
+    if (b.public_pct !== a.public_pct) return b.public_pct - a.public_pct;
+    const ca = a.asg_prob != null ? Math.abs(a.asg_prob - 0.5) : 0;
+    const cb = b.asg_prob != null ? Math.abs(b.asg_prob - 0.5) : 0;
+    return cb - ca;
+  });
+
+  return out;
 }

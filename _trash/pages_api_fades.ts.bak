@@ -1,0 +1,17 @@
+import type { NextApiRequest, NextApiResponse } from "next";
+import { buildFades } from "@/lib/fades/buildFades";
+import { getSupabaseUrl, getAnonKey, getServiceRoleKey } from "@/lib/env";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const league = String(req.query.league || "all").toLowerCase();
+  const sort = String(req.query.sort || "public");
+  try {
+    const url = getSupabaseUrl();
+    const key = getServiceRoleKey() || getAnonKey();
+    const ctx = url && key ? { url, key } : undefined;
+    const items = await buildFades({ league, sort, ctx });
+    res.status(200).json({ league, items });
+  } catch (e: any) {
+    res.status(200).json({ league, items: [], error: String(e?.message || e) });
+  }
+}
