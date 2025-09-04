@@ -18,3 +18,15 @@ jobs:
 
       - name: Call MLB predictions
         run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=mlb&days=14&store=1"
+
+      - name: Call NBA predictions
+        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=nba&days=14&store=1"
+
+      - name: Call NHL predictions
+        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=nhl&days=14&store=1"
+
+      - name: Call NCAAB predictions
+        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=ncaab&days=14&store=1"
+
+      - name: Call WNBA predictions
+        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=wnba&days=14&store=1"
