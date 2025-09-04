@@ -2,14 +2,27 @@
 import time, requests
 from datetime import datetime, timedelta
 from dateutil import tz
+from requests.exceptions import RequestException, ConnectionError, Timeout
+from tenacity import retry, wait_exponential, stop_after_attempt
 from supabase_client import get_client
 
-SPORT="NHL"
+SPORT = "NHL"
 sb = get_client()
+
+# ---------- HTTP session w/ UA ----------
+SESSION = requests.Session()
+SESSION.headers.update({"User-Agent": "Mozilla/5.0 (compatible; AiSportsGuru/1.0; +https://example.com)"})
+
+@retry(wait=wait_exponential(multiplier=1, min=1, max=10), stop=stop_after_attempt(6))
+def nhl_json(url: str):
+    r = SESSION.get(url, timeout=30)
+    r.raise_for_status()
+    return r.json()
 
 def _to_int(x):
     try: return int(float(str(x)))
     except: return None
+
 def _to_float(x):
     try: return float(x)
     except: return None
@@ -34,7 +47,8 @@ def upsert_game(game_pk, date_iso, home_name, away_name, home_score, away_score,
     return res.data[0]["id"]
 
 def upsert_team(name, abbr, ext_id):
-    r = sb.table("teams").upsert({"sport": SPORT,"name": name,"abbr": abbr,"team_id_external": str(ext_id)}, on_conflict="sport,name").execute()
+    r = sb.table("teams").upsert({"sport": SPORT,"name": name,"abbr": abbr,"team_id_external": str(ext_id)},
+                                 on_conflict="sport,name").execute()
     return r.data[0]["id"]
 
 def upsert_team_stats(game_id, team_id, ts, opp_score=None):
@@ -97,18 +111,32 @@ def get_or_create_player(pid_ext, full, first, last, team_id):
 def run_daily():
     tz_ny = tz.gettz("America/New_York")
     today = datetime.now(tz_ny).date()
-    for delta in [0, -1]:  # today and yesterday
+
+    # iterate yesterday then today (yesterday is more likely to be complete)
+    for delta in [-1, 0]:
         day = today + timedelta(days=delta)
-        resp = requests.get(f"https://statsapi.web.nhl.com/api/v1/schedule?date={day.isoformat()}", timeout=30).json()
-        for d in resp.get("dates", []):
+        try:
+            sched = nhl_json(f"https://statsapi.web.nhl.com/api/v1/schedule?startDate={day.isoformat()}&endDate={day.isoformat()}")
+        except Exception as e:
+            print(f"[nhl] warning: schedule fetch failed for {day}: {e}")
+            continue
+
+        for d in sched.get("dates", []):
             for game in d.get("games", []):
                 game_pk = game["gamePk"]
-                if game_exists(game_pk): continue
+                if game_exists(game_pk): 
+                    continue
+
                 home_name = game["teams"]["home"]["team"]["name"]
                 away_name = game["teams"]["away"]["team"]["name"]
-                season_int = int(str(game["season"])[:4])
+                season_int = int(str(game.get("season") or f"{day.year}{day.year+1}")[:4])
 
-                box = requests.get(f"https://statsapi.web.nhl.com/api/v1/game/{game_pk}/boxscore", timeout=30).json()
+                try:
+                    box = nhl_json(f"https://statsapi.web.nhl.com/api/v1/game/{game_pk}/boxscore")
+                except Exception as e:
+                    print(f"[nhl] warning: boxscore fetch failed for game {game_pk}: {e}")
+                    continue
+
                 home_abbr = box["teams"]["home"]["team"].get("triCode") or home_name[:3].upper()
                 away_abbr = box["teams"]["away"]["team"].get("triCode") or away_name[:3].upper()
                 home_tid = upsert_team(home_name, home_abbr, box["teams"]["home"]["team"]["id"])
@@ -119,13 +147,11 @@ def run_daily():
                 away_score = game["teams"]["away"].get("score")
                 game_id = upsert_game(game_pk, day.isoformat(), home_name, away_name, home_score, away_score, status, season_int)
 
-                # team stats
                 hts = box["teams"]["home"]["teamStats"]["teamSkaterStats"]
                 ats = box["teams"]["away"]["teamStats"]["teamSkaterStats"]
                 upsert_team_stats(game_id, home_tid, hts, opp_score=away_score)
                 upsert_team_stats(game_id, away_tid, ats, opp_score=home_score)
 
-                # players
                 for side, tid in [("home", home_tid), ("away", away_tid)]:
                     players = box["teams"][side]["players"]
                     for key in players:
@@ -135,16 +161,23 @@ def run_daily():
                         first = full.split(" ")[0] if full else ""
                         last = " ".join(full.split(" ")[1:]) if full else ""
                         pid_ext = per.get("id")
-                        if pid_ext is None: continue
+                        if pid_ext is None: 
+                            continue
                         pdb = get_or_create_player(pid_ext, full, first, last, tid)
                         if p.get("position",{}).get("code") == "G":
-                            upsert_player(game_id, tid, pdb, goalie_stats=p.get("stats",{}).get("goalieStats",{}))
+                            gstats = p.get("stats",{}).get("goalieStats",{})
+                            if gstats: 
+                                upsert_player(game_id, tid, pdb, goalie_stats=gstats)
                         else:
                             sk = p.get("stats",{}).get("skaterStats")
-                            if sk: upsert_player(game_id, tid, pdb, skater_stats=sk)
-
+                            if sk: 
+                                upsert_player(game_id, tid, pdb, skater_stats=sk)
                 time.sleep(0.2)
 
 if __name__ == "__main__":
-    run_daily()
+    try:
+        run_daily()
+    except Exception as e:
+        # Never fail the cron due to transient NHL API/DNS issues
+        print(f"[nhl] warning: daily run aborted due to exception: {e}")
     print("NHL daily update complete.")
