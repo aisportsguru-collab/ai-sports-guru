@@ -1,32 +1,20 @@
-name: Predict Cron
+name: Daily Predictions Refresh
 
 on:
   schedule:
-    - cron: "*/20 * * * *"   # NFL frequent (every 20 min, UTC)
-    - cron: "0 * * * *"      # NCAAF hourly
-    - cron: "15 * * * *"     # MLB hourly
-  workflow_dispatch: {}       # allow manual runs
+    # Every day at 5:00 UTC (10 PM PT / 1 AM ET)
+    - cron: "0 5 * * *"
+  workflow_dispatch:
 
 jobs:
-  run:
+  refresh:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    timeout-minutes: 10
     steps:
-      - name: NFL (14d)
-        run: |
-          curl -fsS --max-time 25 "https://aisportsguru.com/api/predict/run?league=nfl&days=14&store=1" || true
+      - name: Call NFL predictions
+        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=nfl&days=14&store=1"
 
-      - name: NCAAF (14d)
-        run: |
-          curl -fsS --max-time 25 "https://aisportsguru.com/api/predict/run?league=ncaaf&days=14&store=1" || true
+      - name: Call NCAAF predictions
+        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=ncaaf&days=14&store=1"
 
-      - name: MLB (7d)
-        run: |
-          curl -fsS --max-time 25 "https://aisportsguru.com/api/predict/run?league=mlb&days=7&store=1" || true
-
-    # Avoid overlapping runs if a previous one is still running
-    concurrency:
-      group: predict-cron
-      cancel-in-progress: false
+      - name: Call MLB predictions
+        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=mlb&days=14&store=1"
