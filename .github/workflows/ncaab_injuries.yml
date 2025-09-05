@@ -1,28 +1,34 @@
 name: NCAAB Daily Injuries
 
 on:
+  workflow_dispatch: {}
   schedule:
-    - cron: '0 17 * * *'   # 17:00 UTC daily (~12pm ET)
-  workflow_dispatch:
+    # Daily at 14:10 UTC (update as needed)
+    - cron: "10 14 * * *"
 
 jobs:
   ncaab-injuries:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install deps
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install -r scripts/ncaab/requirements.txt
+
       - name: Scrape injuries
         env:
+          PYTHONPATH: ${{ github.workspace }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           . .venv/bin/activate
           python scripts/ncaab/ncaab_injuries_daily.py

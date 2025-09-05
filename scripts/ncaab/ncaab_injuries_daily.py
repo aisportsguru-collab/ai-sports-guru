@@ -1,69 +1,61 @@
 #!/usr/bin/env python3
-import re, os, json, datetime, requests
-from bs4 import BeautifulSoup
-from scripts.ncaab.supabase_client import get_client
+"""
+NCAAB injuries daily job.
+- Robust import path handling so it runs from GitHub Actions or locally.
+- Currently a safe no-op during offseason; when sources are enabled, insert rows into ncaab_injuries.
+"""
+
+import os, sys, time
+from datetime import datetime, timezone
+
+# Ensure repo root on sys.path (so "scripts.ncaab.supabase_client" works)
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+try:
+    from scripts.ncaab.supabase_client import get_client
+except ModuleNotFoundError:
+    # Fallback if executed directly from scripts/ncaab
+    sys.path.append(os.path.dirname(__file__))
+    from supabase_client import get_client  # type: ignore
 
 sb = get_client()
+SPORT = "NCAAB"
 
-URL = os.getenv("NCAAB_INJURY_URL", "https://www.covers.com/sport/basketball/ncaab/injuries")
+def upsert_injury(payload: dict):
+    """
+    Expected columns in public.ncaab_injuries (adjust if your SQL differs):
+      sport text, report_date date, team_name text, player_name text,
+      status text, description text, source text, raw jsonb
+    """
+    sb.table("ncaab_injuries").upsert(
+        payload,
+        on_conflict="sport,report_date,team_name,player_name"
+    ).execute()
 
-def scrape():
-    try:
-        r = requests.get(URL, timeout=30, headers={"User-Agent":"Mozilla/5.0 AiSportsGuru"})
-        r.raise_for_status()
-    except Exception as e:
-        print(f"[ncaab] injuries: fetch failed: {e}")
-        return []
+def run():
+    # Offseason-friendly: don’t fail the job if there are no injuries available yet.
+    # Wire real sources here (Rotowire/Covers/etc.) once the season starts.
+    today = datetime.now(timezone.utc).date().isoformat()
+    print(f"[ncaab-injuries] {today}: no official source enabled yet; skipping (no-op).")
+    # Example shape for future insertion:
+    # upsert_injury({
+    #     "sport": SPORT,
+    #     "report_date": today,
+    #     "team_name": "Duke Blue Devils",
+    #     "player_name": "John Smith",
+    #     "status": "Out",
+    #     "description": "Lower-body",
+    #     "source": "rotowire",
+    #     "raw": {"example": True}
+    # })
+    return 0
 
-    soup = BeautifulSoup(r.text, "html.parser")
-    rows = []
-    # Covers changes occasionally; we look for table-ish structures
-    # heuristic: rows with team, player, status, description/date
-    for tr in soup.select("table tr"):
-        tds = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
-        if len(tds) < 4:
-            continue
-        team, player, status, note = tds[0:4]
-        # date extraction fallback (often included in note)
-        m = re.search(r'(\d{4}-\d{2}-\d{2}|\w{3}\s+\d{1,2},\s*\d{4})', note)
-        if m:
-            try:
-                report_date = datetime.datetime.strptime(m.group(1), "%Y-%m-%d").date()
-            except Exception:
-                try:
-                    report_date = datetime.datetime.strptime(m.group(1), "%b %d, %Y").date()
-                except Exception:
-                    report_date = datetime.date.today()
-        else:
-            report_date = datetime.date.today()
-
-        rows.append({
-            "sport":"NCAAB",
-            "team_name": team,
-            "player_name": player,
-            "status": status,
-            "description": note,
-            "report_date": str(report_date),
-            "raw": {"tds": tds}
-        })
-    return rows
-
-def upsert(rows):
-    if not rows:
-        print("[ncaab] injuries: 0 rows parsed (structure may have changed)")
-        return
-    # emulate upsert by deleting today's duplicates then inserting (since table has no unique)
-    today = max(r["report_date"] for r in rows)
-    sb.rpc("exec", {"query": f"delete from public.ncaab_injuries where sport='NCAAB' and report_date='{today}'"}).execute() if hasattr(sb, "rpc") else None
-    # chunk insert
-    chunk=500
-    for i in range(0,len(rows),chunk):
-        sb.table("ncaab_injuries").insert(rows[i:i+chunk]).execute()
-    print(f"[ncaab] injuries: inserted {len(rows)} rows")
-
-if __name__=="__main__":
-    try:
-        upsert(scrape())
-    except Exception as e:
-        print(f"[ncaab] injuries: failed {e}")
-    print("NCAAB injuries daily complete.")
+if __name__ == "__main__":
+    # Quick connection warmup to surface auth errors clearly
+    sb.table("ncaab_injuries").select("sport", count="exact").eq("sport", SPORT).execute()
+    rc = run()
+    if rc != 0:
+        raise SystemExit(rc)
+    print("[ncaab-injuries] complete.")
