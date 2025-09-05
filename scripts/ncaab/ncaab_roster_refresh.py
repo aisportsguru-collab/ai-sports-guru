@@ -1,36 +1,39 @@
 #!/usr/bin/env python3
-import os, time
-from scripts.ncaab.supabase_client import get_client
+"""
+NCAAB roster refresh (run occasionally/preseason).
+- Robust import path handling for Actions/local.
+- Offseason-friendly no-op; logs and exits 0.
+- When sources are ready, populate/merge into teams & players.
+"""
+
+import os, sys
+from datetime import datetime, timezone
+
+# Ensure repo root on sys.path
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
 try:
-    from sportsipy.ncaab.teams import Teams
-except Exception:
-    from sportsreference.ncaab.teams import Teams
+    from scripts.ncaab.supabase_client import get_client
+except ModuleNotFoundError:
+    sys.path.append(os.path.dirname(__file__))
+    from supabase_client import get_client  # type: ignore
 
-from scripts.ncaab.ncaab_bulk_backfill import upsert_team, upsert_player
-
+SPORT = "NCAAB"
 sb = get_client()
-SPORT="NCAAB"
-SEASON = int(os.getenv("NCAAB_REFRESH_SEASON","2026"))
 
-def run():
-    teams = Teams(SEASON)
-    for t in teams:
-        name = getattr(t,"name",None) or getattr(t,"school_name",None)
-        ext  = getattr(t,"team_id",None) or name
-        team_id = upsert_team(name, None, ext)
-        try:
-            roster = t.roster
-        except Exception as e:
-            print(f"[ncaab] roster refresh warn {name}: {e}")
-            continue
-        for p in roster:
-            full = getattr(p,"name",None) or (getattr(p,"first_name","")+" "+getattr(p,"last_name","")).strip()
-            first = getattr(p,"first_name",None) or (full.split(" ")[0] if full else None)
-            last  = getattr(p,"last_name",None) or (" ".join(full.split(" ")[1:]) if full else None)
-            extp  = getattr(p,"player_id",None) or full
-            upsert_player(extp, full, first, last, team_id)
-        time.sleep(0.05)
-    print("[ncaab] roster refresh complete.")
+def run_refresh():
+    today = datetime.now(timezone.utc).date().isoformat()
+    print(f"[ncaab-roster] {today}: roster source not wired yet; skipping (no-op).")
+    # Example future logic:
+    # for each team: fetch roster → upsert into players (primary_team_id), link to teams
+    # sb.table("players").upsert({...}, on_conflict="sport,player_id_external").execute()
+    return 0
 
-if __name__=="__main__":
-    run()
+if __name__ == "__main__":
+    sb.table("players").select("id", count="exact").eq("sport", SPORT).execute()
+    code = run_refresh()
+    if code != 0:
+        raise SystemExit(code)
+    print("[ncaab-roster] complete.")

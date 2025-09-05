@@ -1,29 +1,34 @@
 name: NCAAB Daily Stats
 
 on:
+  workflow_dispatch: {}
   schedule:
-    - cron: '15 9 * * *'   # 09:15 UTC daily (~4:15am ET)
-  workflow_dispatch:
+    # Run daily at 14:00 UTC
+    - cron: "0 14 * * *"
 
 jobs:
   ncaab-daily:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install deps
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install -r scripts/ncaab/requirements.txt
+
       - name: Run daily updater
         env:
+          PYTHONPATH: ${{ github.workspace }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NCAAB_CURRENT_SEASON: 2025
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           . .venv/bin/activate
           python scripts/ncaab/ncaab_daily_update.py
