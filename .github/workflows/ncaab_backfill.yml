@@ -1,7 +1,7 @@
 name: NCAAB Backfill (last two seasons)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   ncaab-backfill:
@@ -19,6 +19,23 @@ jobs:
           . .venv/bin/activate
           pip install -r scripts/ncaab/requirements.txt
 
+      - name: DB migrate (create NCAAB tables)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -e
+          if [ -z "${SUPABASE_DB_URL}" ]; then
+            echo "SUPABASE_DB_URL not set; skipping SQL migrate step" >&2
+          else
+            echo "Migrating NCAAB schema…"
+            psql "${SUPABASE_DB_URL}" -f supabase/sql/ncaab_migration.sql
+            if [ -f supabase/sql/ncaab_injuries.sql ]; then
+              psql "${SUPABASE_DB_URL}" -f supabase/sql/ncaab_injuries.sql
+            fi
+            echo "Schema objects:"
+            psql "${SUPABASE_DB_URL}" -c "\dt public.ncaab_*"
+          fi
+
       - name: Run backfill
         env:
           PYTHONPATH: ${{ github.workspace }}
@@ -26,7 +43,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-          NCAAB_SEASONS: 2024,2025
+          # sportsipy expects season by END YEAR (e.g., 2023, 2024). Use last two completed.
+          NCAAB_SEASONS: 2023,2024
         run: |
           . .venv/bin/activate
           python scripts/ncaab/ncaab_bulk_backfill.py
