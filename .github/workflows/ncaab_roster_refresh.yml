@@ -1,0 +1,32 @@
+name: NCAAB Roster Refresh
+
+on:
+  workflow_dispatch:
+    inputs:
+      season:
+        description: 'Season ending year (e.g., 2026)'
+        required: true
+        default: '2026'
+
+jobs:
+  ncaab-roster-refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r scripts/ncaab/requirements.txt
+      - name: Refresh rosters
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NCAAB_REFRESH_SEASON: ${{ github.event.inputs.season }}
+        run: |
+          . .venv/bin/activate
+          python scripts/ncaab/ncaab_roster_refresh.py

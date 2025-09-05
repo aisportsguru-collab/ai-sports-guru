@@ -1,0 +1,32 @@
+name: NCAAB Backfill (last two seasons)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ncaab-backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r scripts/ncaab/requirements.txt
+      - name: Run backfill
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          NCAAB_SEASONS: 2024,2025
+        run: |
+          . .venv/bin/activate
+          python scripts/ncaab/ncaab_bulk_backfill.py
+          if [ -n "${SUPABASE_DB_URL}" ]; then
+            psql "${SUPABASE_DB_URL}" -c "select season,count(*) from ncaab_team_season_stats where sport='NCAAB' group by season order by season;"
+            psql "${SUPABASE_DB_URL}" -c "select season,count(*) from ncaab_player_season_stats where sport='NCAAB' group by season order by season;"
+          fi
