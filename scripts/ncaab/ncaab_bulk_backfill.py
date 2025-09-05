@@ -1,26 +1,32 @@
 #!/usr/bin/env python3
-import os, time, json
-from tenacity import retry, wait_exponential, stop_after_attempt
-from scripts.ncaab.supabase_client import get_client
+import os, sys, time, json
 
-# import shim: sportsipy preferred; fall back to sportsreference if needed
+# Ensure local imports work whether run via module or direct path
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+try:
+    from scripts.ncaab.supabase_client import get_client
+except ModuleNotFoundError:
+    # fallback to relative when executed from scripts/ncaab/
+    sys.path.append(os.path.dirname(__file__))
+    from supabase_client import get_client  # type: ignore
+
+from tenacity import retry, wait_exponential, stop_after_attempt
+
 try:
     from sportsipy.ncaab.teams import Teams
-    HAVE_SPORTSIPY = True
 except Exception:
-    HAVE_SPORTSIPY = False
-    from sportsreference.ncaab.teams import Teams  # may not exist in newer envs
+    from sportsreference.ncaab.teams import Teams
 
 sb = get_client()
 SPORT = "NCAAB"
-
 SEASONS = [int(s.strip()) for s in os.getenv("NCAAB_SEASONS","2024,2025").split(",") if s.strip()]
 
 def _num(x):
-    try: 
-        return None if x in ("", None) else float(x)
-    except: 
-        return None
+    try: return None if x in ("", None) else float(x)
+    except: return None
 
 def upsert_team(name, abbr, ext_id):
     res = sb.table("teams").upsert(
@@ -37,13 +43,11 @@ def upsert_player(ext_id, full, first, last, team_id):
     return res.data[0]["id"]
 
 def as_dict_safe(obj):
-    # sportsipy objects can be cast to dict via .dataframe or __dict__ fallbacks
     d = {}
     for k in dir(obj):
         if k.startswith("_"): continue
         try:
             v = getattr(obj, k)
-            # skip callables and modules
             if callable(v): continue
             if k in ("dataframe","schedule","roster"): continue
             d[k] = v
@@ -52,12 +56,10 @@ def as_dict_safe(obj):
     return d
 
 def team_payload(season, team):
-    # safe pulls (names may differ slightly across lib versions)
     name = getattr(team, "name", None) or getattr(team, "school_name", None)
     abbr = getattr(team, "abbreviation", None) or getattr(team, "abbrev", None)
     ext  = getattr(team, "team_id", None) or getattr(team, "school_id", None) or name
     raw  = as_dict_safe(team)
-
     return {
         "sport": SPORT,
         "season": season,
@@ -90,7 +92,6 @@ def player_payload(season, team_name, team_id, p):
     last  = getattr(p, "last_name", None) or (" ".join(full.split(" ")[1:]) if full else None)
     ext   = getattr(p, "player_id", None) or full
     raw   = as_dict_safe(p)
-
     return {
         "sport": SPORT,
         "season": season,
@@ -115,39 +116,36 @@ def player_payload(season, team_name, team_id, p):
 def run_season(season:int):
     print(f"[ncaab] season {season}: fetching teams")
     teams = Teams(season)
-    df = teams.dataframes  # triggers load
-    added_teams = 0
-    added_players = 0
+    _ = teams.dataframes
+    added_t = added_p = 0
 
     for t in teams:
         tpay = team_payload(season, t)
         team_id = upsert_team(tpay["team_name"], None, tpay["team_id_external"])
         tpay["team_id"] = team_id
+        sb.table("ncaab_team_season_stats").upsert(tpay, on_conflict="sport,season,team_id").execute()
+        added_t += 1
 
-        sb.table("ncaab_team_season_stats").upsert(
-            tpay, on_conflict="sport,season,team_id"
-        ).execute()
-        added_teams += 1
-
-        # roster + players
         try:
             roster = t.roster
         except Exception as e:
-            print(f"[ncaab]   warn: roster load failed for {tpay['team_name']}: {e}")
+            print(f"[ncaab]   warn roster {tpay['team_name']}: {e}")
             continue
 
         for p in roster:
             ppay = player_payload(season, tpay["team_name"], team_id, p)
-            # upsert player entity
-            pid = upsert_player(ppay["player_id_external"], ppay["player_name"], ppay.get("player_name","").split(" ")[0], " ".join((ppay.get("player_name","")+" ").split(" ")[1:]).strip(), team_id)
+            pid = upsert_player(
+                ppay["player_id_external"], ppay["player_name"],
+                (ppay.get("player_name") or "").split(" ")[0] if ppay.get("player_name") else None,
+                " ".join((ppay.get("player_name") or "").split(" ")[1:]) if ppay.get("player_name") else None,
+                team_id
+            )
             ppay["player_id"] = pid
-            sb.table("ncaab_player_season_stats").upsert(
-                ppay, on_conflict="sport,season,player_id"
-            ).execute()
-            added_players += 1
+            sb.table("ncaab_player_season_stats").upsert(ppay, on_conflict="sport,season,player_id").execute()
+            added_p += 1
         time.sleep(0.05)
 
-    print(f"[ncaab] season {season} done. teams:{added_teams} players:{added_players}")
+    print(f"[ncaab] season {season} done. teams:{added_t} players:{added_p}")
 
 if __name__ == "__main__":
     before_t = sb.table("ncaab_team_season_stats").select("id", count="exact").eq("sport","NCAAB").execute().count or 0
@@ -156,8 +154,6 @@ if __name__ == "__main__":
         run_season(s)
     after_t = sb.table("ncaab_team_season_stats").select("id", count="exact").eq("sport","NCAAB").execute().count or 0
     after_p = sb.table("ncaab_player_season_stats").select("id", count="exact").eq("sport","NCAAB").execute().count or 0
-    added_t = (after_t or 0) - (before_t or 0)
-    added_p = (after_p or 0) - (before_p or 0)
-    print(f"[ncaab] backfill complete. +teams:{added_t} +players:{added_p}")
-    if added_t <= 0 and added_p <= 0:
+    print(f"[ncaab] backfill complete. +teams:{(after_t or 0)-(before_t or 0)} +players:{(after_p or 0)-(before_p or 0)}")
+    if ((after_t or 0)-(before_t or 0)) <= 0 and ((after_p or 0)-(before_p or 0)) <= 0:
         raise SystemExit("[ncaab] ERROR: 0 rows added. Check network or sportsipy import.")
