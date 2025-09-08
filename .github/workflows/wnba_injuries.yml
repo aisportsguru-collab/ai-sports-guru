@@ -1,0 +1,35 @@
+name: WNBA Daily Injuries
+
+on:
+  schedule:
+    - cron: "0 14 * * *"  # mid day refresh
+  workflow_dispatch:
+
+jobs:
+  injuries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create venv
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r scripts/wnba/requirements.txt
+
+      - name: Run injuries job
+        run: |
+          . .venv/bin/activate
+          python scripts/wnba/wnba_injuries_daily.py

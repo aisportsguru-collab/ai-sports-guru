@@ -1,0 +1,35 @@
+name: WNBA Daily Stats
+
+on:
+  schedule:
+    - cron: "10 06 * * *"  # daily after overnight, adjust if needed
+  workflow_dispatch:
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create venv
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r scripts/wnba/requirements.txt
+
+      - name: Run daily stats update
+        run: |
+          . .venv/bin/activate
+          python scripts/wnba/wnba_daily_update.py
