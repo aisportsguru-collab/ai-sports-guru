@@ -4,6 +4,52 @@ import pandas as pd
 import numpy as np
 import requests
 
+import time, random, requests
+import pandas as _pd
+from pybaseball import batting_stats, batting_stats_bref
+
+_UA = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    "Referer": "https://www.fangraphs.com/",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+def _normalize(df: "_pd.DataFrame") -> "_pd.DataFrame":
+    if "Tm" in df.columns and "Team" not in df.columns:
+        df = df.rename(columns={"Tm": "Team"})
+    if "Player" in df.columns and "Name" not in df.columns:
+        df = df.rename(columns={"Player": "Name"})
+    for c in ("#", "Rk", "Rank"):
+        if c in df.columns:
+            df = df.drop(columns=[c])
+    return df
+
+def _fg_html(season: int) -> "_pd.DataFrame":
+    url = "https://www.fangraphs.com/leaders-legacy.aspx"
+    params = {"pos":"all","stats":"bat","lg":"all","qual":"0","type":"8","season":str(season),"month":"0","season1":str(season),"ind":"0","team":""}
+    r = requests.get(url, params=params, headers=_UA, timeout=30)
+    r.raise_for_status()
+    tables = _pd.read_html(r.text)
+    if not tables:
+        raise RuntimeError("FG HTML returned no tables")
+    return _normalize(tables[0])
+
+def safe_batting_stats(season: int) -> "_pd.DataFrame":
+    last = None
+    for i in range(3):
+        try:
+            return _normalize(safe_batting_stats(season))
+        except Exception as e:
+            last = e
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            backoff = (2.5 if status in (403, 429) else 1.5) * (i + 1) + random.random()
+            time.sleep(backoff)
+    try:
+        return _normalize(_fg_html(season))
+    except Exception:
+        pass
+    return _normalize(batting_stats_bref(season, season))
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("mlb-stats")
 
@@ -85,7 +131,7 @@ for season in SEASONS:
 
     # ---------------- Batting ----------------
     try:
-        dfb = batting_stats(season, season, qual=0)  # ALL players
+        dfb = safe_batting_stats(season)  # ALL players
     except TypeError:
         dfb = batting_stats(season, season)
     dfb.columns = [c.lower() for c in dfb.columns]
