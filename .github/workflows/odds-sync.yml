@@ -1,0 +1,49 @@
+name: Odds & Games Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      league:
+        description: "League (nba|nhl|mlb|nfl|ncaaf)"
+        required: true
+        default: "nba"
+      days:
+        description: "Days ahead to fetch"
+        required: true
+        default: "7"
+  schedule:
+    - cron: "*/30 * * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install deps
+        run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Resolve inputs
+        run: |
+          echo "LEAGUE=\${{ github.event.inputs.league || 'nba' }}" >> \$GITHUB_ENV
+          echo "DAYS=\${{ github.event.inputs.days || '7' }}" >> \$GITHUB_ENV
+      - name: Fetch games (best-effort)
+        run: |
+          if [ -f scripts/ingest/games.mjs ]; then
+            node --unhandled-rejections=strict scripts/ingest/games.mjs "\$LEAGUE" "\$DAYS"
+          else
+            echo "No games ingest script; skipping."
+          fi
+      - name: Fetch odds & upsert
+        run: node --unhandled-rejections=strict scripts/fetch-odds-rest.mjs "\$LEAGUE" "\$DAYS"
+      - name: Done
+        run: echo "Sync completed for \$LEAGUE"
