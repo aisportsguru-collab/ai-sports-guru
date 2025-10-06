@@ -1,0 +1,30 @@
+name: Games Schedule Sync v2
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "12 * * * *"
+permissions: { contents: read }
+concurrency: { group: games-sync-v2, cancel-in-progress: true }
+jobs:
+  sync-all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Ensure games ingester present
+        run: |
+          if [ ! -f scripts/ingest/games.mjs ]; then echo "games.mjs missing"; exit 1; fi
+      - name: Ingest upcoming schedules for all leagues
+        run: |
+          if [ -z "${ODDS_API_KEY:-}" ]; then echo "No ODDS_API_KEY; skipping."; exit 0; fi
+          for L in nba nhl mlb nfl ncaaf; do
+            echo "::group::Ingest $L"
+            node --unhandled-rejections=strict scripts/ingest/games.mjs "$L" 7 || true
+            echo "::endgroup::"
+          done
