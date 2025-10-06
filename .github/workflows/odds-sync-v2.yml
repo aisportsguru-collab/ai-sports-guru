@@ -1,15 +1,8 @@
 name: Odds and Games Sync v2
 on:
   workflow_dispatch:
-    inputs:
-      league:
-        description: "League (nba|nhl|mlb|nfl|ncaaf)"
-        required: true
-        default: nba
-      days:
-        description: "Days ahead"
-        required: true
-        default: "7"
+  schedule:
+    - cron: "*/30 * * * *"
 permissions:
   contents: read
 concurrency:
