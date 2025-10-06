@@ -1,0 +1,32 @@
+name: Predictions Refresh
+on:
+  workflow_dispatch:
+    inputs:
+      days: { description: "Lookahead days", required: true, default: "3" }
+  schedule:
+    - cron: "*/20 * * * *"
+permissions: { contents: read }
+concurrency: { group: predictions-refresh, cancel-in-progress: true }
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PREDICT_BACKEND_URL: ${{ secrets.PREDICT_BACKEND_URL }}
+      PREDICT_CRON_TOKEN: ${{ secrets.PREDICT_CRON_TOKEN }}
+    steps:
+      - name: Kick predictions for all leagues
+        run: |
+          DAYS="${{ github.event.inputs.days || '3' }}"
+          if [ -z "${PREDICT_BACKEND_URL:-}" ] || [ -z "${PREDICT_CRON_TOKEN:-}" ]; then
+            echo "Missing predict backend or token, skipping"
+            exit 0
+          fi
+          for L in nba nhl mlb nfl ncaaf; do
+            echo "Trigger $L"
+            curl -s -X POST "${PREDICT_BACKEND_URL}?league=${L}&days=${DAYS}" \
+              -H "Authorization: Bearer ${PREDICT_CRON_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{}" | jq . || true
+          done
+          echo "Done"
