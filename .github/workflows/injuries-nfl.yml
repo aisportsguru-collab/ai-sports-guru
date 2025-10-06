@@ -1,0 +1,23 @@
+name: Daily NFL Injuries
+on: { workflow_dispatch: {}, schedule: [ { cron: "5 12 * * *" } ] }
+permissions: { contents: read }
+concurrency: { group: injuries-nfl, cancel-in-progress: true }
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      INJURIES_API_KEY: ${{ secrets.INJURIES_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: "npm" }
+      - run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Run
+        run: |
+          if [ -z "${INJURIES_API_KEY:-}" ]; then echo "No INJURIES_API_KEY, skipping"; exit 0; fi
+          if [ -f scripts/injuries-sync.mjs ]; then node --unhandled-rejections=strict scripts/injuries-sync.mjs nfl; \
+          elif [ -f scripts/injuries/nfl.mjs ]; then node --unhandled-rejections=strict scripts/injuries/nfl.mjs; \
+          else echo "No injuries script, skipping"; fi
