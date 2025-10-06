@@ -1,56 +1,15 @@
-name: Odds and Games Sync
+name: Odds & Games Sync (legacy, disabled on push)
 on:
   workflow_dispatch:
     inputs:
-      league: { description: "League nba nhl mlb nfl ncaaf", required: true, default: nba }
+      league: { description: "nba|nhl|mlb|nfl|ncaaf", required: true, default: nba }
       days:   { description: "Days ahead", required: true, default: "7" }
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/45 * * * *"
 permissions: { contents: read }
-concurrency: { group: odds-games-${{ github.ref }}, cancel-in-progress: true }
+concurrency: { group: odds-games-legacy-${{ github.ref }}, cancel-in-progress: true }
 jobs:
-  sync:
+  noop:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: "20", cache: "npm" }
-      - name: Install deps
-        run: npm ci --prefer-offline --no-audit --no-fund
-      - name: Resolve inputs
-        run: |
-          echo "LEAGUE=${{ github.event.inputs.league || 'nba' }}" >> $GITHUB_ENV
-          echo "DAYS=${{ github.event.inputs.days || '7' }}" >> $GITHUB_ENV
-      - name: Guard missing env
-        run: |
-          : "${NEXT_PUBLIC_SUPABASE_URL:?missing supabase url}"
-          : "${SUPABASE_SERVICE_ROLE_KEY:?missing supabase service key}"
-          if [ -z "${ODDS_API_KEY:-}" ]; then
-            echo "No ODDS_API_KEY, skipping odds pull"
-            echo "SKIPPED=1" >> $GITHUB_ENV
-          fi
-      - name: Fetch games if script exists
-        if: env.SKIPPED != '1'
-        run: |
-          if [ -f scripts/ingest/games.mjs ]; then
-            node --unhandled-rejections=strict scripts/ingest/games.mjs "$LEAGUE" "$DAYS" || true
-          else
-            echo "games ingester not found, continuing"
-          fi
-      - name: Fetch odds with fallback names
-        if: env.SKIPPED != '1'
-        run: |
-          if [ -f scripts/fetch-odds-rest.mjs ]; then
-            node --unhandled-rejections=strict scripts/fetch-odds-rest.mjs "$LEAGUE" "$DAYS"
-          elif [ -f scripts/fetch-odds.mjs ]; then
-            node --unhandled-rejections=strict scripts/fetch-odds.mjs "$LEAGUE" "$DAYS"
-          else
-            echo "no odds ingester present, skipping"
-          fi
-      - name: Done
-        run: echo "Finished league=$LEAGUE days=$DAYS"
+      - run: echo "Legacy workflow retained for history; use odds-sync-v2.yml instead."
