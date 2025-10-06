@@ -2,12 +2,19 @@ name: Odds and Games Sync v2
 on:
   workflow_dispatch:
     inputs:
-      league: { description: "nba, nhl, mlb, nfl, ncaaf", required: true, default: nba }
-      days:   { description: "Days ahead", required: true, default: "7" }
-  schedule:
-    - cron: "*/30 * * * *"
-permissions: { contents: read }
-concurrency: { group: odds-games-v2-${{ github.ref }}, cancel-in-progress: true }
+      league:
+        description: "League (nba|nhl|mlb|nfl|ncaaf)"
+        required: true
+        default: nba
+      days:
+        description: "Days ahead"
+        required: true
+        default: "7"
+permissions:
+  contents: read
+concurrency:
+  group: odds-games-v2-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -19,18 +26,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: "20", cache: "npm" }
+        with:
+          node-version: "20"
+          cache: "npm"
       - run: npm ci --prefer-offline --no-audit --no-fund || true
       - name: Resolve inputs
         run: |
-          echo "LEAGUE=${{ github.event.inputs.league || 'nba' }}" >> $GITHUB_ENV
-          echo "DAYS=${{ github.event.inputs.days || '7' }}" >> $GITHUB_ENV
+          echo "LEAGUE=${{ github.event.inputs.league }}" >> "$GITHUB_ENV"
+          echo "DAYS=${{ github.event.inputs.days }}" >> "$GITHUB_ENV"
       - name: Guard env (skip if no vendor key)
         run: |
           : "${NEXT_PUBLIC_SUPABASE_URL:?missing NEXT_PUBLIC_SUPABASE_URL}"
           : "${SUPABASE_SERVICE_ROLE_KEY:?missing SUPABASE_SERVICE_ROLE_KEY}"
-          if [ -z "${ODDS_API_KEY:-}" ]; then echo "No ODDS_API_KEY; echo SKIP=1 >> \$GITHUB_ENV"; echo "SKIP=1" >> $GITHUB_ENV; fi
-      - name: Ingest upcoming games
+          if [ -z "${ODDS_API_KEY:-}" ]; then
+            echo "No ODDS_API_KEY; skipping."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+      - name: Ingest upcoming games (The Odds API -> Supabase)
         if: env.SKIP != '1'
         run: |
           if [ -f scripts/ingest/games.mjs ]; then
@@ -38,7 +50,7 @@ jobs:
           else
             echo "scripts/ingest/games.mjs missing; skipping games ingest"
           fi
-      - name: Pull odds
+      - name: Pull odds for that league
         if: env.SKIP != '1'
         run: |
           if [ -f scripts/fetch-odds-rest.mjs ]; then
