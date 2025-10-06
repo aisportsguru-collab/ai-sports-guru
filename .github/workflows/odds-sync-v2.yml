@@ -15,6 +15,7 @@ permissions:
 concurrency:
   group: odds-games-v2-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -24,39 +25,74 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
     steps:
+      - name: Show inputs
+        run: |
+          echo "league=${{ github.event.inputs.league }}"
+          echo "days=${{ github.event.inputs.days }}"
+
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci --prefer-offline --no-audit --no-fund || true
-      - name: Resolve inputs
+
+      - name: Install deps (best-effort)
+        run: npm ci --prefer-offline --no-audit --no-fund || true
+
+      - name: Validate env and set guard
+        id: guard
         run: |
-          echo "LEAGUE=${{ github.event.inputs.league }}" >> "$GITHUB_ENV"
-          echo "DAYS=${{ github.event.inputs.days }}" >> "$GITHUB_ENV"
-      - name: Guard env (skip if no vendor key)
-        run: |
+          set -e
           : "${NEXT_PUBLIC_SUPABASE_URL:?missing NEXT_PUBLIC_SUPABASE_URL}"
           : "${SUPABASE_SERVICE_ROLE_KEY:?missing SUPABASE_SERVICE_ROLE_KEY}"
           if [ -z "${ODDS_API_KEY:-}" ]; then
-            echo "No ODDS_API_KEY; skipping."
-            echo "SKIP=1" >> "$GITHUB_ENV"
+            echo "Vendor key missing: ODDS_API_KEY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Ingest upcoming games (The Odds API -> Supabase)
-        if: env.SKIP != '1'
+          echo "LEAGUE=${{ github.event.inputs.league }}" >> "$GITHUB_ENV"
+          echo "DAYS=${{ github.event.inputs.days }}"     >> "$GITHUB_ENV"
+
+      - name: Ingest upcoming games (Odds API -> Supabase)
+        if: steps.guard.outputs.skip != true
+        continue-on-error: true
         run: |
           if [ -f scripts/ingest/games.mjs ]; then
+            set +e
             node --unhandled-rejections=strict scripts/ingest/games.mjs "$LEAGUE" "$DAYS"
+            rc=$?
+            echo "games_ingest_rc=$rc" >> $GITHUB_ENV
+            exit 0
           else
             echo "scripts/ingest/games.mjs missing; skipping games ingest"
           fi
-      - name: Pull odds for that league
-        if: env.SKIP != '1'
+
+      - name: Pull odds for that league (best-effort)
+        if: steps.guard.outputs.skip != true
+        continue-on-error: true
         run: |
+          set +e
           if [ -f scripts/fetch-odds-rest.mjs ]; then
-            node --unhandled-rejections=strict scripts/fetch-odds-rest.mjs "$LEAGUE" "$DAYS" || true
+            node --unhandled-rejections=strict scripts/fetch-odds-rest.mjs "$LEAGUE" "$DAYS"
           elif [ -f scripts/fetch-odds.mjs ]; then
-            node --unhandled-rejections=strict scripts/fetch-odds.mjs "$LEAGUE" "$DAYS" || true
+            node --unhandled-rejections=strict scripts/fetch-odds.mjs "$LEAGUE" "$DAYS"
           else
             echo "No odds script found; skipping"
           fi
+          echo "odds_pull_rc=$?" >> $GITHUB_ENV
+          exit 0
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Odds & Games Sync v2"
+            echo ""
+            echo "- league: $LEAGUE"
+            echo "- days:   $DAYS"
+            echo "- skip:   ${{ steps.guard.outputs.skip || false }}"
+            echo "- games_ingest_rc: ${games_ingest_rc:-n/a}"
+            echo "- odds_pull_rc:    ${odds_pull_rc:-n/a}"
+          } >> "$GITHUB_STEP_SUMMARY"
