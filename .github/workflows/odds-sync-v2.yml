@@ -1,0 +1,50 @@
+name: Odds and Games Sync v2
+on:
+  workflow_dispatch:
+    inputs:
+      league: { description: "nba, nhl, mlb, nfl, ncaaf", required: true, default: nba }
+      days:   { description: "Days ahead", required: true, default: "7" }
+  schedule:
+    - cron: "*/30 * * * *"
+permissions: { contents: read }
+concurrency: { group: odds-games-v2-${{ github.ref }}, cancel-in-progress: true }
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: "npm" }
+      - run: npm ci --prefer-offline --no-audit --no-fund || true
+      - name: Resolve inputs
+        run: |
+          echo "LEAGUE=${{ github.event.inputs.league || 'nba' }}" >> $GITHUB_ENV
+          echo "DAYS=${{ github.event.inputs.days || '7' }}" >> $GITHUB_ENV
+      - name: Guard env (skip if no vendor key)
+        run: |
+          : "${NEXT_PUBLIC_SUPABASE_URL:?missing NEXT_PUBLIC_SUPABASE_URL}"
+          : "${SUPABASE_SERVICE_ROLE_KEY:?missing SUPABASE_SERVICE_ROLE_KEY}"
+          if [ -z "${ODDS_API_KEY:-}" ]; then echo "No ODDS_API_KEY; echo SKIP=1 >> \$GITHUB_ENV"; echo "SKIP=1" >> $GITHUB_ENV; fi
+      - name: Ingest upcoming games
+        if: env.SKIP != '1'
+        run: |
+          if [ -f scripts/ingest/games.mjs ]; then
+            node --unhandled-rejections=strict scripts/ingest/games.mjs "$LEAGUE" "$DAYS"
+          else
+            echo "scripts/ingest/games.mjs missing; skipping games ingest"
+          fi
+      - name: Pull odds
+        if: env.SKIP != '1'
+        run: |
+          if [ -f scripts/fetch-odds-rest.mjs ]; then
+            node --unhandled-rejections=strict scripts/fetch-odds-rest.mjs "$LEAGUE" "$DAYS" || true
+          elif [ -f scripts/fetch-odds.mjs ]; then
+            node --unhandled-rejections=strict scripts/fetch-odds.mjs "$LEAGUE" "$DAYS" || true
+          else
+            echo "No odds script found; skipping"
+          fi
