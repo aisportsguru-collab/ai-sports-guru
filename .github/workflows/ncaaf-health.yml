@@ -1,17 +1,35 @@
 name: NCAAF Health Check
 on:
-  schedule:
-    - cron: '0 9 * * *'   # 09:00 UTC daily
   workflow_dispatch: {}
+  schedule:
+    - cron: "15 * * * *"
+permissions: { contents: read }
+concurrency: { group: ncaaf-health, cancel-in-progress: true }
 jobs:
   health:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
-      - name: Counts
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      - name: Probe counts via Supabase REST
         run: |
-          sudo apt-get update && sudo apt-get install -y postgresql-client
-          psql "$SUPABASE_DB_URL" -c "select season, count(*) as team_rows from public.ncaaf_teams group by season order by season;"
-          psql "$SUPABASE_DB_URL" -c "select season, count(*) as player_rows from public.ncaaf_players group by season order by season;"
-          psql "$SUPABASE_DB_URL" -c "select season, week, count(*) as rows from public.ncaaf_injuries group by season, week order by season desc, week desc limit 10;"
+          set -e
+          if [ -z "${NEXT_PUBLIC_SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            echo "Missing Supabase env, failing"
+            exit 1
+          fi
+          BASE="${NEXT_PUBLIC_SUPABASE_URL%/}/rest/v1"
+          NOW=$(date -u +%FT%TZ)
+          TO=$(date -u -d "+7 days" +%FT%TZ)
+          GAMES_CNT=$(curl -s "${BASE}/games?select=game_id&sport=eq.ncaaf&start_time=gte.${NOW}&start_time=lte.${TO}" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" | jq "length")
+          PREDS_CNT=$(curl -s "${BASE}/mat_games_with_odds_predictions?select=game_id&sport=eq.ncaaf&start_time=gte.${NOW}&start_time=lte.${TO}" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" | jq "length" || echo 0)
+          echo "gamesCnt=${GAMES_CNT} predsCnt=${PREDS_CNT}"
+          if [ "${GAMES_CNT}" -eq 0 ] || [ "${PREDS_CNT}" -eq 0 ]; then
+            echo "Health not ok"
+            exit 2
+          fi
+          echo "Health ok"
