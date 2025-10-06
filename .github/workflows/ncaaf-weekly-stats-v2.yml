@@ -1,0 +1,46 @@
+name: Weekly NCAAF Stats v2
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 9 * * MON"
+permissions: { contents: read }
+concurrency: { group: ncaaf-weekly-stats-v2, cancel-in-progress: true }
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      STATS_API_KEY: ${{ secrets.STATS_API_KEY }}
+    steps:
+      - name: Guard upcoming games via REST (never fail)
+        id: guard
+        run: |
+          set -e
+          BASE="${NEXT_PUBLIC_SUPABASE_URL%/}/rest/v1"
+          NOW=$(date -u +%FT%TZ)
+          TO=$(date -u -d "+3 days" +%FT%TZ)
+          CNT=$(curl -s "${BASE}/games?select=game_id&sport=eq.ncaaf&start_time=gte.${NOW}&start_time=lte.${TO}" \
+               -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" | jq 'length')
+          echo "upcoming_count=${CNT}"
+          if [ "${CNT}" -eq 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice title=No upcoming NCAAF games::Skipping stats sync."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.skip != 'true'
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
+        with: { node-version: "20", cache: "npm" }
+      - run: npm ci --prefer-offline --no-audit --no-fund || true
+        if: steps.guard.outputs.skip != 'true'
+      - name: Run weekly stats best effort (skip if no key)
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          if [ -z "${STATS_API_KEY:-}" ]; then echo "No STATS_API_KEY; skipping."; exit 0; fi
+          if [ -f scripts/stats/ncaaf_weekly.py ]; then python3 scripts/stats/ncaaf_weekly.py || true; \
+          elif [ -f scripts/stats/ncaaf-weekly.mjs ]; then node --unhandled-rejections=strict scripts/stats/ncaaf-weekly.mjs || true; \
+          else echo "No weekly stats script found; skipping."; fi
