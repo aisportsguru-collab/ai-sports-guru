@@ -13,6 +13,7 @@ on:
         default: "7"
   schedule:
     - cron: "*/30 * * * *"
+
 concurrency:
   group: odds-sync-v2-${{ github.event.inputs.league || 'nfl' }}
   cancel-in-progress: false
