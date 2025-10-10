@@ -92,7 +92,7 @@ export async function fetchFades(q: FadeQuery) {
     return true;
   };
 
-  const rows = [];
+  const rows: any[] = [];
   for (const r of preds) {
     if (!inRange(r.game_date)) continue;
 

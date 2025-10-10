@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DSN="$(awk -F= '/^SUPABASE_DB_URL=/{print substr($0,index($0,$2))}' "$ROOT/.env.local")"
+exec psql "$DSN" "$@"

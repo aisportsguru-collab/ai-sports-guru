@@ -3,3 +3,4 @@ __pycache__/
 mlb_players.csv
 mlb_teams.csv
 mlb_injuries.csv
+.vercel

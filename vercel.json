@@ -1,24 +1,9 @@
 {
   "crons": [
-    {
-      "path": "/api/predict/run?league=nfl&days=14&store=1",
-      "schedule": "*/20 * * * *"
-    },
-    {
-      "path": "/api/predict/run?league=ncaaf&days=14&store=1",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/predict/run?league=mlb&days=7&store=1",
-      "schedule": "15 * * * *"
-    },
-    {
-      "path": "/api/eval/hit-rate",
-      "schedule": "30 8 * * *"
-    },
-    {
-      "path": "/api/eval/cv-refresh",
-      "schedule": "0 9 * * 1"
-    }
+    { "path": "/api/predictions/run?league=nfl&days=2&token=asg_cron_token_7kLQ4t9Y1pZB", "schedule": "*/10 * * * *" },
+    { "path": "/api/predictions/run?league=nba&days=2&token=asg_cron_token_7kLQ4t9Y1pZB", "schedule": "*/10 * * * *" },
+    { "path": "/api/predictions/run?league=mlb&days=2&token=asg_cron_token_7kLQ4t9Y1pZB", "schedule": "*/10 * * * *" },
+    { "path": "/api/predictions/run?league=nhl&days=2&token=asg_cron_token_7kLQ4t9Y1pZB", "schedule": "*/10 * * * *" },
+    { "path": "/api/predictions/run?league=ncaaf&days=3&token=asg_cron_token_7kLQ4t9Y1pZB", "schedule": "*/15 * * * *" }
   ]
 }

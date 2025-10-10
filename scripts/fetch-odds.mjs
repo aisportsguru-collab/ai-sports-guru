@@ -1,203 +1,153 @@
 #!/usr/bin/env node
-import fs from 'fs';
-import * as dotenv from 'dotenv';
-import fetch from 'node-fetch';
-import { createClient } from '@supabase/supabase-js';
+import { config as loadEnv } from "dotenv";
+loadEnv({ path: ".env.local" }); loadEnv();
+import fetch from "node-fetch";
+import pg from "pg";
 
-// Load .env.local first if present, else .env
-if (fs.existsSync('.env.local')) {
-  dotenv.config({ path: '.env.local' });
-} else {
-  dotenv.config();
-}
-
-function need(name, altNames = []) {
-  const candidates = [name, ...altNames];
-  for (const n of candidates) {
-    if (process.env[n] && String(process.env[n]).length > 0) return process.env[n];
-  }
-  throw new Error(`Missing env ${name}${altNames.length ? ` (or ${altNames.join(' / ')})` : ''}`);
-}
-
-const SUPABASE_URL = need('NEXT_PUBLIC_SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = need('SUPABASE_SERVICE_ROLE_KEY');
-const ODDS_API_KEY = need('ODDS_API_KEY', ['NEXT_PUBLIC_THE_ODDS_API_KEY']);
-
-const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-
-const SPORT_KEYS = {
-  nfl:  'americanfootball_nfl',
-  mlb:  'baseball_mlb',
-  ncaaf:'americanfootball_ncaaf',
+const INPUT_SPORTS = (process.argv[2] || "nfl,mlb,nba,nhl,ncaaf").split(",").map(s => s.trim());
+const SPORT_MAP = {
+  nfl:   "americanfootball_nfl",
+  ncaaf: "americanfootball_ncaaf",
+  nba:   "basketball_nba",
+  mlb:   "baseball_mlb",
+  nhl:   "icehockey_nhl",
 };
 
-async function fetchOddsEvents(sport) {
-  const sportKey = SPORT_KEYS[sport];
-  if (!sportKey) throw new Error(`Unsupported sport: ${sport}`);
+const API     = process.env.ODDS_API_KEY || process.env.NEXT_PUBLIC_THE_ODDS_API_KEY;
+const REGION  = process.env.ODDS_API_REGION || "us";
+const MARKETS = process.env.ODDS_API_MARKETS || "h2h,spreads,totals";
+const SUPA    = process.env.SUPABASE_DB_URL;
 
-  const url = new URL(`https://api.the-odds-api.com/v4/sports/${sportKey}/odds`);
-  url.searchParams.set('regions', 'us');
-  url.searchParams.set('markets', 'h2h,spreads,totals');
-  url.searchParams.set('oddsFormat', 'american');
-  url.searchParams.set('dateFormat', 'iso');
-  url.searchParams.set('apiKey', ODDS_API_KEY);
+if (!API)  { console.error("Missing ODDS_API_KEY or NEXT_PUBLIC_THE_ODDS_API_KEY"); process.exit(1); }
+if (!SUPA) { console.error("Missing SUPABASE_DB_URL"); process.exit(1); }
 
-  const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    throw new Error(`TheOddsAPI ${sport} ${res.status} ${txt}`);
+const pool = new pg.Pool({ connectionString: SUPA, ssl: { rejectUnauthorized: false } });
+
+function americanFromDecimal(dec) {
+  if (dec == null) return null;
+  if (dec >= 2) return Math.round((dec - 1) * 100);
+  return Math.round(-100 / (dec - 1));
+}
+function norm(s) { return (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+function fuzzyPick(outcomes, home, away) {
+  let oHome = outcomes.find(o => norm(o.name) === norm(home));
+  let oAway = outcomes.find(o => norm(o.name) === norm(away));
+  if (!oHome) oHome = outcomes.find(o => norm(home).includes(norm(o.name)) || norm(o.name).includes(norm(home)));
+  if (!oAway) oAway = outcomes.find(o => norm(away).includes(norm(o.name)) || norm(o.name).includes(norm(away)));
+  if (!oHome || !oAway) {
+    const [a,b] = outcomes;
+    if (!oHome && a) oHome = a;
+    if (!oAway && b) oAway = b || a;
   }
-  return await res.json(); // array
+  return { oHome, oAway };
 }
 
-function avg(a, b) {
-  if (a == null || Number.isNaN(a)) return b;
-  return (a + b) / 2;
+async function findLocalGameId({ sport, home, away, commence }) {
+  const sql = `
+    select id as game_id
+    from games
+    where lower(home_team) = lower($1)
+      and lower(away_team) = lower($2)
+      and sport = $3
+      and start_time between ($4::timestamptz - interval '12 hours') and ($4::timestamptz + interval '12 hours')
+    order by abs(extract(epoch from (start_time - $4::timestamptz))) asc
+    limit 1`;
+  const res = await pool.query(sql, [home, away, sport, new Date(commence).toISOString()]);
+  return res.rows?.[0]?.game_id || null;
 }
 
-function summarizeEvent(ev) {
-  let moneyline_home = null;
-  let moneyline_away = null;
-  let spread_line = null, spread_price_home = null, spread_price_away = null;
-  let total_line = null, total_over_price = null, total_under_price = null;
+async function upsertOdds(row) {
+  const q = `
+  insert into odds
+  (game_id, sportsbook, market,
+   price_home, price_away,
+   spread_line, spread_price_home, spread_price_away,
+   total_line, total_over_price, total_under_price,
+   ml_price_home, ml_price_away,
+   fetched_at)
+  values
+  ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13, now())
+  on conflict (game_id, sportsbook, market)
+  do update set
+    price_home = excluded.price_home,
+    price_away = excluded.price_away,
+    spread_line = excluded.spread_line,
+    spread_price_home = excluded.spread_price_home,
+    spread_price_away = excluded.spread_price_away,
+    total_line = excluded.total_line,
+    total_over_price = excluded.total_over_price,
+    total_under_price = excluded.total_under_price,
+    ml_price_home = excluded.ml_price_home,
+    ml_price_away = excluded.ml_price_away,
+    fetched_at = now()
+  `;
+  await pool.query(q, [
+    row.game_id, row.sportsbook, row.market,
+    row.ml_home, row.ml_away,
+    row.spread_line, row.spread_home, row.spread_away,
+    row.total_line, row.total_over, row.total_under,
+    row.ml_home, row.ml_away
+  ]);
+}
 
-  for (const bm of (ev.bookmakers || [])) {
-    for (const m of (bm.markets || [])) {
-      if (m.key === 'h2h') {
-        const home = m.outcomes.find(o => o.name === ev.home_team);
-        const away = m.outcomes.find(o => o.name === ev.away_team);
-        if (home?.price != null) moneyline_home = avg(moneyline_home, home.price);
-        if (away?.price != null) moneyline_away = avg(moneyline_away, away.price);
+async function runOne(sportKey) {
+  const oddsSport = SPORT_MAP[sportKey];
+  if (!oddsSport) { console.error(`Unknown local sport alias: ${sportKey}`); return; }
+  const url = `https://api.the-odds-api.com/v4/sports/${oddsSport}/odds?regions=${REGION}&markets=${MARKETS}&oddsFormat=decimal&apiKey=${API}`;
+  const res = await fetch(url);
+  if (!res.ok) { console.error(`Fetch failed for ${sportKey}`, await res.text()); return; }
+  const games = await res.json();
+
+  for (const g of games) {
+    const home = g.home_team, away = g.away_team, commence_time = g.commence_time;
+    const game_id = await findLocalGameId({ sport: sportKey, home, away, commence: commence_time });
+    if (!game_id) continue;
+
+    for (const bk of g.bookmakers || []) {
+      const sportsbook = bk.key;
+      const h2h     = (bk.markets || []).find(m => m.key === "h2h");
+      const spreads = (bk.markets || []).find(m => m.key === "spreads");
+      const totals  = (bk.markets || []).find(m => m.key === "totals");
+
+      let ml_home = null, ml_away = null;
+      if (h2h?.outcomes?.length >= 2) {
+        const { oHome, oAway } = fuzzyPick(h2h.outcomes, home, away);
+        ml_home = americanFromDecimal(oHome?.price);
+        ml_away = americanFromDecimal(oAway?.price);
       }
-      if (m.key === 'spreads') {
-        const home = m.outcomes.find(o => o.name === ev.home_team);
-        const away = m.outcomes.find(o => o.name === ev.away_team);
-        if (home?.point != null) spread_line = avg(spread_line, home.point);
-        if (home?.price != null) spread_price_home = avg(spread_price_home, home.price);
-        if (away?.price != null) spread_price_away = avg(spread_price_away, away.price);
+
+      let spread_line = null, spread_home = null, spread_away = null;
+      if (spreads?.outcomes?.length >= 2) {
+        const { oHome, oAway } = fuzzyPick(spreads.outcomes, home, away);
+        spread_line = oHome?.point ?? (oAway?.point != null ? -oAway.point : null);
+        spread_home = americanFromDecimal(oHome?.price);
+        spread_away = americanFromDecimal(oAway?.price);
       }
-      if (m.key === 'totals') {
-        const over  = m.outcomes.find(o => String(o.name).toLowerCase().startsWith('over'));
-        const under = m.outcomes.find(o => String(o.name).toLowerCase().startsWith('under'));
-        if (over?.point != null) total_line = avg(total_line, over.point);
-        if (over?.price != null) total_over_price = avg(total_over_price, over.price);
-        if (under?.price != null) total_under_price = avg(total_under_price, under.price);
+
+      let total_line = null, total_over = null, total_under = null;
+      if (totals?.outcomes?.length >= 2) {
+        const oOver  = totals.outcomes.find(o => /over/i.test(o.name || "")) || totals.outcomes[0];
+        const oUnder = totals.outcomes.find(o => /under/i.test(o.name || "")) || totals.outcomes[1] || totals.outcomes[0];
+        total_line  = oOver?.point ?? oUnder?.point ?? null;
+        total_over  = americanFromDecimal(oOver?.price);
+        total_under = americanFromDecimal(oUnder?.price);
       }
-    }
-  }
 
-  return {
-    provider_event_id: ev.id,
-    home_team: ev.home_team,
-    away_team: ev.away_team,
-    commence_time: ev.commence_time,
-    moneyline_home,
-    moneyline_away,
-    spread_line,
-    spread_price_home,
-    spread_price_away,
-    total_line,
-    total_over_price,
-    total_under_price,
-  };
-}
-
-async function ensureGameAndGetUuid({ sport, provider_event_id, home_team, away_team, commence_time }) {
-  // find by provider_game_id first
-  const { data: existing, error: findErr } = await sb
-    .from('games')
-    .select('id')
-    .eq('provider_game_id', provider_event_id)
-    .limit(1);
-  if (findErr) throw findErr;
-  if (existing && existing.length) return existing[0].id;
-
-  // insert minimal games row and return id
-  const toInsert = {
-    sport,
-    league: sport,
-    provider_game_id: provider_event_id,
-    home_team,
-    away_team,
-    commence_time: commence_time ? new Date(commence_time).toISOString() : null,
-    game_date: commence_time ? new Date(commence_time).toISOString().slice(0,10) : null,
-    season: commence_time ? new Date(commence_time).getUTCFullYear() : null,
-  };
-
-  const { data: ins, error: insErr } = await sb
-    .from('games')
-    .insert([toInsert])
-    .select('id')
-    .limit(1);
-  if (insErr) {
-    // unique race: refetch
-    const { data: re, error: reErr } = await sb
-      .from('games')
-      .select('id')
-      .eq('provider_game_id', provider_event_id)
-      .limit(1);
-    if (reErr) throw reErr;
-    if (re && re.length) return re[0].id;
-    throw insErr;
-  }
-  return ins?.[0]?.id;
-}
-
-async function insertSnapshot(uuid, summary) {
-  const row = {
-    game_id: uuid, // uuid fk to games.id
-    book: 'oddsapi',
-    fetched_at: new Date().toISOString(),
-    moneyline_home: summary.moneyline_home,
-    moneyline_away: summary.moneyline_away,
-    spread_line: summary.spread_line,
-    spread_price_home: summary.spread_price_home,
-    spread_price_away: summary.spread_price_away,
-    total_line: summary.total_line,
-    total_over_price: summary.total_over_price,
-    total_under_price: summary.total_under_price,
-  };
-  const { error } = await sb.from('odds_snapshots').insert([row]);
-  if (error && error.code !== '23505') throw error; // ignore dedupe collisions
-}
-
-async function ingestLeague(sport) {
-  const events = await fetchOddsEvents(sport);
-  let wrote = 0;
-  for (const ev of events) {
-    try {
-      const summary = summarizeEvent(ev);
-      const uuid = await ensureGameAndGetUuid({
-        sport,
-        provider_event_id: summary.provider_event_id,
-        home_team: summary.home_team,
-        away_team: summary.away_team,
-        commence_time: summary.commence_time,
+      await upsertOdds({
+        game_id, sportsbook, market: "main",
+        ml_home, ml_away,
+        spread_line, spread_home, spread_away,
+        total_line, total_over, total_under
       });
-      await insertSnapshot(uuid, summary);
-      wrote++;
-    } catch (e) {
-      console.error(`[${sport}] snapshot error for ${ev?.id || 'unknown'}:`, e?.message || e);
     }
   }
-  console.log(`[${sport}] events=${events.length} wrote_snapshots=${wrote}`);
-  return wrote;
 }
 
 async function main() {
-  const leagues = (process.argv[2] || 'nfl,mlb,ncaaf')
-    .split(',')
-    .map(s => s.trim().toLowerCase())
-    .filter(Boolean);
-
-  let total = 0;
-  for (const lg of leagues) {
-    try {
-      total += await ingestLeague(lg);
-    } catch (e) {
-      console.error(`[${lg}] FAILED`, e?.message || e);
-    }
-  }
-  console.log(`Total snapshots written: ${total}`);
+  const ping = await pool.query("select now() as now");
+  console.log("db_ok=", ping.rows[0].now);
+  for (const s of INPUT_SPORTS) await runOne(s);
+  await pool.end();
+  console.log("Done");
 }
 main().catch(e => { console.error(e); process.exit(1); });

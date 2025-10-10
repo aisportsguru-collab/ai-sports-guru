@@ -1,74 +1,66 @@
-import { fetchJson } from "@/lib/fetchJson";
+// app/(sports)/LeaguePage.tsx
+export const dynamic = 'force-dynamic';
 
-type Props = { league: string };
+import GameCard from '@/components/GameCard';
 
-type Item = {
+type ApiGame = {
   game_id: string;
-  league: string;
+  game_uuid?: string;
+  sport: string;
+  start_time: string;
   home_team: string;
   away_team: string;
-  moneyline_home: number | null;
-  moneyline_away: number | null;
-  line_home: number | null;
-  line_away: number | null;
-  game_time: string | null;
-  asg_prob: number | null;
-  asg_pick: string | null;
+  status?: string;
+  ml_price_home?: number|null;
+  ml_price_away?: number|null;
+  spread_line?: number|null;
+  spread_price_home?: number|null;
+  spread_price_away?: number|null;
+  total_line?: number|null;
+  total_over_price?: number|null;
+  total_under_price?: number|null;
+  model_version?: string|null;
+  moneyline_pick?: string|null;
+  moneyline_conf?: number|null;
+  spread_pick?: string|null;
+  pred_spread_line?: number|null;
+  spread_conf?: number|null;
+  total_pick?: string|null;
+  pred_total_line?: number|null;
+  total_conf?: number|null;
+  prediction_created_at?: string|null;
 };
 
-export default async function LeaguePage({ league }: Props) {
-  const today = new Date().toISOString().slice(0, 10);
-  const url = `/api/predict/latest?league=${encodeURIComponent(league)}&date=${today}&days=14`;
+async function getGames(league: string): Promise<ApiGame[]> {
+  try {
+    const res = await fetch(`/api/games?league=${encodeURIComponent(league)}&daysFrom=7`, {
+      cache: 'no-store',
+      // Make sure this page is dynamic and not pre-rendered at build time.
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json?.data) ? json.data : [];
+  } catch {
+    return [];
+  }
+}
 
-  const json = await fetchJson(url);
-  const items: Item[] = Array.isArray(json?.items) ? json.items : [];
+export default async function LeaguePage({ league }: { league: string }) {
+  const games = await getGames(league);
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-1 uppercase">{league} Games & Picks</h1>
-      <p className="text-sm text-gray-400 mb-6">Times shown in your local timezone.</p>
-
-      {items.length === 0 ? (
-        <div className="text-gray-400">No games match your filter.</div>
+    <div className="max-w-5xl mx-auto p-4 space-y-4">
+      <h1 className="text-2xl font-semibold capitalize">{league} — upcoming games</h1>
+      {games.length === 0 ? (
+        <p className="text-sm opacity-70">No games found in the next 7 days.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-800">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-900/40">
-              <tr className="text-left">
-                <th className="py-2 px-4">Kickoff</th>
-                <th className="py-2 px-4">Matchup</th>
-                <th className="py-2 px-4">Moneyline (A/H)</th>
-                <th className="py-2 px-4">Spread (A/H)</th>
-                <th className="py-2 px-4">ASG Pick</th>
-                <th className="py-2 px-4">Confidence</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-900">
-              {items.map((g) => (
-                <tr key={g.game_id} className="hover:bg-gray-900/30">
-                  <td className="py-2 px-4">
-                    {g.game_time ? new Date(g.game_time).toLocaleString() : "—"}
-                  </td>
-                  <td className="py-2 px-4">
-                    <div className="font-medium">{g.away_team}</div>
-                    <div className="text-gray-500">at {g.home_team}</div>
-                  </td>
-                  <td className="py-2 px-4">
-                    {(g.moneyline_away ?? "—")} / {(g.moneyline_home ?? "—")}
-                  </td>
-                  <td className="py-2 px-4">
-                    {(g.line_away ?? "—")} / {(g.line_home ?? "—")}
-                  </td>
-                  <td className="py-2 px-4">{g.asg_pick ?? "—"}</td>
-                  <td className="py-2 px-4">
-                    {g.asg_prob != null ? `${(g.asg_prob * 100).toFixed(1)}%` : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-3">
+          {games.map((g) => (
+            <GameCard key={g.game_uuid || g.game_id} row={g as any} />
+          ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }

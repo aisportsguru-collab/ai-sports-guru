@@ -70,7 +70,7 @@ export async function GET(req: Request) {
   }
   const predMap = new Map(preds?.map(p => [p.game_id, p]) ?? []);
 
-  const items = [];
+  const items: any[] = [];
   for (const g of games as any[]) {
     const pr = predMap.get(g.game_id);
     const pb = pbMap.get(g.game_id) || {};

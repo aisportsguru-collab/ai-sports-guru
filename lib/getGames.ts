@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Game } from '../components/GameCard';
 
 /**

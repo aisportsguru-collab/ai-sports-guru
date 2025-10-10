@@ -41,8 +41,8 @@ async function fetchGamesForLeague(league) {
   // IMPORTANT: select internal UUID id (for predictions) AND external text game_id (for sanity)
   const { data, error } = await sb
     .from('games')
-    .select('id, game_id, sport, home_team, away_team, commence_time')
-    .eq('sport', league)
+    .select('game_id, game_id, sport, home_team, away_team, commence_time')
+    .ilike('sport', league)
     .gte('commence_time', start.toISOString())
     .lte('commence_time', end.toISOString())
     .order('commence_time', { ascending: true });
@@ -67,8 +67,7 @@ async function upsertPredictions(rows) {
   if (!rows.length) return { upserted: 0 };
   // predictions.game_id is UUID; we pass games.id (uuid) below
   const { error } = await sb
-    .from('predictions')
-    .upsert(rows, { onConflict: 'game_id,model' });
+    .from('predictions').upsert(rows, { returning: "minimal" }, { onConflict: 'game_id,model_version', returning: 'minimal' })
   if (error) throw error;
   return { upserted: rows.length };
 }
@@ -94,7 +93,7 @@ async function runForLeague(league) {
     const { pick, prob } = makePrediction(g, hasAnyMarket);
 
     payload.push({
-      game_id: g.id, // <-- INTERNAL UUID for predictions
+      game_id: g.game_id, // <-- INTERNAL UUID for predictions
       model: MODEL_NAME,
       model_version: MODEL_VERSION,
       pick,

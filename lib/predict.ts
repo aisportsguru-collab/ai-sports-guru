@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { NormalGame } from './odds';
 
 export type PickRow = {

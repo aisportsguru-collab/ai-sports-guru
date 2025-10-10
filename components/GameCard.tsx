@@ -1,83 +1,70 @@
-"use client";
-import type { ApiGame } from "@/lib/fetchGames";
-import { american, formatSpreadWithTeam, formatTotals } from "@/lib/formatOdds";
+'use client';
+import React from 'react';
 
-function localTime(iso: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      month: "numeric", day: "numeric", year: "numeric",
-      hour: "numeric", minute: "2-digit"
-    });
-  } catch { return iso; }
+type Props = { row: any };
+
+const fmtConf = (x?: number | null) => {
+  if (typeof x !== 'number' || Number.isNaN(x)) return '—';
+  const v = x > 1 ? Math.round(x) : Math.round(x * 100);
+  return `${v}%`;
+};
+
+function pickToTeam(pick: string | null | undefined, home: string, away: string) {
+  if (!pick) return '—';
+  const p = pick.toLowerCase();
+  if (p === 'home' || p === home.toLowerCase()) return home;
+  if (p === 'away' || p === away.toLowerCase()) return away;
+  return pick; // already a team name (or something else)
 }
 
-function pickToLabel(game: ApiGame, pick: string | null): string {
-  if (!pick) return "—";
-  const p = pick.trim().toUpperCase();
-  // SPREAD strings can be "HOME -3.5" or "AWAY +2"
-  if (p.startsWith("HOME")) {
-    const rest = pick.slice(4).trim();
-    return `${game.home_team}${rest ? " " + rest : ""}`;
-  }
-  if (p.startsWith("AWAY")) {
-    const rest = pick.slice(4).trim();
-    return `${game.away_team}${rest ? " " + rest : ""}`;
-  }
-  // TOTAL: "OVER 47.5" / "UNDER 47.5"
-  if (p.startsWith("OVER") || p.startsWith("UNDER")) return pick;
-  return pick;
-}
-
-export default function GameCard({ game }: { game: ApiGame }) {
-  const time = localTime(game.game_time);
-
-  const mlHome = american(game.moneyline_home);
-  const mlAway = american(game.moneyline_away);
-  const spread = formatSpreadWithTeam(game.home_team, game.away_team, game.spread_line);
-  const totals = formatTotals(game.total_points, game.over_odds, game.under_odds);
-
-  const mlPick = pickToLabel(game, game.ai_ml_pick);
-  const spreadPick = pickToLabel(game, game.ai_spread_pick);
-  const totalPick = game.ai_total_pick ?? (game.ai_total_number ? `OVER ${game.ai_total_number}` : null);
+export default function GameCard({ row }: Props) {
+  const moneylineTeam = pickToTeam(row.moneyline_pick, row.home_team, row.away_team);
+  const spreadTeam    = pickToTeam(row.spread_pick, row.home_team, row.away_team);
+  const totalPick     = typeof row.total_pick === 'string' ? row.total_pick.toUpperCase() : '—';
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-neutral-900/50 p-4 shadow-sm">
-      <div className="text-xs opacity-70">{time}</div>
-
-      <div className="mt-1 flex items-center justify-between gap-4">
-        <div className="font-semibold">{game.away_team}</div>
-        <div className="opacity-60 text-sm">at</div>
-        <div className="font-semibold">{game.home_team}</div>
+    <div className="rounded-2xl border border-zinc-800 bg-black text-white p-5 shadow-lg">
+      <div className="flex items-center justify-between">
+        <div className="text-xs uppercase tracking-widest text-zinc-400">{row.sport}</div>
+        <div className="text-xs text-zinc-400">{new Date(row.start_time).toLocaleString()}</div>
       </div>
 
-      {/* Odds */}
-      <div className="mt-4 rounded-xl bg-neutral-800/60 p-3 text-sm">
-        <div className="font-medium mb-2 opacity-80">Odds</div>
-        <div className="space-y-1 leading-6">
-          <div>Moneyline: <span className="opacity-80">{game.home_team}</span> {mlHome}  <span className="opacity-60 mx-1">/</span>  <span className="opacity-80">{game.away_team}</span> {mlAway}</div>
-          <div>Spread: <span className="opacity-80">{spread}</span></div>
-          <div>Total: <span className="opacity-80">{totals}</span></div>
+      <div className="mt-3 grid gap-1">
+        <div className="text-xl font-semibold">{row.away_team}</div>
+        <div className="text-xl font-semibold">{row.home_team}</div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="rounded-xl bg-zinc-900 p-4">
+          <div className="text-xs text-zinc-400">Moneyline</div>
+          <div className="text-sm text-zinc-400">
+            Home {row.ml_price_home ?? '—'} / Away {row.ml_price_away ?? '—'}
+          </div>
+          <div className="mt-1 text-lg">
+            Pick: <span className="font-bold text-amber-400">{moneylineTeam}</span>
+            <div className="text-xs text-zinc-400 mt-1">Confidence {fmtConf(row.moneyline_conf)}</div>
+          </div>
         </div>
-      </div>
 
-      {/* AI Predictions */}
-      <div className="mt-3 rounded-xl bg-neutral-800/60 p-3 text-sm">
-        <div className="font-medium mb-2 opacity-80">AI Predictions</div>
-        <div className="space-y-1 leading-6">
-          <div>
-            Moneyline: <span className="opacity-80">
-              {mlPick !== "—" ? `${mlPick} ${game.ai_ml_conf ? `(${game.ai_ml_conf}%)` : ""}` : "—"}
-            </span>
+        <div className="rounded-xl bg-zinc-900 p-4">
+          <div className="text-xs text-zinc-400">Spread</div>
+          <div className="text-sm text-zinc-400">
+            Line {row.spread_line ?? '—'} (H {row.spread_price_home ?? '—'} / A {row.spread_price_away ?? '—'})
           </div>
-          <div>
-            Spread: <span className="opacity-80">
-              {spreadPick !== "—" ? `${spreadPick} ${game.ai_spread_conf ? `(${game.ai_spread_conf}%)` : ""}` : "—"}
-            </span>
+          <div className="mt-1 text-lg">
+            Pick: <span className="font-bold text-amber-400">{spreadTeam}</span>
+            <div className="text-xs text-zinc-400 mt-1">Confidence {fmtConf(row.spread_conf)}</div>
           </div>
-          <div>
-            Total: <span className="opacity-80">
-              {totalPick ? `${totalPick} ${game.ai_total_conf ? `(${game.ai_total_conf}%)` : ""}` : "—"}
-            </span>
+        </div>
+
+        <div className="rounded-xl bg-zinc-900 p-4">
+          <div className="text-xs text-zinc-400">Total</div>
+          <div className="text-sm text-zinc-400">
+            Line {row.total_line ?? row.pred_total_line ?? '—'} (O {row.total_over_price ?? '—'} / U {row.total_under_price ?? '—'})
+          </div>
+          <div className="mt-1 text-lg">
+            Pick: <span className="font-bold text-amber-400">{totalPick}</span>
+            <div className="text-xs text-zinc-400 mt-1">Confidence {fmtConf(row.total_conf)}</div>
           </div>
         </div>
       </div>
