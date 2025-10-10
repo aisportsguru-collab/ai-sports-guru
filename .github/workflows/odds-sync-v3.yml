@@ -1,0 +1,58 @@
+name: Odds and Games Sync v3
+
+on:
+  workflow_dispatch:
+    inputs:
+      league:
+        description: League (nfl/nba/mlb/etc)
+        required: true
+        default: nfl
+      days:
+        description: Days forward to pull
+        required: true
+        default: "14"
+      skip:
+        description: Skip odds snapshots (1=yes)
+        required: false
+        default: "0"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Guard env (skip if missing secrets)
+        shell: bash
+        run: |
+          test -n "${SUPABASE_URL}" && test -n "${SUPABASE_SERVICE_ROLE_KEY}"
+
+      - name: Ingest upcoming games (The Odds API -> Supabase) [treat 409/23505 as success]
+        shell: bash
+        run: |
+          set -o pipefail
+          code=0
+          node ./scripts/ingest/games.mjs "${{ inputs.league }}" "${{ inputs.days }}" 2>err.log || code=$?
+          if [ "${code:-0}" != "0" ]; then
+            if grep -Eqi 'duplicate key value|violates unique constraint|status[^0-9]*409|code["'\'': ]*23505' err.log; then
+              echo "::warning::Duplicates ignored (409/23505). Continuing."
+            else
+              echo "::error::$(sed 's/%/%25/g;s/\r/%0D/g;s/\n/%0A/g' err.log)"
+              exit "${code}"
+            fi
+          fi
+
+      - name: Pull odds snapshots (optional)
+        if: ${{ inputs.skip != '1' }}
+        shell: bash
+        run: |
+          node ./scripts/fetch-odds-rest.mjs "${{ inputs.league }}" "${{ inputs.days }}"

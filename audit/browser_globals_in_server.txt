@@ -1,0 +1,12 @@
+app/sign-up/page.tsx
+app/lib/supa-browser.ts
+app/api/predict/run/route.ts
+app/api/fades/route.ts
+app/api/games/route.ts
+app/account/page.tsx
+app/pricing/page.tsx
+app/debug/auth/page.tsx
+components/Navbar.tsx
+components/SubscribeButton.tsx
+components/LeaguePage.tsx
+components/GameList.tsx

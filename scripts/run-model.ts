@@ -30,14 +30,14 @@ async function main() {
     const mlPick = pAway > pHome ? g.away_team : g.home_team;
     const mlConf = Math.max(pAway, pHome); // 0.5..~0.8 for typical prices
 
-    await sb.from("predictions").upsert({
+    await sb.from('predictions').upsert({
       game_id: g.game_id,
       model_version: "v1",
       pick_type: "moneyline",
       pick_side: mlPick,
       confidence: mlConf,
       updated_at: new Date().toISOString()
-    }, { onConflict: "game_id,model_version,pick_type" });
+    })
 
     // Spread pick: lean to the team with more favorable spread magnitude
     const spreadAway = Number(o.spread_away ?? 0);
@@ -45,7 +45,7 @@ async function main() {
     const spreadPick = Math.abs(spreadAway) > Math.abs(spreadHome) ? g.away_team : g.home_team;
     const spreadConf = 0.5 + Math.min(0.45, Math.abs(spreadAway - spreadHome) * 0.05);
 
-    await sb.from("predictions").upsert({
+    await sb.from('predictions').upsert({
       game_id: g.game_id,
       model_version: "v1",
       pick_type: "spread",
@@ -53,7 +53,7 @@ async function main() {
       pick_value: Math.abs(spreadAway) > Math.abs(spreadHome) ? spreadAway : spreadHome,
       confidence: spreadConf,
       updated_at: new Date().toISOString()
-    }, { onConflict: "game_id,model_version,pick_type" });
+    })
 
     // Total pick: heuristic around 44/220 lines; make a call with medium confidence
     const total = Number(o.total_points ?? 0);
@@ -61,7 +61,7 @@ async function main() {
       const target = g.league === "mlb" ? 9 : g.league === "nba" ? 220 : 44;
       const side = total > target ? "under" : "over"; // be contrarian-ish
       const conf = 0.55 + Math.min(0.35, Math.abs(total - target) * 0.01);
-      await sb.from("predictions").upsert({
+      await sb.from('predictions').upsert({
         game_id: g.game_id,
         model_version: "v1",
         pick_type: "total",
@@ -69,7 +69,7 @@ async function main() {
         pick_value: total,
         confidence: conf,
         updated_at: new Date().toISOString()
-      }, { onConflict: "game_id,model_version,pick_type" });
+      })
     }
   }
 

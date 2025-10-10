@@ -1,0 +1,224 @@
+node and npm versions
+v20.19.4
+11.5.2
+
+next configs present
+next.config.mjs
+
+tailwind and postcss configs present
+postcss.config.cjs
+postcss.config.js.bak
+postcss.config.mjs
+tailwind.config.cjs
+tailwind.config.js.bak
+tailwind.config.mjs
+tailwind.config.ts
+
+middleware present
+middleware.ts
+
+duplicates by basename that often cause hydration or routing conflicts
+page.tsx
+
+search for old pages/ directory conflicting with app/ router
+pages
+└── api
+    ├── _disabled
+    │   └── predictions.ts.disabled
+    ├── _health.ts
+    ├── accuracy.ts
+    ├── admin
+    │   ├── backfill.ts
+    │   ├── grade-results.ts
+    │   ├── mock-seed.ts
+    │   └── run-pipeline.ts
+    ├── cron
+    │   ├── grade-daily.ts
+    │   ├── run-daily.ts
+    │   ├── warm-all.ts
+    │   └── warm.ts
+    ├── diag
+    │   ├── preds-columns.ts
+    │   ├── preds.ts
+    │   └── view-columns.ts
+    ├── diag-keylen.ts
+    ├── echo.ts
+    ├── fades
+    │   └── [league].ts
+    ├── games-v2.ts
+    ├── games-with-predictions.ts
+    ├── ingest
+    │   ├── games.ts
+    │   └── scores.ts
+    ├── ping.ts
+    └── wd.ts
+
+8 directories, 23 files
+
+app router tree for visibility
+app
+├── (sports)
+│   ├── [league]
+│   │   └── page.tsx
+│   └── LeaguePage.tsx
+├── account
+│   └── page.tsx
+├── admin
+│   └── page.tsx
+├── api
+│   ├── admin
+│   │   └── predictions
+│   │       └── route.ts
+│   ├── cron
+│   │   ├── grade-yesterday
+│   │   │   └── route.ts
+│   │   ├── run-today
+│   │   │   └── route.ts
+│   │   └── warm-nfl
+│   │       └── route.ts
+│   ├── debug
+│   │   └── env
+│   │       └── route.ts
+│   ├── diag
+│   │   ├── supabase
+│   │   │   └── route.ts
+│   │   ├── supabase-admin
+│   │   │   └── route.ts
+│   │   ├── supabase-decode
+│   │   │   └── route.ts
+│   │   └── supabase-raw
+│   │       └── route.ts
+│   ├── envcheck
+│   │   └── route.ts
+│   ├── fades
+│   │   └── route.ts
+│   ├── games
+│   │   ├── route.ts
+│   │   └── route.ts.bak
+│   ├── health
+│   │   └── route.ts
+│   ├── metrics
+│   │   ├── recompute
+│   │   │   └── route.ts
+│   │   └── route.ts
+│   ├── mobile
+│   │   └── league
+│   │       └── route.ts
+│   ├── predict
+│   │   ├── latest
+│   │   │   └── route.ts
+│   │   └── run
+│   │       ├── _upsert.ts
+│   │       └── route.ts
+│   └── predictions
+│       └── [league]
+│           └── route.ts
+├── debug
+│   └── auth
+│       └── page.tsx
+├── debug-auth
+│   └── page.tsx
+├── fades
+│   └── page.tsx
+├── globals.css
+├── layout.tsx
+├── lib
+│   ├── supa-browser.ts
+│   └── supabaseAdmin.ts
+├── login
+│   └── page.tsx
+├── mlb
+│   └── page.tsx
+├── nba
+│   └── page.tsx
+├── ncaab
+│   └── page.tsx
+├── ncaaf
+│   └── page.tsx
+├── nfl
+│   └── page.tsx
+├── nhl
+│   └── page.tsx
+├── page.tsx
+├── predictions
+│   └── mlb
+│       ├── Client.tsx
+│       └── page.tsx
+├── pricing
+│   └── page.tsx
+├── sign-in
+│   └── page.tsx
+├── sign-up
+│   └── page.tsx
+├── success
+│   └── page.tsx
+└── wnba
+    └── page.tsx
+
+51 directories, 47 files
+
+routes referencing prediction or odds endpoints
+./.env.local:1:### ODDS + PREDICTION ###
+./.env.local:2:NEXT_PUBLIC_THE_ODDS_API_KEY=2a9f9fcde40be35d51692f85efecb4f9
+./.env.local:3:NEXT_PUBLIC_PREDICTION_API_URL=http://localhost:3001/api/predict
+./app/(sports)/LeaguePage.tsx:21:  const url = `/api/predict/latest?league=${encodeURIComponent(league)}&date=${today}&days=14`;
+./app/predictions/mlb/Client.tsx:93:      const url = `/api/predictions/mlb${queryString ? `?${queryString}` : ""}`;
+./vercel.json:4:      "path": "/api/predict/run?league=nfl&days=14&store=1",
+./vercel.json:8:      "path": "/api/predict/run?league=ncaaf&days=14&store=1",
+./vercel.json:12:      "path": "/api/predict/run?league=mlb&days=7&store=1",
+./aisportsguru-mobile/aisportsguru-mobile/lib/api.ts:3:  const url = `${BASE}/api/predictions/${sport}?daysFrom=${daysFrom}`;
+./aisportsguru-mobile/.env.backup.1755147549:8:NEXT_PUBLIC_PREDICTION_API_URL=https://aisportsguru.com/api
+./aisportsguru-mobile/src/hooks/usePredictions.ts:7:      const res = await fetch(`${process.env.EXPO_PUBLIC_API_BASE}/api/predictions/${sport}?season=2025`);
+./backend/.env.local:5:NEXT_PUBLIC_THE_ODDS_API_KEY=2a9f9fcde40be35d51692f85efecb4f9
+./backend/updateGamesForSport.mjs:9:  "NEXT_PUBLIC_THE_ODDS_API_KEY",
+./backend/updateGamesForSport.mjs:12:const ODDS_API_KEY = process.env.NEXT_PUBLIC_THE_ODDS_API_KEY;
+./backend/updateGames.mjs:9:  "NEXT_PUBLIC_THE_ODDS_API_KEY", // The Odds API
+./backend/updateGames.mjs:12:const ODDS_API_KEY = process.env.NEXT_PUBLIC_THE_ODDS_API_KEY;
+./backend/.env:8:PREDICTIONS_ADMIN_TOKEN=9d13f6b7-b1b0-4db4-b6d8-b3b1d5a7f3b0
+./.next/types/routes.d.ts:5:type AppRouteHandlerRoutes = "/api/admin/predictions" | "/api/cron/grade-yesterday" | "/api/cron/run-today" | "/api/cron/warm-nfl" | "/api/debug/env" | "/api/diag/supabase" | "/api/diag/supabase-admin" | "/api/diag/supabase-decode" | "/api/diag/supabase-raw" | "/api/envcheck" | "/api/fades" | "/api/games" | "/api/health" | "/api/metrics" | "/api/metrics/recompute" | "/api/mobile/league" | "/api/predict/latest" | "/api/predict/run" | "/api/predictions/[league]"
+./.next/types/routes.d.ts:34:  "/api/predict/latest": {}
+./.next/types/routes.d.ts:35:  "/api/predict/run": {}
+./.next/types/routes.d.ts:36:  "/api/predictions/[league]": { "league": string; }
+./.next/types/validator.ts:279:// Validate ../../app/api/predict/latest/route.ts
+./.next/types/validator.ts:281:  const handler = {} as typeof import("../../app/api/predict/latest/route.js")
+./.next/types/validator.ts:282:  handler satisfies RouteHandlerConfig<"/api/predict/latest">
+./.next/types/validator.ts:285:// Validate ../../app/api/predict/run/route.ts
+./.next/types/validator.ts:287:  const handler = {} as typeof import("../../app/api/predict/run/route.js")
+./.next/types/validator.ts:288:  handler satisfies RouteHandlerConfig<"/api/predict/run">
+./.next/types/validator.ts:291:// Validate ../../app/api/predictions/[league]/route.ts
+./.next/types/validator.ts:293:  const handler = {} as typeof import("../../app/api/predictions/[league]/route.js")
+./.next/types/validator.ts:294:  handler satisfies RouteHandlerConfig<"/api/predictions/[league]">
+./components/PredictionsGrid.tsx:49:      const res = await fetch(`/api/predictions/${sport}?daysFrom=${daysFrom}`, {
+./components/PredictionsPage.tsx:61:  const res = await fetch(`/api/predictions/${sport}?` + qs.toString(), {
+./.env.vercel:3:NEXT_PUBLIC_PREDICTION_API_URL="https://aisportsguru.com/api/predict"
+./scripts/patch_frontend.sh:57:    `/api/predict/latest?league=${encodeURIComponent(league)}` +
+./scripts/fetch-odds.mjs:24:const ODDS_API_KEY = need('ODDS_API_KEY', ['NEXT_PUBLIC_THE_ODDS_API_KEY']);
+./scripts/fetch-odds.mjs.bak:21:  process.env.ODDS_API_KEY || process.env.NEXT_PUBLIC_THE_ODDS_API_KEY;
+./scripts/patch-predictions-route.js:2:const path = 'app/api/predictions/[sport]/route.ts';
+./.github/workflows/predict-cron.yml:14:        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=nfl&days=14&store=1"
+./.github/workflows/predict-cron.yml:17:        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=ncaaf&days=14&store=1"
+./.github/workflows/predict-cron.yml:20:        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=mlb&days=14&store=1"
+./.github/workflows/predict-cron.yml:23:        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=nba&days=14&store=1"
+./.github/workflows/predict-cron.yml:26:        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=nhl&days=14&store=1"
+./.github/workflows/predict-cron.yml:29:        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=ncaab&days=14&store=1"
+./.github/workflows/predict-cron.yml:32:        run: curl -s "${{ secrets.SITE_URL }}/api/predict/run?league=wnba&days=14&store=1"
+./lib/fetchOdds.ts:43:    process.env.THE_ODDS_API_KEY || process.env.NEXT_PUBLIC_THE_ODDS_API_KEY;
+./lib/fetchOdds.ts:44:  if (!apiKey) throw new Error("Missing THE_ODDS_API_KEY");
+./lib/fades.ts:59:  const url = `${BASE}/api/predictions/${league}`;
+./lib/env.ts:17:  return process.env.ODDS_API_KEY || process.env.NEXT_PUBLIC_THE_ODDS_API_KEY || "";
+./lib/fetchPredictions.ts:22:  const url = new URL(`/api/predictions/${league}`, base);
+./.git/logs/HEAD:23:5daf51e95fa6db7ca0d8746d83978643e71f6fd4 cbe2201310534fa9f91554606d76152d653414fe Jordan Smith <aisportsguru@gmail.com> 1756520363 -0700	commit: Remove legacy pages/api/predictions to fix duplicate route
+./.git/logs/refs/heads/main:10:5daf51e95fa6db7ca0d8746d83978643e71f6fd4 cbe2201310534fa9f91554606d76152d653414fe Jordan Smith <aisportsguru@gmail.com> 1756520363 -0700	commit: Remove legacy pages/api/predictions to fix duplicate route
+./.env.server:9:# You had NEXT_PUBLIC_THE_ODDS_API_KEY in .env.local; reuse it server-side:
+./pages/api/admin/grade-results.ts:11:  process.env.PREDICTIONS_ADMIN_TOKEN ||
+./pages/api/admin/backfill.ts:4:const ADMIN_TOKEN = process.env.PREDICTIONS_ADMIN_TOKEN || process.env.ADMIN_TOKEN || "";
+./pages/api/admin/run-pipeline.ts:4:const ADMIN_TOKEN = process.env.PREDICTIONS_ADMIN_TOKEN || process.env.ADMIN_TOKEN || "";
+./.env.local.bak:1:### ODDS + PREDICTION ###
+./.env.local.bak:2:NEXT_PUBLIC_THE_ODDS_API_KEY=2a9f9fcde40be35d51692f85efecb4f9
+./.env.local.bak:3:NEXT_PUBLIC_PREDICTION_API_URL=http://localhost:3001/api/predict
+./vercel.cron.patch.json:4:      "path": "/api/predict/run?league=nfl&days=14&store=1",
+./vercel.cron.patch.json:8:      "path": "/api/predict/run?league=ncaaf&days=14&store=1",
+./vercel.cron.patch.json:12:      "path": "/api/predict/run?league=mlb&days=7&store=1",
+
+search for multiple next configs which break Next 15
+./next.config.mjs

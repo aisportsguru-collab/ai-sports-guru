@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
     const { data: games, error: e1 } = await supabaseAdmin
       .from('games')
-      .select('id, sport, home_team, away_team, commence_time')
+      .select('game_id, sport, home_team, away_team, commence_time')
       .gte('commence_time', from.toISOString())
       .lte('commence_time', to.toISOString());
     if (e1) throw e1;
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       const conf_total = 53;
 
       rows.push({
-        game_id: g.id,
+        game_id: g.game_id,
         model_version: 'v1',
         pick_ml, conf_ml,
         pick_spread, conf_spread,
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     for (let i = 0; i < rows.length; i += 200) {
       const chunk = rows.slice(i, i + 200);
-      const { error } = await supabaseAdmin.from('predictions').upsert(chunk, { onConflict: 'game_id,model_version' });
+      const { error } = await supabaseAdmin.from('predictions').upsert(chunk, { returning: "minimal" }, { onConflict: 'game_id,model_version', returning: 'minimal' })
       if (error) throw error;
     }
 
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function startJob(name: string) {
-  const { data } = await supabaseAdmin.from('job_runs').insert({ job_name: name }).select('id').single();
+  const { data } = await supabaseAdmin.from('job_runs').insert({ job_name: name }).single();
   return data!;
 }
 async function finishJob(id: number, ok: boolean, details: any) {

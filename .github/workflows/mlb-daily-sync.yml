@@ -1,0 +1,41 @@
+name: Daily MLB stats sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 9 * * *"   # keep/adjust as you like (UTC)
+
+concurrency:
+  group: mlb-sync-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps (global, no venv)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Run MLB daily stats sync
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SEASONS: 2023,2024,2025
+        timeout-minutes: 40
+        run: |
+          set -euxo pipefail
+          echo "[MLB] seasons ${SEASONS}"
+          timeout 30m bash scripts/data-sync/mlb/sync_mlb.sh
+      - name: Dump debug info on failure
+        if: failure()
+        run: |
+          dmesg | tail -n 200 || true
+          df -h || true
+          free -m || true

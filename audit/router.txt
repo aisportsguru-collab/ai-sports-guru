@@ -1,0 +1,47 @@
+=== ROUTES (page.tsx and route.ts) ===
+(sports)/[league]/page.tsx
+account/page.tsx
+admin/page.tsx
+api/admin/predictions/route.ts
+api/cron/grade-yesterday/route.ts
+api/cron/run-today/route.ts
+api/cron/warm-nfl/route.ts
+api/debug/env/route.ts
+api/diag/supabase-admin/route.ts
+api/diag/supabase-decode/route.ts
+api/diag/supabase-raw/route.ts
+api/diag/supabase/route.ts
+api/envcheck/route.ts
+api/fades/route.ts
+api/games/route.ts
+api/health/route.ts
+api/metrics/recompute/route.ts
+api/metrics/route.ts
+api/mobile/league/route.ts
+api/odds/route.ts
+api/predict/latest/route.ts
+api/predict/route.ts
+api/predict/run/route.ts
+api/predictions/[league]/route.ts
+debug-auth/page.tsx
+debug/auth/page.tsx
+fades/page.tsx
+login/page.tsx
+mlb/page.tsx
+nba/page.tsx
+ncaab/page.tsx
+ncaaf/page.tsx
+nfl/page.tsx
+nhl/page.tsx
+page.tsx
+predictions/mlb/page.tsx
+pricing/page.tsx
+sign-in/page.tsx
+sign-up/page.tsx
+success/page.tsx
+wnba/page.tsx
+
+=== Duplicate page.tsx in the same segment (should be max 1 per segment) ===
+
+=== Legacy pages/ dir present? ===
+No legacy pages/ directory

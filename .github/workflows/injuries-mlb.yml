@@ -1,7 +1,24 @@
+<<<<<<< Updated upstream
 name: Daily MLB Injuries
 on: { workflow_dispatch: {}, schedule: [ { cron: "10 12 * * *" } ] }
 permissions: { contents: read }
 concurrency: { group: injuries-mlb, cancel-in-progress: true }
+=======
+name: Daily MLB injuries sync
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "10 12 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: injuries-mlb
+  cancel-in-progress: true
+
+>>>>>>> Stashed changes
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -13,6 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
+<<<<<<< Updated upstream
         with: { node-version: "20", cache: "npm" }
       - run: npm ci --prefer-offline --no-audit --no-fund
       - name: Run
@@ -21,3 +39,23 @@ jobs:
           if [ -f scripts/injuries-sync.mjs ]; then node --unhandled-rejections=strict scripts/injuries-sync.mjs mlb; \
           elif [ -f scripts/injuries/mlb.mjs ]; then node --unhandled-rejections=strict scripts/injuries/mlb.mjs; \
           else echo "No injuries script, skipping"; fi
+=======
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install deps
+        run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Run injuries sync (mlb)
+        run: |
+          if [ -z "${INJURIES_API_KEY:-}" ]; then
+            echo "No INJURIES_API_KEY configured; skipping."
+            exit 0
+          fi
+          if [ -f scripts/injuries-sync.mjs ]; then
+            node --unhandled-rejections=strict scripts/injuries-sync.mjs mlb
+          elif [ -f scripts/injuries/mlb.mjs ]; then
+            node --unhandled-rejections=strict scripts/injuries/mlb.mjs
+          else
+            echo "No injuries script found; skipping."
+          fi
+>>>>>>> Stashed changes

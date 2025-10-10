@@ -1,7 +1,24 @@
+<<<<<<< Updated upstream
 name: Weekly NCAAF Stats
 on: { workflow_dispatch: {}, schedule: [ { cron: "0 9 * * MON" } ] }
 permissions: { contents: read }
 concurrency: { group: ncaaf-weekly-stats, cancel-in-progress: true }
+=======
+name: Weekly NCAAF stats sync
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 9 * * MON"  # Mondays 09:00 UTC
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncaaf-weekly-stats
+  cancel-in-progress: true
+
+>>>>>>> Stashed changes
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -12,6 +29,7 @@ jobs:
       STATS_API_KEY: ${{ secrets.STATS_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+<<<<<<< Updated upstream
       - name: Guard upcoming games via REST
         run: |
           BASE="${NEXT_PUBLIC_SUPABASE_URL%/}/rest/v1"
@@ -29,3 +47,53 @@ jobs:
           if [ -f scripts/stats/ncaaf_weekly.py ]; then python3 scripts/stats/ncaaf_weekly.py || true; \
           elif [ -f scripts/stats/ncaaf-weekly.mjs ]; then node --unhandled-rejections=strict scripts/stats/ncaaf-weekly.mjs || true; \
           else echo "No weekly stats script found, skipping"; fi
+=======
+
+      - name: Quick season guard (skip if no upcoming NCAAF games)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: |
+          node - <<'NODE'
+          import { createClient } from '@supabase/supabase-js';
+          const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+          const now = new Date();
+          const to = new Date(now.getTime() + 3*864e5).toISOString();
+          const { data, error } = await supabase
+            .from('games')
+            .select('game_id', { count: 'exact', head: true })
+            .eq('sport', 'ncaaf')
+            .gte('start_time', now.toISOString())
+            .lte('start_time', to);
+          if (error) { console.error(error); process.exit(1); }
+          const count = (data && data.length === 0) ? 0 : 1; // head query
+          if (!count) {
+            console.log('No NCAAF games soon; skipping weekly stats.');
+            process.exit(78);
+          }
+          console.log('Games upcoming; continue.');
+          NODE
+        continue-on-error: true
+
+      - name: Setup Python (if your stats sync uses it)
+        if: success()
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps (best-effort)
+        if: success()
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else echo "no requirements.txt"; fi
+
+      - name: Run weekly stats (best-effort)
+        if: success()
+        run: |
+          if [ -f scripts/stats/ncaaf_weekly.py ]; then
+            python scripts/stats/ncaaf_weekly.py
+          elif [ -f scripts/stats/ncaaf-weekly.mjs ]; then
+            node --unhandled-rejections=strict scripts/stats/ncaaf-weekly.mjs
+          else
+            echo "No weekly stats script found; skipping."
+          fi
+>>>>>>> Stashed changes

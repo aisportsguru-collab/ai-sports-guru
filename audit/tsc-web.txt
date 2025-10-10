@@ -1,0 +1,14 @@
+app/api/predict/run/_upsert.ts(49,35): error TS2554: Expected 0-1 arguments, but got 2.
+app/api/predict/run/route.ts(57,33): error TS2345: Argument of type '{ ml_home: any; ml_away: any; spread_line: any; spread_home_price: null; spread_away_price: null; total_points: any; over_price: any; under_price: any; }' is not assignable to parameter of type 'OddsRow'.
+  Type '{ ml_home: any; ml_away: any; spread_line: any; spread_home_price: null; spread_away_price: null; total_points: any; over_price: any; under_price: any; }' is missing the following properties from type 'OddsRow': game_id, sport, home_team, away_team, commence_time
+components/Nav.tsx(32,17): error TS2322: Type 'string' is not assignable to type 'UrlObject | RouteImpl<string>'.
+components/PredictionCard.tsx(44,22): error TS2554: Expected 4 arguments, but got 3.
+components/PredictionCard.tsx(45,21): error TS2554: Expected 2 arguments, but got 1.
+components/SiteHeader.tsx(24,15): error TS2322: Type 'string' is not assignable to type 'UrlObject | RouteImpl<string>'.
+components/SiteHeader.tsx(33,13): error TS2820: Type '"/signin"' is not assignable to type 'UrlObject | RouteImpl<"/signin">'. Did you mean '"/sign-in"'?
+lib/fades/buildFades.ts(59,39): error TS2353: Object literal may only specify known properties, and 'league' does not exist in type 'any[]'.
+lib/fades/buildFades.ts(60,15): error TS2339: Property 'length' does not exist on type '{ spread: { min: number; max: number; }; total: { min: number; max: number; }; }'.
+lib/fades/buildFades.ts(63,51): error TS2345: Argument of type '{ spread: { min: number; max: number; }; total: { min: number; max: number; }; }' is not assignable to parameter of type 'any[]'.
+  Type '{ spread: { min: number; max: number; }; total: { min: number; max: number; }; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 35 more.
+lib/getGames.ts(1,10): error TS2614: Module '"../components/GameCard"' has no exported member 'Game'. Did you mean to use 'import Game from "../components/GameCard"' instead?
+scripts/fetch-odds.ts(27,11): error TS2740: Type '{}' is missing the following properties from type 'any[]': length, pop, push, concat, and 35 more.

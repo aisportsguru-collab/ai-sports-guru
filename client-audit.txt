@@ -1,0 +1,3 @@
+=== Missing or misplaced 'use client' after fix ===
+
+=== 'use client' not at very top (line > 1) ===

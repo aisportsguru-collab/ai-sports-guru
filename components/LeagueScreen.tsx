@@ -1,18 +1,14 @@
-import { fetchGames } from "@/lib/fetchGames";
-import GameCard from "@/components/GameCard";
+"use client";
+import GameCard from "./GameCard";
 
-export default async function LeagueScreen({ league, title }: { league: string; title: string }) {
-  const games = await fetchGames(league, 14);
+type Props = { games?: any[] };
+
+export default function LeagueScreen({ games = [] }: Props) {
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-bold">{title}</h1>
-      {games.length === 0 ? (
-        <div className="opacity-70">No upcoming games found.</div>
-      ) : (
-        <div className="grid gap-4">
-          {games.map((g) => <GameCard key={g.game_uuid || g.game_id} game={g} />)}
-        </div>
-      )}
+    <div className="grid gap-4">
+      {games.map((g: any) => (
+        <GameCard key={String(g.game_uuid ?? g.game_id ?? Math.random())} row={g} />
+      ))}
     </div>
   );
 }

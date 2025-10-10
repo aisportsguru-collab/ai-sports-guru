@@ -1,0 +1,39 @@
+name: Odds and Games Sync v3
+on:
+  workflow_dispatch:
+    inputs:
+      league:
+        description: League (nfl, nba, mlb, etc.)
+        required: true
+        default: nfl
+      days:
+        description: How many future days to fetch
+        required: true
+        default: "14"
+      skip:
+        description: Skip odds snapshots (1 to skip)
+        required: false
+        default: "0"
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Guard env
+        run: |
+          test -n "${SUPABASE_URL}" && test -n "${SUPABASE_SERVICE_ROLE_KEY}" && test -n "${ODDS_API_KEY}"
+      - name: Ingest upcoming games (The Odds API -> Supabase)
+        run: |
+          bash scripts/ci/ingest-games.sh "${{ inputs.league }}" "${{ inputs.days }}"
+      - name: Pull odds snapshots (optional)
+        if: ${{ inputs.skip != '1' }}
+        run: |
+          node ./scripts/fetch-odds-rest.mjs "${{ inputs.league }}" "${{ inputs.days }}"

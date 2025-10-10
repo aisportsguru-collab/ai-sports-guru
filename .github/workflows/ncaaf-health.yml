@@ -1,10 +1,19 @@
 name: NCAAF Health Check
+
 on:
   workflow_dispatch: {}
   schedule:
+<<<<<<< Updated upstream
     - cron: "15 * * * *"
 permissions: { contents: read }
 concurrency: { group: ncaaf-health, cancel-in-progress: true }
+=======
+    - cron: "15 * * * *"  # hourly :15
+
+permissions:
+  contents: read
+
+>>>>>>> Stashed changes
 jobs:
   health:
     runs-on: ubuntu-latest
@@ -13,6 +22,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
+<<<<<<< Updated upstream
       - name: Probe counts via Supabase REST
         run: |
           set -e
@@ -33,3 +43,52 @@ jobs:
             exit 2
           fi
           echo "Health ok"
+=======
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check DB readiness for NCAAF
+        run: |
+          node - <<'NODE'
+          import { createClient } from '@supabase/supabase-js';
+
+          const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          if (!url || !key) {
+            console.error('Supabase env not set');
+            process.exit(1);
+          }
+
+          const supabase = createClient(url, key, { auth: { persistSession: false }});
+          const now = new Date();
+          const to = new Date(now.getTime() + 7*864e5);
+          const isoNow = now.toISOString();
+          const isoTo  = to.toISOString();
+
+          // Upcoming games exist?
+          const { data: games, error: gErr } = await supabase
+            .from('games')
+            .select('game_id', { count: 'exact', head: true })
+            .eq('sport', 'ncaaf')
+            .gte('start_time', isoNow)
+            .lte('start_time', isoTo);
+
+          if (gErr) { console.error('games error:', gErr); process.exit(2); }
+          if (!games) { console.error('No games data returned'); process.exit(3); }
+
+          // Predictions with any confidence exist in that window?
+          const { data: preds, error: pErr } = await supabase
+            .from('mat_games_with_odds_predictions')
+            .select('game_id', { count: 'exact', head: true })
+            .eq('sport', 'ncaaf')
+            .gte('start_time', isoNow)
+            .lte('start_time', isoTo)
+            .or('moneyline_conf.not.is.null,spread_conf.not.is.null,total_conf.not.is.null');
+
+          if (pErr) { console.error('preds error:', pErr); process.exit(4); }
+          if (!preds) { console.error('No preds data returned'); process.exit(5); }
+
+          console.log('✅ NCAAF health OK: games + predictions present in next 7d');
+          NODE
+>>>>>>> Stashed changes

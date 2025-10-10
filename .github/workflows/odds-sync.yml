@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 name: Odds & Games Sync (legacy, disabled on push)
 on:
   workflow_dispatch:
@@ -11,5 +12,72 @@ concurrency: { group: odds-games-legacy-${{ github.ref }}, cancel-in-progress: t
 jobs:
   noop:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
     steps:
       - run: echo "Legacy workflow retained for history; use odds-sync-v2.yml instead."
+=======
+name: Odds & Games Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      league:
+        description: League (nba|nhl|mlb|nfl|ncaaf)
+        required: true
+        default: nba
+      days:
+        description: Days ahead to look
+        required: true
+        default: "7"
+  schedule:
+    - cron: "*/30 * * * *"  # every 30 min
+
+permissions:
+  contents: read
+
+concurrency:
+  group: odds-games-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Resolve inputs
+        run: |
+          echo "LEAGUE=${{ github.event.inputs.league || 'nba' }}" >> $GITHUB_ENV
+          echo "DAYS=${{ github.event.inputs.days || '7' }}" >> $GITHUB_ENV
+
+      - name: Fetch games (best effort)
+        run: |
+          if [ -f scripts/ingest/games.mjs ]; then
+            node --unhandled-rejections=strict scripts/ingest/games.mjs "$LEAGUE" "$DAYS" || true
+          else
+            echo "No games ingester present; skipping."
+          fi
+
+      - name: Fetch odds & upsert
+        run: node --unhandled-rejections=strict scripts/fetch-odds-rest.mjs "$LEAGUE" "$DAYS"
+
+      - name: Done
+        run: echo "Sync completed for $LEAGUE"
+>>>>>>> Stashed changes

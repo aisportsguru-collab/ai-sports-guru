@@ -25,7 +25,7 @@ export default function SiteHeader() {
         </Link>
         <nav className="flex gap-4">
           {nav.map((item) => {
-            const active = pathname.startsWith(item.href);
+            const active = (pathname ?? "").startsWith(item.href);
             return (
               <Link
                 key={item.href}

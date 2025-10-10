@@ -1,0 +1,315 @@
+aisportsguru-mobile/aisportsguru-mobile/app.config.ts(1,28): error TS2307: Cannot find module 'expo/config' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(auth)/_layout.tsx(2,23): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(auth)/login.tsx(2,108): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(auth)/login.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(auth)/signup.tsx(2,108): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(auth)/signup.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(onboarding)/welcome.tsx(2,70): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(onboarding)/welcome.tsx(3,32): error TS2307: Cannot find module 'expo-linear-gradient' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(onboarding)/welcome.tsx(4,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(onboarding)/welcome.tsx(5,20): error TS2307: Cannot find module '~/components/ui/Button' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(paywall)/subscribe.tsx(2,58): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(paywall)/subscribe.tsx(3,29): error TS2307: Cannot find module 'expo-web-browser' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(paywall)/subscribe.tsx(4,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/_layout.tsx(2,22): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/_layout.tsx(3,26): error TS2307: Cannot find module '@expo/vector-icons' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/account/index.tsx(2,88): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/account/index.tsx(3,29): error TS2307: Cannot find module 'expo-web-browser' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/account/subscribe.tsx(2,75): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/account/subscribe.tsx(4,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/index.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/sports/[sport].tsx(5,8): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/sports/[sport].tsx(6,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/sports/[sport].tsx(7,26): error TS2307: Cannot find module 'expo-haptics' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/sports/[sport].tsx(8,26): error TS2307: Cannot find module 'expo-sharing' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/sports/[sport].tsx(9,53): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/sports/[sport].tsx(10,38): error TS2307: Cannot find module 'react-native-view-shot' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/sports/index.tsx(2,70): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/(tabs)/sports/index.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/_layout.tsx(2,23): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/_layout.tsx(5,8): error TS1192: Module '"/Users/jordansmith/ai-sports-guru/aisportsguru-mobile/aisportsguru-mobile/lib/purchases"' has no default export.
+aisportsguru-mobile/aisportsguru-mobile/app/_layout.tsx(5,36): error TS2305: Module '"../lib/purchases"' has no exported member 'PurchasesProvider'.
+aisportsguru-mobile/aisportsguru-mobile/app/index.tsx(2,26): error TS2307: Cannot find module '~/lib/supabase' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/index.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/app/index.tsx(4,22): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/components/GameCard.tsx(2,58): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/components/GameCard.tsx(13,46): error TS1016: A required parameter cannot follow an optional parameter.
+aisportsguru-mobile/aisportsguru-mobile/components/ui/Button.tsx(2,63): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/components/ui/Loader.tsx(2,44): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/lib/favorites.ts(1,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/lib/notifications.ts(1,32): error TS2307: Cannot find module 'expo-notifications' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/lib/purchases.ts(1,26): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/lib/purchases.ts(11,37): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/lib/purchases.ts(23,37): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/lib/purchases.ts(31,35): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/lib/purchases.ts(36,35): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/aisportsguru-mobile/lib/session.tsx(2,26): error TS2307: Cannot find module '~/lib/supabase' or its corresponding type declarations.
+aisportsguru-mobile/app.config.ts(1,33): error TS2307: Cannot find module '@expo/config' or its corresponding type declarations.
+aisportsguru-mobile/App.tsx(2,30): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/App.tsx(3,10): error TS2305: Module '"./src/lib/purchases"' has no exported member 'configurePurchases'.
+aisportsguru-mobile/app/(auth)/sign-in.tsx(1,51): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(auth)/sign-in.tsx(2,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(auth)/sign-up.tsx(1,51): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(auth)/sign-up.tsx(2,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/api-check.tsx(2,40): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-check.tsx(2,40): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-check.tsx(3,23): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-diagnostics.tsx(2,52): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-diagnostics.tsx(3,52): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-diagnostics.tsx(4,30): error TS2307: Cannot find module 'expo-application' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-force-create.tsx(2,51): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-force-create.tsx(3,28): error TS2307: Cannot find module 'expo-clipboard' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-force-create.tsx(4,23): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-user-id.tsx(2,45): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-user-id.tsx(3,23): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/app/(dev)/rc-user-id.tsx(4,28): error TS2307: Cannot find module 'expo-clipboard' or its corresponding type declarations.
+aisportsguru-mobile/app/(modals)/_layout.tsx(1,23): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(modals)/prediction/[id].tsx(2,94): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(modals)/prediction/[id].tsx(3,49): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(modals)/prediction/[id].tsx(4,32): error TS2307: Cannot find module 'expo-linear-gradient' or its corresponding type declarations.
+aisportsguru-mobile/app/(modals)/prediction/[id].tsx(5,10): error TS2305: Module '"../../../src/data/predictions"' has no exported member 'getPredictionById'.
+aisportsguru-mobile/app/(modals)/prediction/[id].tsx(53,53): error TS2339: Property 'startTimeISO' does not exist on type 'Prediction'.
+aisportsguru-mobile/app/(modals)/prediction/[id].tsx(58,110): error TS2339: Property 'value' does not exist on type 'Prediction'.
+aisportsguru-mobile/app/(modals)/prediction/[id].tsx(66,34): error TS2339: Property 'confidence' does not exist on type 'Prediction'.
+aisportsguru-mobile/app/(onboarding)/terms.tsx(2,66): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(onboarding)/terms.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(onboarding)/welcome.tsx(2,88): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(onboarding)/welcome.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(onboarding)/welcome.tsx(4,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/paywall.tsx(2,110): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/paywall.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/paywall.tsx(4,45): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/paywall.tsx(5,32): error TS2307: Cannot find module 'expo-linear-gradient' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/paywall.tsx(6,26): error TS2307: Cannot find module 'expo-haptics' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/privacy.tsx(2,66): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/privacy.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/responsible.tsx(2,75): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(public)/responsible.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/_layout.tsx(2,22): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/_layout.tsx(3,26): error TS2307: Cannot find module '@expo/vector-icons' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/account.tsx(2,65): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/account.tsx(4,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/account/privacy.tsx(2,66): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/account/settings.tsx(2,73): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/account/terms.tsx(2,60): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/_layout.tsx(2,23): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/admin.tsx(2,59): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/index.tsx(2,77): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/index.tsx(4,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/league/[id].tsx(2,52): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/league/[id].tsx(3,38): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/league/index.tsx(2,41): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/league/index.tsx(3,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/league/mlb.tsx(3,55): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/app/(tabs)/home/league/nba.tsx(3,55): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/app/(tabs)/home/league/ncaab.tsx(3,57): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/app/(tabs)/home/league/ncaaf.tsx(3,57): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/app/(tabs)/home/league/nfl.tsx(3,55): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/app/(tabs)/home/league/nhl.tsx(3,55): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/app/(tabs)/home/league/wnba.tsx(3,56): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/app/(tabs)/home/prediction/[id].tsx(2,77): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/prediction/[id].tsx(3,49): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/home/prediction/[id].tsx(4,10): error TS2305: Module '"../../../../src/data/api"' has no exported member 'cachedJSON'.
+aisportsguru-mobile/app/(tabs)/home/settings.tsx(2,60): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/index.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/sports.tsx(2,82): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/sports.tsx(3,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/(tabs)/sports.tsx(5,26): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+aisportsguru-mobile/app/+not-found.tsx(1,29): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/+not-found.tsx(2,28): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/+not-found.tsx(4,28): error TS2307: Cannot find module '@/components/ThemedText' or its corresponding type declarations.
+aisportsguru-mobile/app/+not-found.tsx(5,28): error TS2307: Cannot find module '@/components/ThemedView' or its corresponding type declarations.
+aisportsguru-mobile/app/_layout.tsx(1,22): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/_layout.tsx(5,22): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/account/index.tsx(1,39): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/account/index.tsx(2,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/account/privacy.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/account/settings.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/account/terms.tsx(2,60): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/auth/index.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/auth/sign-in.tsx(2,76): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/auth/sign-in.tsx(4,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/auth/sign-up.tsx(2,76): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/auth/sign-up.tsx(4,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/index.tsx(2,87): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/index.tsx(3,32): error TS2307: Cannot find module 'expo-linear-gradient' or its corresponding type declarations.
+aisportsguru-mobile/app/index.tsx(5,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/league/[id].tsx(1,48): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/nfl/index.tsx(2,73): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/nfl/index.tsx(3,33): error TS2307: Cannot find module '@/lib/api' or its corresponding type declarations.
+aisportsguru-mobile/app/nfl/index.tsx(98,8): error TS2304: Cannot find name '__DEV__'.
+aisportsguru-mobile/app/predictions.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/premium-example.tsx(2,28): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/premium-tools/index.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/premium-tools/index.tsx(2,28): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/app/premium-tools/index.tsx(6,11): error TS2339: Property 'hasPro' does not exist on type 'Ctx'.
+aisportsguru-mobile/app/settings.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/sign-in.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/app/sign-up.tsx(1,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/components/Collapsible.tsx(2,46): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/Collapsible.tsx(4,28): error TS2307: Cannot find module '@/components/ThemedText' or its corresponding type declarations.
+aisportsguru-mobile/components/Collapsible.tsx(5,28): error TS2307: Cannot find module '@/components/ThemedView' or its corresponding type declarations.
+aisportsguru-mobile/components/Collapsible.tsx(6,28): error TS2307: Cannot find module '@/components/ui/IconSymbol' or its corresponding type declarations.
+aisportsguru-mobile/components/Collapsible.tsx(7,24): error TS2307: Cannot find module '@/constants/Colors' or its corresponding type declarations.
+aisportsguru-mobile/components/Collapsible.tsx(8,32): error TS2307: Cannot find module '@/hooks/useColorScheme' or its corresponding type declarations.
+aisportsguru-mobile/components/ExternalLink.tsx(1,28): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/components/ExternalLink.tsx(2,34): error TS2307: Cannot find module 'expo-web-browser' or its corresponding type declarations.
+aisportsguru-mobile/components/ExternalLink.tsx(4,26): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/HapticTab.tsx(1,41): error TS2307: Cannot find module '@react-navigation/bottom-tabs' or its corresponding type declarations.
+aisportsguru-mobile/components/HapticTab.tsx(2,35): error TS2307: Cannot find module '@react-navigation/elements' or its corresponding type declarations.
+aisportsguru-mobile/components/HapticTab.tsx(3,26): error TS2307: Cannot find module 'expo-haptics' or its corresponding type declarations.
+aisportsguru-mobile/components/HelloWave.tsx(2,28): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/HelloWave.tsx(9,8): error TS2307: Cannot find module 'react-native-reanimated' or its corresponding type declarations.
+aisportsguru-mobile/components/HelloWave.tsx(11,28): error TS2307: Cannot find module '@/components/ThemedText' or its corresponding type declarations.
+aisportsguru-mobile/components/ParallaxScrollView.tsx(2,28): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/ParallaxScrollView.tsx(8,8): error TS2307: Cannot find module 'react-native-reanimated' or its corresponding type declarations.
+aisportsguru-mobile/components/ParallaxScrollView.tsx(10,28): error TS2307: Cannot find module '@/components/ThemedView' or its corresponding type declarations.
+aisportsguru-mobile/components/ParallaxScrollView.tsx(11,38): error TS2307: Cannot find module '@/components/ui/TabBarBackground' or its corresponding type declarations.
+aisportsguru-mobile/components/ParallaxScrollView.tsx(12,32): error TS2307: Cannot find module '@/hooks/useColorScheme' or its corresponding type declarations.
+aisportsguru-mobile/components/PurchasesProvider.tsx(2,33): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/PurchasesProvider.tsx(3,70): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/components/PurchasesProvider.tsx(36,27): error TS2304: Cannot find name '__DEV__'.
+aisportsguru-mobile/components/SportCard.tsx(2,46): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/ThemedText.tsx(1,50): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/ThemedText.tsx(3,31): error TS2307: Cannot find module '@/hooks/useThemeColor' or its corresponding type declarations.
+aisportsguru-mobile/components/ThemedView.tsx(1,38): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/ThemedView.tsx(3,31): error TS2307: Cannot find module '@/hooks/useThemeColor' or its corresponding type declarations.
+aisportsguru-mobile/components/ui/IconSymbol.ios.tsx(1,59): error TS2307: Cannot find module 'expo-symbols' or its corresponding type declarations.
+aisportsguru-mobile/components/ui/IconSymbol.ios.tsx(2,38): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/ui/IconSymbol.tsx(3,27): error TS2307: Cannot find module '@expo/vector-icons/MaterialIcons' or its corresponding type declarations.
+aisportsguru-mobile/components/ui/IconSymbol.tsx(4,47): error TS2307: Cannot find module 'expo-symbols' or its corresponding type declarations.
+aisportsguru-mobile/components/ui/IconSymbol.tsx(6,66): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/components/ui/TabBarBackground.ios.tsx(1,39): error TS2307: Cannot find module '@react-navigation/bottom-tabs' or its corresponding type declarations.
+aisportsguru-mobile/components/ui/TabBarBackground.ios.tsx(2,26): error TS2307: Cannot find module 'expo-blur' or its corresponding type declarations.
+aisportsguru-mobile/components/ui/TabBarBackground.ios.tsx(3,28): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/hooks/useColorScheme.ts(1,32): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/hooks/useColorScheme.web.ts(2,52): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/hooks/useThemeColor.ts(6,24): error TS2307: Cannot find module '@/constants/Colors' or its corresponding type declarations.
+aisportsguru-mobile/hooks/useThemeColor.ts(7,32): error TS2307: Cannot find module '@/hooks/useColorScheme' or its corresponding type declarations.
+aisportsguru-mobile/lib/api.ts(58,9): error TS2304: Cannot find name '__DEV__'.
+aisportsguru-mobile/lib/revenuecat.ts(1,26): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/lib/revenuecat.ts(2,71): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/lib/useSportsList.ts(2,10): error TS2305: Module '"./api"' has no exported member 'getSportsList'.
+aisportsguru-mobile/providers/EntitlementProvider.tsx(2,64): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/screens/LoginScreen.tsx(2,59): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/Card.tsx(2,45): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/Disclaimer.tsx(2,40): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/GameRow.tsx(2,40): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/GradientButton.tsx(2,56): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/GradientButton.tsx(3,32): error TS2307: Cannot find module 'expo-linear-gradient' or its corresponding type declarations.
+aisportsguru-mobile/src/components/LegalFooter.tsx(2,40): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/LegalNote.tsx(2,28): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/Paywall.tsx(3,39): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/Paywall.tsx(4,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/src/components/Paywall.tsx(5,23): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/src/components/Paywall.tsx(19,18): error TS2304: Cannot find name 'openSubscribe'.
+aisportsguru-mobile/src/components/Paywall.tsx(25,27): error TS2304: Cannot find name 'restore'.
+aisportsguru-mobile/src/components/PredChips.tsx(2,40): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/PredictionCard.tsx(2,58): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/PredictionCard.tsx(3,32): error TS2307: Cannot find module 'expo-linear-gradient' or its corresponding type declarations.
+aisportsguru-mobile/src/components/PredictionCard.tsx(5,26): error TS2307: Cannot find module 'expo-haptics' or its corresponding type declarations.
+aisportsguru-mobile/src/components/PredictionCard.tsx(6,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/src/components/PredictionCard.tsx(17,33): error TS2339: Property 'confidence' does not exist on type 'Prediction'.
+aisportsguru-mobile/src/components/PredictionCard.tsx(18,32): error TS2339: Property 'startTimeISO' does not exist on type 'Prediction'.
+aisportsguru-mobile/src/components/PredictionCard.tsx(25,66): error TS2339: Property 'id' does not exist on type 'Prediction'.
+aisportsguru-mobile/src/components/PredictionCard.tsx(36,44): error TS2339: Property 'confidence' does not exist on type 'Prediction'.
+aisportsguru-mobile/src/components/PredictionCard.tsx(53,67): error TS2339: Property 'value' does not exist on type 'Prediction'.
+aisportsguru-mobile/src/components/ProBadge.tsx(3,28): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/RCOfferingsDebug.tsx(2,34): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/RCOfferingsDebug.tsx(3,23): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/src/components/RequirePro.tsx(2,26): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/src/components/RestorePurchasesButton.tsx(3,31): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/RestorePurchasesButton.tsx(7,11): error TS2339: Property 'restore' does not exist on type 'Ctx'.
+aisportsguru-mobile/src/components/SubscriptionGate.tsx(2,41): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/SubscriptionGate.tsx(3,41): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/src/components/TeamAvatar.tsx(2,40): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/TeamAvatar.tsx(3,32): error TS2307: Cannot find module 'expo-linear-gradient' or its corresponding type declarations.
+aisportsguru-mobile/src/components/ui/Card.tsx(2,34): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/ui/GradientBackground.tsx(2,34): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/ui/GradientBackground.tsx(3,32): error TS2307: Cannot find module 'expo-linear-gradient' or its corresponding type declarations.
+aisportsguru-mobile/src/components/ui/PrimaryButton.tsx(2,52): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/components/ui/PrimaryButton.tsx(3,26): error TS2307: Cannot find module 'expo-haptics' or its corresponding type declarations.
+aisportsguru-mobile/src/components/ui/Skeleton.tsx(2,37): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/cta/primary.ts(1,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/src/cta/primary.ts(2,24): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/src/data/api.ts(13,41): error TS2554: Expected 1 arguments, but got 2.
+aisportsguru-mobile/src/data/cache.ts(1,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/src/data/games.ts(22,46): error TS2554: Expected 1 arguments, but got 2.
+aisportsguru-mobile/src/data/leaguePredictions.ts(25,64): error TS2554: Expected 1 arguments, but got 2.
+aisportsguru-mobile/src/data/leagues.ts(50,65): error TS2554: Expected 1 arguments, but got 2.
+aisportsguru-mobile/src/data/leagues.ts(71,50): error TS2554: Expected 1 arguments, but got 2.
+aisportsguru-mobile/src/data/mock.ts(50,7): error TS2820: Type '"spread"' is not assignable to type '"ML" | "SPREAD" | "TOTAL"'. Did you mean '"SPREAD"'?
+aisportsguru-mobile/src/data/mock.ts(59,7): error TS2820: Type '"total"' is not assignable to type '"ML" | "SPREAD" | "TOTAL"'. Did you mean '"TOTAL"'?
+aisportsguru-mobile/src/data/mock.ts(70,7): error TS2820: Type '"spread"' is not assignable to type '"ML" | "SPREAD" | "TOTAL"'. Did you mean '"SPREAD"'?
+aisportsguru-mobile/src/data/predictions.ts(19,52): error TS2554: Expected 1 arguments, but got 2.
+aisportsguru-mobile/src/data/source.ts(1,36): error TS2307: Cannot find module '../lib/cache' or its corresponding type declarations.
+aisportsguru-mobile/src/data/source.ts(2,15): error TS2724: '"../constants/leagues"' has no exported member named 'LeagueId'. Did you mean 'LEAGUES'?
+aisportsguru-mobile/src/hooks/useBootNavigation.ts(2,27): error TS2307: Cannot find module 'expo-router' or its corresponding type declarations.
+aisportsguru-mobile/src/hooks/useBootNavigation.ts(3,10): error TS2305: Module '"../logic/lastSpot"' has no exported member 'consumeLastSpot'.
+aisportsguru-mobile/src/hooks/usePredictions.ts(1,26): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+aisportsguru-mobile/src/integrations/ingest.ts(1,15): error TS2305: Module '"../data/games"' has no exported member 'LeagueGame'.
+aisportsguru-mobile/src/lib/kv.ts(1,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/src/lib/lastDest.ts(1,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/src/lib/purchases.ts(1,23): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/src/lib/purchases.ts(2,26): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/lib/purchases.ts(13,9): error TS2304: Cannot find name '__DEV__'.
+aisportsguru-mobile/src/lib/purchases.ts(18,7): error TS2304: Cannot find name '__DEV__'.
+aisportsguru-mobile/src/lib/query.tsx(2,79): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+aisportsguru-mobile/src/lib/query.tsx(3,21): error TS2307: Cannot find module '@react-native-community/netinfo' or its corresponding type declarations.
+aisportsguru-mobile/src/lib/revenuecat.ts(2,35): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/src/logic/lastSpot.ts(1,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/src/providers/EntitlementAdapter.ts(4,11): error TS2339: Property 'hasPro' does not exist on type 'Ctx'.
+aisportsguru-mobile/src/providers/EntitlementAdapter.ts(4,19): error TS2339: Property 'customerInfo' does not exist on type 'Ctx'.
+aisportsguru-mobile/src/providers/EntitlementAdapter.ts(4,33): error TS2339: Property 'refresh' does not exist on type 'Ctx'.
+aisportsguru-mobile/src/providers/EntitlementProvider.tsx(10,11): error TS2339: Property 'hasPro' does not exist on type 'Ctx'.
+aisportsguru-mobile/src/providers/EntitlementProvider.tsx(10,28): error TS2339: Property 'refresh' does not exist on type 'Ctx'.
+aisportsguru-mobile/src/providers/ProProvider.tsx(2,23): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/src/screens/league/LeagueTemplate.tsx(2,98): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/screens/league/MLB.tsx(3,55): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/src/screens/league/NBA.tsx(3,55): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/src/screens/league/NCAAB.tsx(3,57): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/src/screens/league/NCAAF.tsx(3,57): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/src/screens/league/NFL.tsx(3,55): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/src/screens/league/NHL.tsx(3,55): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/src/screens/league/WNBA.tsx(3,56): error TS2322: Type '{ league: string; }' is not assignable to type 'IntrinsicAttributes & { leagueId?: string; }'.
+  Property 'league' does not exist on type 'IntrinsicAttributes & { leagueId?: string; }'. Did you mean 'leagueId'?
+aisportsguru-mobile/src/screens/PaywallScreen.tsx(2,77): error TS2307: Cannot find module 'react-native' or its corresponding type declarations.
+aisportsguru-mobile/src/screens/PaywallScreen.tsx(3,88): error TS2307: Cannot find module 'react-native-purchases' or its corresponding type declarations.
+aisportsguru-mobile/src/utils/cache.ts(1,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+aisportsguru-mobile/src/utils/labels.ts(1,10): error TS2305: Module '"../constants/leagues"' has no exported member 'getLeagueLabel'.
+aisportsguru-mobile/src/utils/prefs.ts(1,26): error TS2307: Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.
+app/api/odds/route.ts(17,38): error TS2339: Property 'ODDS_KEY' does not exist on type '{ APP_URL: string; SITE_URL: string; THE_ODDS_API_KEY: string; PREDICT_URL: string; SUPABASE_URL: string; SUPABASE_ANON_KEY: string; SUPABASE_SERVICE_ROLE: string; }'.
+app/api/odds/route.ts(18,39): error TS2339: Property 'ODDS_REGION' does not exist on type '{ APP_URL: string; SITE_URL: string; THE_ODDS_API_KEY: string; PREDICT_URL: string; SUPABASE_URL: string; SUPABASE_ANON_KEY: string; SUPABASE_SERVICE_ROLE: string; }'.
+app/api/odds/route.ts(19,39): error TS2339: Property 'ODDS_MARKETS' does not exist on type '{ APP_URL: string; SITE_URL: string; THE_ODDS_API_KEY: string; PREDICT_URL: string; SUPABASE_URL: string; SUPABASE_ANON_KEY: string; SUPABASE_SERVICE_ROLE: string; }'.
+app/api/predict/run/_upsert.ts(49,28): error TS2554: Expected 0-1 arguments, but got 2.
+app/api/predict/run/route.ts(57,33): error TS2345: Argument of type '{ ml_home: any; ml_away: any; spread_line: any; spread_home_price: null; spread_away_price: null; total_points: any; over_price: any; under_price: any; }' is not assignable to parameter of type 'OddsRow'.
+  Type '{ ml_home: any; ml_away: any; spread_line: any; spread_home_price: null; spread_away_price: null; total_points: any; over_price: any; under_price: any; }' is missing the following properties from type 'OddsRow': game_id, sport, home_team, away_team, commence_time
+components/GameList.tsx(41,35): error TS2740: Type 'Game' is missing the following properties from type 'ApiGame': spread_line, ai_ml_pick, ai_ml_conf, ai_spread_pick, and 4 more.
+components/Nav.tsx(32,17): error TS2322: Type 'string' is not assignable to type 'UrlObject | RouteImpl<string>'.
+components/PredictionCard.tsx(3,20): error TS2305: Module '"@/lib/formatOdds"' has no exported member 'sideToTeam'.
+components/PredictionCard.tsx(3,32): error TS2305: Module '"@/lib/formatOdds"' has no exported member 'formatSpreadPick'.
+components/PredictionCard.tsx(3,50): error TS2724: '"@/lib/formatOdds"' has no exported member named 'formatTotalPick'. Did you mean 'formatTotals'?
+components/SiteHeader.tsx(24,15): error TS2322: Type 'string' is not assignable to type 'UrlObject | RouteImpl<string>'.
+components/SiteHeader.tsx(33,13): error TS2820: Type '"/signin"' is not assignable to type 'UrlObject | RouteImpl<"/signin">'. Did you mean '"/sign-in"'?
+lib/adminAuth.ts(56,30): error TS2339: Property 'reason' does not exist on type 'AdminCheck'.
+  Property 'reason' does not exist on type '{ ok: true; envLen: number; headerLen: number; }'.
+lib/archive.ts(3,15): error TS2724: '"./odds"' has no exported member named 'NormalGame'. Did you mean 'normalizeGame'?
+lib/fades/buildFades.ts(1,10): error TS2305: Module '"@/lib/odds"' has no exported member 'getOddsRange'.
+lib/fades/buildFades.ts(1,24): error TS2724: '"@/lib/odds"' has no exported member named 'NormalizedGame'. Did you mean 'normalizeGame'?
+lib/getGames.ts(1,10): error TS2614: Module '"../components/GameCard"' has no exported member 'Game'. Did you mean to use 'import Game from "../components/GameCard"' instead?
+lib/model/featurize.ts(1,15): error TS2724: '"../odds"' has no exported member named 'NormalizedGame'. Did you mean 'normalizeGame'?
+lib/predict.ts(1,15): error TS2724: '"./odds"' has no exported member named 'NormalGame'. Did you mean 'normalizeGame'?
+scripts/fetch-odds.ts(27,11): error TS2740: Type '{}' is missing the following properties from type 'any[]': length, pop, push, concat, and 35 more.
