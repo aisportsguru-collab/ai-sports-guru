@@ -1,34 +1,56 @@
 name: NCAAB Daily Injuries
 
 on:
-  workflow_dispatch: {}
   schedule:
-    # Daily at 14:10 UTC (update as needed)
-    - cron: "10 14 * * *"
+    - cron: "20 13 * * *"   # 05:20 AM PT – adjust if you like
+  workflow_dispatch: {}
 
 jobs:
   ncaab-injuries:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Map from repo Secrets/Variables to the names your scripts actually read
+      SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: "20"
 
-      - name: Install deps
+      - name: Print env + probe Supabase
         run: |
-          python -m venv .venv
-          . .venv/bin/activate
-          pip install -r scripts/ncaab/requirements.txt
+          set -euo pipefail
+          echo "SUPABASE_URL=${SUPABASE_URL:-<unset>}"
+          test -n "${SUPABASE_SERVICE_ROLE_KEY:-}" || { echo "::error::Missing SUPABASE_SERVICE_ROLE_KEY"; exit 1; }
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/odds?select=id&limit=1" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+          echo "Supabase probe HTTP=$code"
+          [ "$code" = "200" ] || { echo "::error::Supabase probe failed ($code)"; exit 1; }
 
-      - name: Scrape injuries
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      - name: Install deps (if your script needs them)
         run: |
-          . .venv/bin/activate
-          python scripts/ncaab/ncaab_injuries_daily.py
+          if [ -f package-lock.json ] || [ -f package.json ]; then
+            npm ci || npm i
+          fi
+
+      # ⬇️ keep your existing run command; if it’s a Node script, this will still work
+      - name: Run NCAAB injuries sync
+        run: |
+          set -euo pipefail
+          # replace with your actual command if different
+          if [ -f scripts/ncaab/injuries.mjs ]; then
+            node scripts/ncaab/injuries.mjs || { echo "::warning::injuries script crashed"; exit 1; }
+          else
+            echo "::error::scripts/ncaab/injuries.mjs not found – update the path in this workflow."
+            exit 1
+          fi

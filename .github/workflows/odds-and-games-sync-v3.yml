@@ -1,39 +1,54 @@
 name: Odds and Games Sync v3
+
 on:
   workflow_dispatch:
     inputs:
       league:
-        description: League (nfl, nba, mlb, etc.)
+        description: "League (nfl|ncaaf|nba|mlb|nhl|wnba)"
         required: true
-        default: nfl
+        default: "nfl"
       days:
-        description: How many future days to fetch
+        description: "Days ahead to fetch"
         required: true
         default: "14"
-      skip:
-        description: Skip odds snapshots (1 to skip)
-        required: false
-        default: "0"
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      # Try every possible way to load the secrets or variables
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY || vars.ODDS_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Guard env
+
+      - name: Print debug info
+        shell: bash
         run: |
-          test -n "${SUPABASE_URL}" && test -n "${SUPABASE_SERVICE_ROLE_KEY}" && test -n "${ODDS_API_KEY}"
-      - name: Ingest upcoming games (The Odds API -> Supabase)
+          echo "🏗 Debugging Environment..."
+          env | grep -E "SUPABASE|ODDS" || true
+          echo "Working directory:"
+          pwd
+          echo "Node version:"
+          node -v
+
+      - name: Ensure scripts exist
+        shell: bash
         run: |
+          ls -l scripts/ci || (echo "::error::Missing scripts/ci" && exit 1)
+          ls -l scripts/ingest || (echo "::error::Missing scripts/ingest" && exit 1)
+
+      - name: Run ingest wrapper
+        shell: bash
+        run: |
+          echo "Running ingest with:"
+          echo "League=${{ inputs.league }} Days=${{ inputs.days }}"
+          chmod +x scripts/ci/ingest-games.sh
           bash scripts/ci/ingest-games.sh "${{ inputs.league }}" "${{ inputs.days }}"
-      - name: Pull odds snapshots (optional)
-        if: ${{ inputs.skip != '1' }}
-        run: |
-          node ./scripts/fetch-odds-rest.mjs "${{ inputs.league }}" "${{ inputs.days }}"
